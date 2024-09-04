@@ -644,38 +644,29 @@ class BMSPack {
    async readBytesFromDeviceRegister(device, register, byteCount) {
       var sendData = [device << 1, register, byteCount]; // bytes to send
 
-      // console.log( "sendData=" + sendData );
-
       // TODO: add CRC check, retry on failed, return as soon as all data received
-      return this.serial
-         .write(sendData)
-         .then(() => {
-            // increased time from 20 to 40 ms here
-            return sleep(40 /* 2*((byteCount + 4) / 8 + 1) */);
-         })
-         .then(() => {
-            var data = this.serial.readAll();
-            var crc = this.crc(data.slice(0, byteCount + 3));
-            // console.log( "Received data=" + data );
-            if (data.length == byteCount + 4) {
-               if (data[0] != sendData[0])
-                  throw 'first byte is ' + data[0] + ', not device id ' + device;
-               if (data[1] != register)
-                  throw 'second byte is ' + data[1] + ', not register ' + register;
-               if (data[2] != byteCount)
-                  throw 'third byte is ' + data[2] + ', not byte count ' + byteCount;
-               if (data[data.length - 1] != crc)
-                  throw 'last byte is ' + data[data.length - 1] + ', not expected crc ' + crc;
-               // console.log( "readBytes... returning" );
-               return data.slice(3, 3 + byteCount);
-            } else
-               throw (
-                  'readBytesFromDeviceRegister: Expected ' +
-                  (byteCount + 4) +
-                  ' bytes, got ' +
-                  data.length
-               );
-         });
+      return this.serial.write(sendData).then(async () => {
+         var data = await this.serial.readBytes(byteCount + 4);
+         var crc = this.crc(data.slice(0, byteCount + 3));
+         // console.log( "Received data=" + data );
+         if (data.length == byteCount + 4) {
+            if (data[0] != sendData[0])
+               throw 'first byte is ' + data[0] + ', not device id ' + device;
+            if (data[1] != register)
+               throw 'second byte is ' + data[1] + ', not register ' + register;
+            if (data[2] != byteCount)
+               throw 'third byte is ' + data[2] + ', not byte count ' + byteCount;
+            if (data[data.length - 1] != crc)
+               throw 'last byte is ' + data[data.length - 1] + ', not expected crc ' + crc;
+            return data.slice(3, 3 + byteCount);
+         } else
+            throw (
+               'readBytesFromDeviceRegister: Expected ' +
+               (byteCount + 4) +
+               ' bytes, got ' +
+               data.length
+            );
+      });
    }
 
    async writeByteToDeviceRegister(device, register, byte) {
@@ -685,24 +676,21 @@ class BMSPack {
       console.log('writeBytesToDeviceRegister: register=' + register, sendData);
       // console.log( "writeBytes: sendData: " + sendData );
       this.serial.flushInput();
-      return this.serial
-         .write(sendData)
-         .then(() => sleep(20 * (sendData.length / 8 + 1)))
-         .then(() => {
-            var reply = this.serial.readAll();
-            console.log('writeBytes: received ' + reply);
+      return this.serial.write(sendData).then(async () => {
+         const reply = await this.serial.readBytes(sendData.length);
+         console.log('writeBytes: received ', reply);
 
-            if (reply.length != sendData.length)
-               throw (
-                  'writeByteToDeviceRegistr: Expected ' +
-                  sendData.length +
-                  ' bytes, got ' +
-                  reply.length
-               );
-            for (var i = 0; i < reply.length; i++)
-               if (reply[i] != sendData[i])
-                  throw 'Expected byte ' + i + ' to be ' + sendData[i] + ', was ' + reply[i];
-         });
+         if (reply.length != sendData.length)
+            throw (
+               'writeByteToDeviceRegistr: Expected ' +
+               sendData.length +
+               ' bytes, got ' +
+               reply.length
+            );
+         for (var i = 0; i < reply.length; i++)
+            if (reply[i] != sendData[i])
+               throw 'Expected byte ' + i + ' to be ' + sendData[i] + ', was ' + reply[i];
+      });
    }
 }
 
