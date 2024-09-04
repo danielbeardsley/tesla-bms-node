@@ -1,0 +1,13 @@
+{
+  "name": "tesla-bms-node",
+  "version": "1.0.0",
+  "description": "Send commands to the tesla BMS on Model S battery packs",
+  "main": "index.js",
+  "scripts": {
+  },
+  "license": "MIT",
+  "dependencies": {
+    "async-lock": "^1.2.8",
+    "serialport": "^9.0.2"
+  }
+}
