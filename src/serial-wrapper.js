@@ -1,4 +1,5 @@
-const SerialPort = require('serialport');
+const { SerialPort } = require('serialport');
+
 class SerialWrapper {
    constructor(device, speed) {
       this.device = device;
@@ -8,27 +9,13 @@ class SerialWrapper {
 
    async open() {
       return new Promise((resolve, reject) => {
-         this.port = new SerialPort(this.device, { baudRate: this.speed }, err => {
-            if (err) return reject(err);
-            else {
-               this.port.on('error', function (err) {
-                  console.log('Error: ', err.message);
-               });
-               /*
-							this.port.on('data', function (chunk) {
-							  console.log('onData!')
-							  // , port.read())
-							})
-							*/
-               this.port.on(
-                  'readable',
-                  function () {
-                     var readData;
-                     readData = this.port.read();
-                     this.readQueue.push(...readData);
-                  }.bind(this)
-               );
-
+         this.port.on('error', function (err) {
+            console.log('Error: ', err.message);
+         });
+         this.port = new SerialPort({ path: this.device, baudRate: this.speed }, err => {
+            if (err) {
+               return reject(err);
+            } else {
                return resolve(this);
             }
          });
@@ -54,10 +41,11 @@ class SerialWrapper {
    }
 
    readAll() {
-      var result = this.readQueue;
-      this.readQueue = [];
-      console.log('readAll: ', result);
-      return result;
+      let allData = [];
+      while ((data = this.port.read()) !== null) {
+         allData.push(...data);
+      }
+      return allData;
    }
 
    flushInput() {
