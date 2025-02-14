@@ -409,7 +409,7 @@ class BQFaults {
 
 class BMSPack {
    // static MAX_MODULE_ADDR = 0x3e
-   static MAX_MODULE_ADDR = 0x02;
+   static MAX_MODULE_ADDR = 0x0A;
    static BROADCAST_ADDR = 0x3f;
 
    constructor(serialDevice) {
@@ -608,7 +608,7 @@ class BMSPack {
             console.log("lock aquired for module " + number);
             console.log('Polling module ' + number, 'sending:', sendData);
             await this.serial.write(sendData);
-            await sleep(20);
+            await sleep(40);
 
             return this.serial.readAll();
          })
@@ -738,6 +738,16 @@ initPack(pack)
                console.log(module.cellVoltages);
                console.log(module.temperatures);
             });
+      }
+   })
+   .then(async () => {
+      while(true) {
+         try {
+            await pack.modules[1].readValues();
+         } catch (error) {
+            console.error('Error reading values: ', error);
+         }
+         await sleep(1000);
       }
    })
    .catch(error => {
