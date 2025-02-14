@@ -71,7 +71,6 @@ class SerialWrapper {
     * have been read. If the timeout is reached, the promise will reject.
     */
    async readBytes(numBytes, timeout = 100) {
-      console.log('Reading bytes', numBytes);
       return new Promise((resolve, reject) => {
          const timeoutid =
             timeout > 0

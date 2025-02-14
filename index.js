@@ -54,14 +54,10 @@ class BMSBoard {
    }
 
    async readStatus() {
-      console.log('reading status');
       var bytes = await this.readBytesFromRegister(BMSBoard.Registers.REG_ALERT_STATUS, 4);
-      console.log('status bytes=', bytes);
 
       this.alerts = new BQAlerts(bytes[0]);
-      console.log( "Alerts: " + this.alerts )
       this.faults = new BQFaults(bytes[1]);
-      console.log( "Faults: " + this.faults )
       this.covFaults = bytes[2];
       this.cuvFaults = bytes[3];
    }
@@ -82,7 +78,6 @@ class BMSBoard {
       // write 0 to IO_CONTROL[SLEEP]
       return this.writeIOControl(false, false, false, false, true, true)
          .then(() => this.readIOControl())
-         .then(ioc => console.log('IOControl after wake: ' + ioc));
       // turn on TS1, TS2
    }
 
@@ -99,8 +94,6 @@ class BMSBoard {
 
    async readConfig() {
       return this.readBytesFromRegister(BMSBoard.Registers.REG_FUNCTION_CONFIG, 8).then(bytes => {
-         console.log('Configuration:');
-         for (var i = 0; i < 8; i++) console.log(i + ': ' + bytes[i]);
       });
    }
 
@@ -115,25 +108,12 @@ class BMSBoard {
       var cellSum = 0;
 
       this.moduleVolt = ((bytes[0] * 256 + bytes[1]) * 6.25) / (0.1875 * 2 ** 14); // 0.002034609;
-      console.log( "moduleVolt = " + this.moduleVolt + "(" + bytes[0] + ", " + bytes[1] + ")" );
-      console.log('readMultiRegisters: bytes=' + bytes);
       for (var i = 0; i < 6; i++) {
          this.cellVoltages[i] =
             ((bytes[2 + i * 2] * 256 + bytes[2 + i * 2 + 1]) * 6250) / (16383 * 1000);
          cellSum += this.cellVoltages[i];
-         console.log(
-            'Cell voltage ' +
-               i +
-               ' = ' +
-               this.cellVoltages[i] +
-               '(' +
-               bytes[2 + i * 2] +
-               ', ' +
-               bytes[2 + i * 2 + 1]
-         ) + ')';
       }
 
-      // console.log( "Sum of cells: " + cellSum )
       tempTemp = 1.78 / ((bytes[14] * 256 + bytes[15] + 2) / 33046.0) - 3.57;
 
       tempTemp = tempTemp * 1000;
@@ -198,7 +178,6 @@ class BMSBoard {
 
    async readIOControl() {
       return this.readBytesFromRegister(BMSBoard.Registers.REG_IO_CONTROL, 1).then(bytes => {
-         console.log('IOControl bytes=' + bytes);
          return new BQIOControl(bytes[0]);
       });
    }
@@ -437,19 +416,13 @@ class BMSPack {
       var x;
       // var modules = []
 
-      console.log( "findBoards entry" );
       for (x = 1; x < BMSPack.MAX_MODULE_ADDR; x++) {
-         console.log('Looking for board ' + x);
          await this.pollModule(x).then(module => {
-            console.log('pollModule returned:', module);
             if (module) {
-               console.log( "module: " + module );
                this.modules[x] = module;
             }
          });
       }
-      console.log('findBoards exit');
-      console.log('this.modules=', this.modules);
       // console.log( this.modules );
    }
 
@@ -573,7 +546,6 @@ class BMSPack {
    }
 
    async checkAllStatuses() {
-      console.log('Checking all statuses');
       for (var index in this.modules) {
          var faults = await this.lock.acquire('key', () => this.modules[index].readStatus());
          // console.log( "Module " + index + ": " + faults );
@@ -592,7 +564,6 @@ class BMSPack {
    }
 
    async readAllIOControl() {
-      console.log('Reading all IO Control');
       for (var index in this.modules) {
          var ioc = await this.lock.acquire('key', () => this.modules[index].readIOControl());
          // console.log( "Module " + index + ": " + ioc );
@@ -602,19 +573,16 @@ class BMSPack {
    async pollModule(number) {
       var sendData = [number << 1, 0, 1]; // bytes to send
 
-      console.log("aquiring lock for module " + number);
       return this.lock
          .acquire('key', async () => {
-            console.log("lock aquired for module " + number);
-            console.log('Polling module ' + number, 'sending:', sendData);
             await this.serial.write(sendData);
             await sleep(40);
 
             return this.serial.readAll();
          })
          .then(reply => {
-            console.log('Found module #' + number + ': ', reply);
             if (reply.length > 4) {
+               console.log('Found module #' + number + ': ', reply);
                return new BMSBoard(this, number);
             } else {
                // console.log( "No module #" + number );
@@ -677,12 +645,10 @@ class BMSPack {
       var sendData = [(device << 1) | 1, register, byte]; // bytes to send
 
       sendData.push(this.crc(sendData));
-      console.log('writeBytesToDeviceRegister: register=' + register, sendData);
       // console.log( "writeBytes: sendData: " + sendData );
       this.serial.flushInput();
       return this.serial.write(sendData).then(async () => {
          const reply = await this.serial.readBytes(sendData.length);
-         console.log('writeBytes: received ', reply);
 
          if (reply.length != sendData.length)
             throw (
@@ -703,35 +669,25 @@ var pack = new BMSPack('/dev/ttyUSB0');
 initPack(pack)
    .then(() => pack.wakeBoards())
    .then(async () => {
-      console.log(pack.modules);
-      //await pack.stopBalancing();
       for (var key in pack.modules) {
-         console.log('key: ' + key);
          var module = pack.modules[key];
-         console.log('module: ' + module);
          await module
             .readIOControl()
             .then(ioControl => {
-               console.log(ioControl);
             })
             .then(() => {
-               console.log('Reading status...');
                return module.readStatus();
             })
             .then(() => {
-               console.log('Reading values...');
                return module.readValues();
             })
             .then(() => {
-               console.log('Reading config...');
                return module.readConfig();
             })
             .then(() => {
-               console.log('Sleeping module...');
                return module.sleep();
             })
             .then(() => {
-               console.log('Reading status again...');
                // return module.readStatus();
             })
             .then(() => {
@@ -755,9 +711,7 @@ initPack(pack)
    });
 
 async function initPack(pack) {
-   console.log('before pack.init()');
    await pack.init();
-   console.log('after pack.init()');
 }
 
 async function sleep(ms) {
