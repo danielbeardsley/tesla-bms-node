@@ -59,9 +59,9 @@ class BMSBoard {
       console.log('status bytes=', bytes);
 
       this.alerts = new BQAlerts(bytes[0]);
-      // console.log( "Alerts: " + this.alerts )
+      console.log( "Alerts: " + this.alerts )
       this.faults = new BQFaults(bytes[1]);
-      // console.log( "Faults: " + this.faults )
+      console.log( "Faults: " + this.faults )
       this.covFaults = bytes[2];
       this.cuvFaults = bytes[3];
    }
@@ -92,8 +92,8 @@ class BMSBoard {
       //start all ADC conversions
       return this.writeADCControl(false, true, true, true, 6)
          .then(() => this.writeIOControl(false, false, false, false, true, true)) // wait one ms here?
-         .then(() => new Promise(resolve => setTimeout(() => resolve(), 1000))) // waiting one second to test
          .then(() => this.writeADCConvert(true))
+         // .then(() => new Promise(resolve => setTimeout(() => resolve(), 1000))) // waiting one second to test
          .then(() => this.readMultiRegisters());
    }
 
@@ -115,7 +115,7 @@ class BMSBoard {
       var cellSum = 0;
 
       this.moduleVolt = ((bytes[0] * 256 + bytes[1]) * 6.25) / (0.1875 * 2 ** 14); // 0.002034609;
-      // console.log( "moduleVolt = " + this.moduleVolt + "(" + bytes[0] + ", " + bytes[1] + ")" );
+      console.log( "moduleVolt = " + this.moduleVolt + "(" + bytes[0] + ", " + bytes[1] + ")" );
       console.log('readMultiRegisters: bytes=' + bytes);
       for (var i = 0; i < 6; i++) {
          this.cellVoltages[i] =
@@ -197,9 +197,8 @@ class BMSBoard {
    }
 
    async readIOControl() {
-      // console.log( "readIOControl: entry" );
       return this.readBytesFromRegister(BMSBoard.Registers.REG_IO_CONTROL, 1).then(bytes => {
-         /* console.log( "IOControl bytes=" + bytes ); */
+         console.log('IOControl bytes=' + bytes);
          return new BQIOControl(bytes[0]);
       });
    }
@@ -438,12 +437,13 @@ class BMSPack {
       var x;
       // var modules = []
 
-      // console.log( "findBoards entry" );
+      console.log( "findBoards entry" );
       for (x = 1; x < BMSPack.MAX_MODULE_ADDR; x++) {
          console.log('Looking for board ' + x);
          await this.pollModule(x).then(module => {
+            console.log('pollModule returned:', module);
             if (module) {
-               /* console.log( "module: " + module ); */
+               console.log( "module: " + module );
                this.modules[x] = module;
             }
          });
@@ -573,6 +573,7 @@ class BMSPack {
    }
 
    async checkAllStatuses() {
+      console.log('Checking all statuses');
       for (var index in this.modules) {
          var faults = await this.lock.acquire('key', () => this.modules[index].readStatus());
          // console.log( "Module " + index + ": " + faults );
@@ -591,6 +592,7 @@ class BMSPack {
    }
 
    async readAllIOControl() {
+      console.log('Reading all IO Control');
       for (var index in this.modules) {
          var ioc = await this.lock.acquire('key', () => this.modules[index].readIOControl());
          // console.log( "Module " + index + ": " + ioc );
@@ -600,8 +602,10 @@ class BMSPack {
    async pollModule(number) {
       var sendData = [number << 1, 0, 1]; // bytes to send
 
+      console.log("aquiring lock for module " + number);
       return this.lock
          .acquire('key', async () => {
+            console.log("lock aquired for module " + number);
             console.log('Polling module ' + number, 'sending:', sendData);
             await this.serial.write(sendData);
             await sleep(20);
@@ -609,8 +613,8 @@ class BMSPack {
             return this.serial.readAll();
          })
          .then(reply => {
+            console.log('Found module #' + number + ': ', reply);
             if (reply.length > 4) {
-               // console.log( "Found module #" + number + ": " + reply )
                return new BMSBoard(this, number);
             } else {
                // console.log( "No module #" + number );
@@ -699,10 +703,8 @@ var pack = new BMSPack('/dev/ttyUSB0');
 initPack(pack)
    .then(() => pack.wakeBoards())
    .then(async () => {
-      console.log('Checking statuses');
       console.log(pack.modules);
-      console.log(Object.entries(pack.modules));
-      // console.log( "Modules: " + JSON.stringify( pack.modules ) );
+      //await pack.stopBalancing();
       for (var key in pack.modules) {
          console.log('key: ' + key);
          var module = pack.modules[key];
@@ -711,7 +713,6 @@ initPack(pack)
             .readIOControl()
             .then(ioControl => {
                console.log(ioControl);
-               return module.readStatus();
             })
             .then(() => {
                console.log('Reading status...');
@@ -731,12 +732,16 @@ initPack(pack)
             })
             .then(() => {
                console.log('Reading status again...');
-               return module.readStatus();
+               // return module.readStatus();
+            })
+            .then(() => {
+               console.log(module.cellVoltages);
+               console.log(module.temperatures);
             });
       }
    })
    .catch(error => {
-      console.error('ERROR: ' + error);
+      console.error('Error: ', error);
    });
 
 async function initPack(pack) {
