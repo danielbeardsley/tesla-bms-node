@@ -1,7 +1,8 @@
 import { SerialPort } from 'serialport';
+import { Buffer } from 'buffer';
 
 export class SerialWrapper {
-  private port: SerialPort;
+  private port!: SerialPort;
   private buffer: number[];
   private readQueue: (() => boolean)[];
   private device: string;
@@ -16,24 +17,23 @@ export class SerialWrapper {
 
   async open(): Promise<SerialWrapper> {
     return new Promise((resolve, reject) => {
-      this.port = new SerialPort({ 
-        path: this.device, 
-        baudRate: this.speed 
-      }, (err?: Error) => {
-        if (err) {
-          return reject(err);
-        } else {
-          return resolve(this);
-        }
+      this.port = new SerialPort({
+        path: this.device,
+        baudRate: this.speed
       });
 
-      this.port.on('error', (err: Error) => {
-        console.log('Error: ', err);
+      this.port.on('error', (err) => {
+        if (err) console.log('Error: ', err);
       });
 
       this.port.on('data', (data: Buffer) => {
         this.buffer.push(...data);
         this.processReadQueue();
+      });
+
+      this.port.on('open', () => resolve(this));
+      this.port.on('error', (err) => {
+        if (err) reject(err);
       });
     });
   }
@@ -44,10 +44,10 @@ export class SerialWrapper {
 
   async write(buffer: number[] | Buffer): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.port.write(buffer, '', (err?: Error) => {
+      this.port.write(buffer, (err?: Error | null) => {
         if (err) reject(err);
         else {
-          this.port.drain((error?: Error) => {
+          this.port.drain((error?: Error | null) => {
             if (error) reject(error);
             else resolve();
           });
