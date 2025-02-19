@@ -4,12 +4,16 @@
   "description": "Send commands to the tesla BMS on Model S battery packs",
   "main": "index.js",
   "scripts": {
-     "format": "biome format --fix"
+    "format": "biome format --fix"
   },
   "license": "MIT",
   "dependencies": {
     "@biomejs/biome": "^1.8.3",
     "async-lock": "^1.2.8",
     "serialport": "^12.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.4",
+    "typescript": "^5.7.3"
   }
 }
