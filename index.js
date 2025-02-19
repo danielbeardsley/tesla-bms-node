@@ -339,8 +339,7 @@ initPack(pack)
          var module = pack.modules[key];
          await module
             .readIOControl()
-            .then(ioControl => {
-            })
+            .then(ioControl => {})
             .then(() => {
                return module.readStatus();
             })
@@ -363,7 +362,7 @@ initPack(pack)
       }
    })
    .then(async () => {
-      while(true) {
+      while (true) {
          try {
             await pack.modules[1].readValues();
          } catch (error) {

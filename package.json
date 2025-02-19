@@ -4,7 +4,11 @@
   "description": "Send commands to the tesla BMS on Model S battery packs",
   "main": "index.js",
   "scripts": {
-    "format": "biome format --fix"
+    "format": "biome format --fix",
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist"
   },
   "license": "MIT",
   "dependencies": {

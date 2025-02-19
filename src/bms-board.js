@@ -73,8 +73,9 @@ class BMSBoard {
 
    async wake() {
       // write 0 to IO_CONTROL[SLEEP]
-      return this.writeIOControl(false, false, false, false, true, true)
-         .then(() => this.readIOControl())
+      return this.writeIOControl(false, false, false, false, true, true).then(() =>
+         this.readIOControl()
+      );
       // turn on TS1, TS2
    }
 
@@ -82,16 +83,19 @@ class BMSBoard {
       //ADC Auto mode, read every ADC input we can (Both Temps, Pack, 6 cells)
       //enable temperature measurement VSS pins
       //start all ADC conversions
-      return this.writeADCControl(false, true, true, true, 6)
-         .then(() => this.writeIOControl(false, false, false, false, true, true)) // wait one ms here?
-         .then(() => this.writeADCConvert(true))
-         // .then(() => new Promise(resolve => setTimeout(() => resolve(), 1000))) // waiting one second to test
-         .then(() => this.readMultiRegisters());
+      return (
+         this.writeADCControl(false, true, true, true, 6)
+            .then(() => this.writeIOControl(false, false, false, false, true, true)) // wait one ms here?
+            .then(() => this.writeADCConvert(true))
+            // .then(() => new Promise(resolve => setTimeout(() => resolve(), 1000))) // waiting one second to test
+            .then(() => this.readMultiRegisters())
+      );
    }
 
    async readConfig() {
-      return this.readBytesFromRegister(BMSBoard.Registers.REG_FUNCTION_CONFIG, 8).then(bytes => {
-      });
+      return this.readBytesFromRegister(BMSBoard.Registers.REG_FUNCTION_CONFIG, 8).then(
+         bytes => {}
+      );
    }
 
    // async readVoltages()
@@ -263,7 +267,6 @@ class BQIOControl {
    }
 }
 
-
 class BQAlerts {
    static sleep = new BQAlerts(1 << 2);
    static none = new BQAlerts(0);
@@ -334,10 +337,8 @@ class BQFaults {
    }
 }
 
-
 module.exports = {
    BMSBoard,
    BQAlerts,
    BQFaults,
 };
-
