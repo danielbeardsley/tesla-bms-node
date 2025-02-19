@@ -54,7 +54,7 @@ class BitmapValue {
 
 class BMSPack {
    // static MAX_MODULE_ADDR = 0x3e
-   static MAX_MODULE_ADDR = 0x0A;
+   static MAX_MODULE_ADDR = 0x0a;
    static BROADCAST_ADDR = 0x3f;
 
    constructor(serialDevice) {

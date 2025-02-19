@@ -1,100 +1,110 @@
-const { SerialPort } = require('serialport');
+import { SerialPort } from 'serialport';
 
-class SerialWrapper {
-   constructor(device, speed) {
-      this.device = device;
-      this.speed = speed;
-      this.buffer = [];
-      this.readQueue = [];
-   }
+export class SerialWrapper {
+  private port: SerialPort;
+  private buffer: number[];
+  private readQueue: (() => boolean)[];
+  private device: string;
+  private speed: number;
 
-   async open() {
-      return new Promise((resolve, reject) => {
-         this.port = new SerialPort({ path: this.device, baudRate: this.speed }, err => {
-            if (err) {
-               return reject(err);
-            } else {
-               return resolve(this);
-            }
-         });
-         this.port.on('error', function (err) {
-            console.log('Error: ', err);
-         });
-         this.port.on('data', data => {
-            this.buffer.push(...data);
-            this.processReadQueue();
-         });
+  constructor(device: string, speed: number) {
+    this.device = device;
+    this.speed = speed;
+    this.buffer = [];
+    this.readQueue = [];
+  }
+
+  async open(): Promise<SerialWrapper> {
+    return new Promise((resolve, reject) => {
+      this.port = new SerialPort({ 
+        path: this.device, 
+        baudRate: this.speed 
+      }, (err?: Error) => {
+        if (err) {
+          return reject(err);
+        } else {
+          return resolve(this);
+        }
       });
-   }
 
-   close() {
-      this.port.close();
-   }
-
-   async write(buffer) {
-      return new Promise((resolve, reject) => {
-         this.port.write(buffer, '', err => {
-            if (err) reject(err);
-            else {
-               this.port.drain(error => {
-                  if (err) reject(err);
-                  else resolve();
-               });
-            }
-         });
+      this.port.on('error', (err: Error) => {
+        console.log('Error: ', err);
       });
-   }
 
-   /**
-    * Let the first function in the queue know that there is data to read.
-    */
-   processReadQueue() {
-      while (this.readQueue.length && this.buffer.length) {
-         // If the reader is unhappy with the data, we will wait
-         if (!this.readQueue[0]()) {
-            return;
-         }
-         // Otherwise, we will remove the reader from the queue cause they
-         // were satisfied with the data.
-         this.readQueue.shift();
+      this.port.on('data', (data: Buffer) => {
+        this.buffer.push(...data);
+        this.processReadQueue();
+      });
+    });
+  }
+
+  close(): void {
+    this.port.close();
+  }
+
+  async write(buffer: number[] | Buffer): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.port.write(buffer, '', (err?: Error) => {
+        if (err) reject(err);
+        else {
+          this.port.drain((error?: Error) => {
+            if (error) reject(error);
+            else resolve();
+          });
+        }
+      });
+    });
+  }
+
+  /**
+   * Let the first function in the queue know that there is data to read.
+   */
+  private processReadQueue(): void {
+    while (this.readQueue.length && this.buffer.length) {
+      // If the reader is unhappy with the data, we will wait
+      if (!this.readQueue[0]()) {
+        return;
       }
-   }
+      // Otherwise, we will remove the reader from the queue cause they
+      // were satisfied with the data.
+      this.readQueue.shift();
+    }
+  }
 
-   readAll() {
-      const buffer = this.buffer;
-      this.buffer = [];
-      return buffer;
-   }
+  readAll(): number[] {
+    const buffer = this.buffer;
+    this.buffer = [];
+    return buffer;
+  }
 
-   /**
-    * Return a promise that will resolve when the requested number of bytes
-    * have been read. If the timeout is reached, the promise will reject.
-    */
-   async readBytes(numBytes, timeout = 100) {
-      return new Promise((resolve, reject) => {
-         const timeoutid =
-            timeout > 0
-               ? setTimeout(() => {
-                    reject(new Error(`Timeout waiting for ${numBytes} bytes`));
-                    this.readQueue.shift();
-                 }, timeout)
-               : null;
-         this.readQueue.push(() => {
-            if (this.buffer.length < numBytes) {
-               return false;
-            }
-            timeoutid && clearTimeout(timeoutid);
-            const buffer = this.buffer.slice(0, numBytes);
-            this.buffer = this.buffer.slice(numBytes);
-            resolve(buffer);
-            return true;
-         });
+  /**
+   * Return a promise that will resolve when the requested number of bytes
+   * have been read. If the timeout is reached, the promise will reject.
+   */
+  async readBytes(numBytes: number, timeout: number = 100): Promise<number[]> {
+    return new Promise((resolve, reject) => {
+      const timeoutid: NodeJS.Timeout | null = 
+        timeout > 0
+          ? setTimeout(() => {
+              reject(new Error(`Timeout waiting for ${numBytes} bytes`));
+              this.readQueue.shift();
+            }, timeout)
+          : null;
+
+      this.readQueue.push(() => {
+        if (this.buffer.length < numBytes) {
+          return false;
+        }
+        timeoutid && clearTimeout(timeoutid);
+        const buffer = this.buffer.slice(0, numBytes);
+        this.buffer = this.buffer.slice(numBytes);
+        resolve(buffer);
+        return true;
       });
-   }
+    });
+  }
 
-   flushInput() {
-      this.buffer = [];
-   }
-}
-
-module.exports = SerialWrapper;
+  flushInput(): void {
+    this.buffer = [];
+  }
+} 
