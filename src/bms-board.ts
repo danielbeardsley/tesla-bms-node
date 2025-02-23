@@ -1,7 +1,34 @@
+import { BMSPack } from './bms-pack';
+
+interface BQRegisters {
+   REG_DEV_STATUS: number;
+   REG_GPAI: number;
+   REG_VCELL1: number;
+   REG_VCELL2: number;
+   REG_VCELL3: number;
+   REG_VCELL4: number;
+   REG_VCELL5: number;
+   REG_VCELL6: number;
+   REG_TEMPERATURE1: number;
+   REG_TEMPERATURE2: number;
+   REG_ALERT_STATUS: number;
+   REG_FAULT_STATUS: number;
+   REG_COV_FAULT: number;
+   REG_CUV_FAULT: number;
+   REG_ADC_CONTROL: number;
+   REG_IO_CONTROL: number;
+   REG_BAL_CTRL: number;
+   REG_BAL_TIME: number;
+   REG_ADC_CONVERT: number;
+   REG_ADDR_CTRL: number;
+   REG_RESET: number;
+   REG_FUNCTION_CONFIG: number;
+}
+
 class BMSBoard {
    // TODO: Move to class for the TI BQ76PL536A-Q1 chip
    // registers for bq76PL536A-Q1 (https://www.ti.com/lit/ds/symlink/bq76pl536a-q1.pdf)
-   static Registers = {
+   static Registers: BQRegisters = {
       REG_DEV_STATUS: 0,
       REG_GPAI: 1,
       REG_VCELL1: 3,
@@ -26,18 +53,23 @@ class BMSBoard {
       REG_FUNCTION_CONFIG: 0x40,
    };
 
-   constructor(pack, id) {
+   private pack: BMSPack;
+   private id: number;
+   private cellVoltages: number[];
+   private temperatures: number[];
+
+   constructor(pack: BMSPack, id: number) {
       this.pack = pack;
       this.id = id;
       this.cellVoltages = [undefined, undefined, undefined, undefined, undefined, undefined];
       this.temperatures = [undefined, undefined];
    }
 
-   async readBytesFromRegister(register, byteCount) {
+   async readBytesFromRegister(register: number, byteCount: number) {
       return this.pack.readBytesFromDeviceRegister(this.id, register, byteCount);
    }
 
-   async writeByteToRegister(register, byte) {
+   async writeByteToRegister(register: number, byte: number) {
       // console.log( "BMS Board: writeByteToRegister(register=" + register + ")" )
 
       return this.pack
@@ -46,7 +78,7 @@ class BMSBoard {
       // .then( (faults) => console.log( "Faults: " + faults ) )
    }
 
-   async writeAlertStatus(alertStatus) {
+   async writeAlertStatus(alertStatus: BQAlerts) {
       return this.writeByteToRegister(BMSBoard.Registers.REG_ALERT_STATUS, alertStatus.getByte());
    }
 
@@ -156,12 +188,12 @@ class BMSBoard {
    }
 
    async writeIOControl(
-      auxConnected,
-      gpioOutOpenDrain,
-      gpioInHigh,
-      sleep,
-      ts1connected,
-      ts2connected
+      auxConnected: boolean,
+      gpioOutOpenDrain: boolean,
+      gpioInHigh: boolean,
+      sleep: boolean,
+      ts1connected: boolean,
+      ts2connected: boolean
    ) {
       var value;
 
@@ -183,7 +215,7 @@ class BMSBoard {
       });
    }
 
-   async writeADCControl(adcOn, tempSensor1On, tempSensor2On, gpaiOn, cellCount) {
+   async writeADCControl(adcOn: boolean, tempSensor1On: boolean, tempSensor2On: boolean, gpaiOn: boolean, cellCount: number) {
       var value;
 
       value =
@@ -198,7 +230,7 @@ class BMSBoard {
       return this.writeByteToRegister(BMSBoard.Registers.REG_ADC_CONTROL, value);
    }
 
-   async writeADCConvert(initiateConversion) {
+   async writeADCConvert(initiateConversion: boolean) {
       return this.writeByteToRegister(
          BMSBoard.Registers.REG_ADC_CONVERT,
          initiateConversion ? 1 : 0
@@ -206,7 +238,7 @@ class BMSBoard {
    }
 
    // cells is array of 6 booleans, true to balance
-   async balance(cells) {
+   async balance(cells: boolean[]) {
       var regValue = 0;
 
       for (var i = 0; i < 6; i++) if (cells[i]) regValue = regValue | (1 << i);
@@ -216,7 +248,7 @@ class BMSBoard {
    }
 
    // if not isSeconds, then the count is in minutes
-   async setBalanceTimer(count, isSeconds) {
+   async setBalanceTimer(count: number, isSeconds: boolean) {
       if (count >= 64) throw 'Invalid count, must be 0-63';
 
       var regValue = count | (isSeconds ? 0 : 1 << 7);
@@ -232,10 +264,11 @@ class BMSBoard {
 }
 
 class BQIOControl {
-   constructor(byteValue) {
+   private byteValue: number;
+   constructor(byteValue: number) {
       this.byteValue = byteValue;
    }
-   toString() {
+   toString(): string {
       var result = 'IO Control: Aux: ';
       if (this.byteValue & (1 << 7)) result += ' connected to REG50, ';
       else result += ' Open, ';
@@ -270,6 +303,7 @@ class BQIOControl {
 class BQAlerts {
    static sleep = new BQAlerts(1 << 2);
    static none = new BQAlerts(0);
+
    /*
 	static createFrom( ar, parity, ecc_err, force, tsd, sleep, ot2, ot1 )
 	{
@@ -282,21 +316,23 @@ class BQAlerts {
 			byteValue |= 1 << 
 	}
 */
-   constructor(byteValue) {
+   private byteValue: number;
+
+   constructor(byteValue: number) {
       this.byteValue = byteValue;
    }
 
-   getByte() {
+   getByte(): number {
       return this.byteValue;
    }
 
-   equals(other) {
+   equals(other: BQAlerts): boolean {
       var result = other.byteValue == this.byteValue;
 
       return result;
    }
 
-   toString() {
+   toString(): string {
       var result = 'Alerts: ';
       if (this.byteValue & (1 << 7)) result += ' Address has not been assigned';
       if (this.byteValue & (1 << 6)) result += ' Group 3 protected registers are invalid';
@@ -315,15 +351,17 @@ class BQAlerts {
 class BQFaults {
    static none = new BQFaults(0);
 
-   constructor(byteValue) {
+   private byteValue: number;
+
+   constructor(byteValue: number) {
       this.byteValue = byteValue;
    }
 
-   equals(other) {
+   equals(other: BQFaults): boolean {
       return other.byteValue == this.byteValue;
    }
 
-   toString() {
+   toString(): string {
       var result = 'Faults: ';
       if (this.byteValue & (1 << 5)) result += ' Internal Consistency Check Failed';
       if (this.byteValue & (1 << 4)) result += ' Fault Forced';

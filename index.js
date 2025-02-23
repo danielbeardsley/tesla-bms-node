@@ -385,6 +385,4 @@ async function sleep(ms) {
 
 module.exports = {
    BMSPack: BMSPack,
-   BQAlerts: BQAlerts,
-   BQFaults: BQFaults,
 };
