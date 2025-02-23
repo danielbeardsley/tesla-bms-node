@@ -1,4 +1,4 @@
-import { BMSPack } from './bms-pack';
+import { BMSPack } from '../index';
 
 interface BQRegisters {
    REG_DEV_STATUS: number;
@@ -55,14 +55,19 @@ class BMSBoard {
 
    private pack: BMSPack;
    private id: number;
-   private cellVoltages: number[];
-   private temperatures: number[];
+   private cellVoltages: (number | undefined)[];
+   private temperatures: (number | undefined)[];
+   private moduleVolt?: number;
+   public alerts!: BQAlerts;
+   public faults!: BQFaults;
+   private covFaults!: number;
+   private cuvFaults!: number;
 
    constructor(pack: BMSPack, id: number) {
       this.pack = pack;
       this.id = id;
-      this.cellVoltages = [undefined, undefined, undefined, undefined, undefined, undefined];
-      this.temperatures = [undefined, undefined];
+      this.cellVoltages = new Array(6).fill(undefined);
+      this.temperatures = new Array(2).fill(undefined);
    }
 
    async readBytesFromRegister(register: number, byteCount: number) {
@@ -375,8 +380,4 @@ class BQFaults {
    }
 }
 
-module.exports = {
-   BMSBoard,
-   BQAlerts,
-   BQFaults,
-};
+export { BMSBoard, BQAlerts, BQFaults };

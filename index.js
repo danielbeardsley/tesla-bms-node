@@ -52,7 +52,7 @@ class BitmapValue {
    }
 }
 
-class BMSPack {
+export class BMSPack {
    // static MAX_MODULE_ADDR = 0x3e
    static MAX_MODULE_ADDR = 0x0a;
    static BROADCAST_ADDR = 0x3f;
@@ -382,7 +382,3 @@ async function initPack(pack) {
 async function sleep(ms) {
    return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-module.exports = {
-   BMSPack: BMSPack,
-};
