@@ -43,8 +43,8 @@ class BMSBoard {
    constructor(pack: BMSPack, id: number) {
       this.pack = pack;
       this.id = id;
-      this.cellVoltages = new Array(6).fill(undefined);
-      this.temperatures = new Array(2).fill(undefined);
+      this.cellVoltages = new Array(6).fill(0);
+      this.temperatures = new Array(2).fill(0);
    }
 
    async readBytesFromRegister(register: number, byteCount: number) {
@@ -124,9 +124,10 @@ class BMSBoard {
 
       this.moduleVolt = ((bytes[0] * 256 + bytes[1]) * 6.25) / (0.1875 * 2 ** 14); // 0.002034609;
       for (var i = 0; i < 6; i++) {
-         this.cellVoltages[i] =
+         const cellVoltage =
             ((bytes[2 + i * 2] * 256 + bytes[2 + i * 2 + 1]) * 6250) / (16383 * 1000);
-         cellSum += this.cellVoltages[i];
+         cellSum += cellVoltage;
+         this.cellVoltages[i] = cellVoltage;
       }
 
       tempTemp = 1.78 / ((bytes[14] * 256 + bytes[15] + 2) / 33046.0) - 3.57;
@@ -155,7 +156,6 @@ class BMSBoard {
    }
 
    getMinVoltage() {
-      console.log('Module min voltage: ' + Math.min(...this.cellVoltages));
       return Math.min(...this.cellVoltages);
    }
 

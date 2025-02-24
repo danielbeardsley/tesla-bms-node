@@ -1,6 +1,7 @@
 import AsyncLock from 'async-lock';
 import { SerialWrapper } from './serial-wrapper';
 import { BMSBoard, BQAlerts, BQFaults } from './bms-board';
+import { sleep } from './utils';
 
 export class BMSPack {
    // static MAX_MODULE_ADDR = 0x3e
