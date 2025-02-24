@@ -1,11 +1,26 @@
 import { SerialWrapper } from './serial-wrapper';
-import { crc } from './utils';
+import { crc, sleep } from './utils';
 
 export class TeslaComms {
    private serial: SerialWrapper;
 
    constructor(serialWrapper: SerialWrapper) {
       this.serial = serialWrapper;
+   }
+
+   async pollModule(number: number) {
+      const sendData = [number << 1, 0, 1]; // bytes to send
+
+      await this.serial.write(sendData);
+      await sleep(40);
+      const reply = await this.serial.readAll();
+
+      if (reply.length > 4) {
+         console.log('Found module #' + number + ': ', reply);
+         return number;
+      } else {
+         return null;
+      }
    }
 
    async readBytesFromDeviceRegister(device: number, register: number, byteCount: number) {

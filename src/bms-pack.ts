@@ -39,10 +39,17 @@ export class BMSPack {
       let x: number;
 
       for (x = 1; x < BMSPack.MAX_MODULE_ADDR; x++) {
-         await this.pollModule(x).then(module => {
+         await this.lock.acquire('key', () =>
+            this.teslaComms.pollModule(x)
+         ).then(module => {
             if (module) {
-               this.modules[x] = module;
+               this.modules[x] = new BMSBoard(this.teslaComms, module);
+               console.log(`Module ${x} found`);
+            } else {
+               console.log(`Module ${x} not found`)
             }
+         }).catch(() => {
+            console.log(`Error polling module ${x}`);
          });
       }
    }
@@ -190,26 +197,5 @@ export class BMSPack {
          var ioc = await this.lock.acquire('key', () => this.modules[index].readIOControl());
          // console.log( "Module " + index + ": " + ioc );
       }
-   }
-
-   async pollModule(number: number) {
-      var sendData = [number << 1, 0, 1]; // bytes to send
-
-      return this.lock
-         .acquire('key', async () => {
-            await this.serial.write(sendData);
-            await sleep(40);
-
-            return this.serial.readAll();
-         })
-         .then(reply => {
-            if (reply.length > 4) {
-               console.log('Found module #' + number + ': ', reply);
-               return new BMSBoard(this.teslaComms, number);
-            } else {
-               // console.log( "No module #" + number );
-               return null;
-            }
-         });
    }
 }
