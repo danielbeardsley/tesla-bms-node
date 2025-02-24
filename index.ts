@@ -3,6 +3,7 @@ import { sleep } from "./src/utils";
 
 var pack = new BMSPack('/dev/ttyUSB0');
 
+pack.init()
    .then(() => pack.wakeBoards())
    .then(async () => {
       for (var key in pack.modules) {
@@ -44,7 +45,3 @@ var pack = new BMSPack('/dev/ttyUSB0');
    .catch(error => {
       console.error('Error: ', error);
    });
-
-async function initPack(pack: BMSPack) {
-   await pack.init();
-}
