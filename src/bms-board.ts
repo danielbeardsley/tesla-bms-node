@@ -32,8 +32,8 @@ class BMSBoard {
 
    private pack: BMSPack;
    private id: number;
-   private cellVoltages: (number | undefined)[];
-   private temperatures: (number | undefined)[];
+   public cellVoltages: number[];
+   public temperatures: number[];
    private moduleVolt?: number;
    public alerts!: BQAlerts;
    public faults!: BQFaults;
