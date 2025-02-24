@@ -1,8 +1,9 @@
 {
   "compilerOptions": {
+    "noEmitOnError": false,
     "target": "es6",
     "module": "commonjs",
-    "lib": ["dom", "es6", "es2017", "esnext.asynciterable", "ES2015"],
+    "lib": ["es6", "es2017", "esnext.asynciterable", "ES2015"],
     "skipLibCheck": true,
     "sourceMap": true,
     "outDir": "./dist",
@@ -29,5 +30,5 @@
     "declaration": true
   },
   "exclude": ["node_modules", "dist"],
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "./index.ts"]
 } 
