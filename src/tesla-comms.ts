@@ -1,5 +1,8 @@
 import { SerialWrapper } from './serial-wrapper';
 import { crc, sleep } from './utils';
+import { BQRegisters } from './bms-board';
+
+export const BROADCAST_ADDR = 0x3f;
 
 export class TeslaComms {
    private serial: SerialWrapper;

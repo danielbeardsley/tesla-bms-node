@@ -2,12 +2,11 @@ import AsyncLock from 'async-lock';
 import { SerialWrapper } from './serial-wrapper';
 import { BMSBoard, BQAlerts, BQFaults } from './bms-board';
 import { sleep } from './utils';
-import { TeslaComms } from './tesla-comms';
+import { TeslaComms, BROADCAST_ADDR } from './tesla-comms';
 
 export class BMSPack {
    // static MAX_MODULE_ADDR = 0x3e
    static MAX_MODULE_ADDR = 0x0a;
-   static BROADCAST_ADDR = 0x3f;
 
    public modules: { [key: number]: BMSBoard };
    private serial: SerialWrapper;
@@ -61,7 +60,7 @@ export class BMSPack {
          this.lock
             .acquire('key', async () =>
                this.teslaComms.writeByteToDeviceRegister(
-                  BMSPack.BROADCAST_ADDR,
+                  BROADCAST_ADDR,
                   BMSBoard.Registers.REG_IO_CONTROL,
                   0
                )
@@ -73,7 +72,7 @@ export class BMSPack {
             .then(() =>
                this.lock.acquire('key', async () =>
                   this.teslaComms.writeByteToDeviceRegister(
-                     BMSPack.BROADCAST_ADDR,
+                     BROADCAST_ADDR,
                      BMSBoard.Registers.REG_ALERT_STATUS,
                      0x04
                   )
@@ -84,7 +83,7 @@ export class BMSPack {
             .then(() =>
                this.lock.acquire('key', async () =>
                   this.teslaComms.writeByteToDeviceRegister(
-                     BMSPack.BROADCAST_ADDR,
+                     BROADCAST_ADDR,
                      BMSBoard.Registers.REG_ALERT_STATUS,
                      0
                   )

@@ -1,6 +1,6 @@
 import { TeslaComms } from './tesla-comms';
 
-enum BQRegisters {
+export enum BQRegisters {
    REG_DEV_STATUS = 0x00,
    REG_GPAI = 0x01,
    REG_VCELL1 = 0x03,
