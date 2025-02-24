@@ -1,57 +1,34 @@
 import { BMSPack } from './bms-pack';
 
-interface BQRegisters {
-   REG_DEV_STATUS: number;
-   REG_GPAI: number;
-   REG_VCELL1: number;
-   REG_VCELL2: number;
-   REG_VCELL3: number;
-   REG_VCELL4: number;
-   REG_VCELL5: number;
-   REG_VCELL6: number;
-   REG_TEMPERATURE1: number;
-   REG_TEMPERATURE2: number;
-   REG_ALERT_STATUS: number;
-   REG_FAULT_STATUS: number;
-   REG_COV_FAULT: number;
-   REG_CUV_FAULT: number;
-   REG_ADC_CONTROL: number;
-   REG_IO_CONTROL: number;
-   REG_BAL_CTRL: number;
-   REG_BAL_TIME: number;
-   REG_ADC_CONVERT: number;
-   REG_ADDR_CTRL: number;
-   REG_RESET: number;
-   REG_FUNCTION_CONFIG: number;
+enum BQRegisters {
+   REG_DEV_STATUS = 0x00,
+   REG_GPAI = 0x01,
+   REG_VCELL1 = 0x03,
+   REG_VCELL2 = 0x05,
+   REG_VCELL3 = 0x07,
+   REG_VCELL4 = 0x09,
+   REG_VCELL5 = 0x0B,
+   REG_VCELL6 = 0x0D,
+   REG_TEMPERATURE1 = 0x0F,
+   REG_TEMPERATURE2 = 0x11,
+   REG_ALERT_STATUS = 0x20,
+   REG_FAULT_STATUS = 0x21,
+   REG_COV_FAULT = 0x22,
+   REG_CUV_FAULT = 0x23,
+   REG_ADC_CONTROL = 0x30,
+   REG_IO_CONTROL = 0x31,
+   REG_BAL_CTRL = 0x32,
+   REG_BAL_TIME = 0x33,
+   REG_ADC_CONVERT = 0x34,
+   REG_ADDR_CTRL = 0x3B,
+   REG_RESET = 0x3C,
+   REG_FUNCTION_CONFIG = 0x40
 }
 
 class BMSBoard {
    // TODO: Move to class for the TI BQ76PL536A-Q1 chip
    // registers for bq76PL536A-Q1 (https://www.ti.com/lit/ds/symlink/bq76pl536a-q1.pdf)
-   static Registers: BQRegisters = {
-      REG_DEV_STATUS: 0,
-      REG_GPAI: 1,
-      REG_VCELL1: 3,
-      REG_VCELL2: 5,
-      REG_VCELL3: 7,
-      REG_VCELL4: 9,
-      REG_VCELL5: 0xb,
-      REG_VCELL6: 0xd,
-      REG_TEMPERATURE1: 0xf,
-      REG_TEMPERATURE2: 0x11,
-      REG_ALERT_STATUS: 0x20,
-      REG_FAULT_STATUS: 0x21,
-      REG_COV_FAULT: 0x22,
-      REG_CUV_FAULT: 0x23,
-      REG_ADC_CONTROL: 0x30,
-      REG_IO_CONTROL: 0x31,
-      REG_BAL_CTRL: 0x32,
-      REG_BAL_TIME: 0x33,
-      REG_ADC_CONVERT: 0x34,
-      REG_ADDR_CTRL: 0x3b,
-      REG_RESET: 0x3c,
-      REG_FUNCTION_CONFIG: 0x40,
-   };
+   static Registers = BQRegisters;
 
    private pack: BMSPack;
    private id: number;
