@@ -2,13 +2,50 @@ import { SerialWrapper } from './serial-wrapper';
 import { crc, sleep } from './utils';
 import { BQRegisters } from './bms-board';
 
-export const BROADCAST_ADDR = 0x3f;
+export const BROADCAST_ADDR = 0x3F;
+export const RESET_VALUE = 0xA5;
 
 export class TeslaComms {
    private serial: SerialWrapper;
 
    constructor(serialWrapper: SerialWrapper) {
       this.serial = serialWrapper;
+   }
+
+   async close() {
+      await this.serial.close();
+   }
+
+   async renumberModules(maxModules: number): Promise<number> {
+      // Reset all of the addresses to 0x00
+      await this.writeByteToDeviceRegister(BROADCAST_ADDR, BQRegisters.REG_RESET, RESET_VALUE);
+
+      let nextAddress = 1;
+
+      // Read the status register at address zero, then assign an address until no more are left
+      try {
+         for (let i = 0; i < maxModules; i++) {
+            console.debug(`Trying next module...`);
+            await this.readBytesFromDeviceRegister(0x00, BQRegisters.REG_DEV_STATUS, 1);
+            console.debug(`Module found, assigning address ${nextAddress}`);
+            await this.writeByteToDeviceRegister(
+               0x00,
+               BQRegisters.REG_ADDR_CTRL,
+               nextAddress | 0x80
+            );
+
+            // Read from the new address to make sure it works
+            await this.readBytesFromDeviceRegister(
+               nextAddress,
+               BQRegisters.REG_ADDR_CTRL,
+               1
+            );
+            nextAddress++;
+         }
+      } catch (error) {
+         console.debug(`Didn't find module ${nextAddress}, stopping renumbering`);
+      }
+      return nextAddress - 1;
    }
 
    async pollModule(number: number) {
@@ -32,6 +69,8 @@ export class TeslaComms {
       // TODO: add CRC check, retry on failed, return as soon as all data received
       return this.serial.write(sendData).then(async () => {
          var data = await this.serial.readBytes(byteCount + 4);
+         // Saw this in other implementations, not sure why
+         data[0] = data[0] & 0b01111111;
          var checksum = crc(data.slice(0, byteCount + 3));
          if (data.length == byteCount + 4) {
             if (data[0] != sendData[0])
@@ -60,6 +99,8 @@ export class TeslaComms {
       this.serial.flushInput();
       return this.serial.write(sendData).then(async () => {
          const reply = await this.serial.readBytes(sendData.length);
+         // Saw this in other implementations, not sure why
+         reply[0] = reply[0] & 0b01111111;
 
          if (reply.length != sendData.length)
             throw (
