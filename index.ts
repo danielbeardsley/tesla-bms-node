@@ -1,4 +1,5 @@
 import { BMSPack } from "./src/bms-pack";
+import { sleep } from "./src/utils";
 
 var pack = new BMSPack('/dev/ttyUSB0');
 
@@ -46,8 +47,4 @@ var pack = new BMSPack('/dev/ttyUSB0');
 
 async function initPack(pack: BMSPack) {
    await pack.init();
-}
-
-async function sleep(ms: number) {
-   return new Promise(resolve => setTimeout(resolve, ms));
 }
