@@ -1,53 +1,76 @@
-const AsyncLock = require('async-lock');
-const SerialWrapper = require('./src/serial-wrapper');
-const { BMSBoard, BQAlerts, BQFaults } = require('./src/bms-board');
+import AsyncLock from 'async-lock';
+import { SerialWrapper } from './src/serial-wrapper';
+import { BMSBoard, BQAlerts, BQFaults } from './src/bms-board';
+
+interface BitFields {
+   [key: string]: number;
+}
 
 class BitmapField {
    // maps bit to symbolic name
    // { 0: 'jet engine enabled', 1: 'black hole collapsing' }
-   constructor(name, bits) {
+   private name: string;
+   private bits: BitFields;
+   private fields: { [key: string]: string };
+
+   constructor(name: string, bits: BitFields) {
       this.name = name;
       this.bits = bits;
       this.fields = {};
-      for (bit in bits) this.fields[this.bits[bit]] = bit;
+      for (const bit in bits) {
+         this.fields[this.bits[bit]] = bit;
+      }
    }
 
-   setFields(fieldValues, value) {
-      for (field in fieldValues) {
-         if (field in this.bitmap.fields) {
-            var bit = this.bitmap.fields[field];
-            var mask = 1 << bit;
+   setFields(fieldValues: { [key: string]: boolean }, value: number): number {
+      for (const field in fieldValues) {
+         if (field in this.fields) {
+            const bit = this.fields[field];
+            const mask = 1 << parseInt(bit);
 
             value = value & ~mask; // reset bit
             if (fieldValues[field]) value = value | mask;
-         } else throw "Unrecognized field '" + field + "'";
+         } else throw new Error(`Unrecognized field '${field}'`);
       }
-
       return value;
+   }
+
+   getFields(value: number): { [key: string]: boolean } {
+      const fields: { [key: string]: boolean } = {};
+      for (const field in this.fields) {
+         const bit = parseInt(this.fields[field]);
+         fields[field] = (value & (1 << bit)) !== 0;
+      }
+      return fields;
    }
 }
 
 class BitmapValue {
-   constructor(bitmap) {
+   private bitmap: BitmapField;
+   private value: number;
+
+   constructor(bitmap: BitmapField) {
       this.bitmap = bitmap;
       this.value = 0;
    }
 
-   setValue(value) {
-      this.value = 0;
+   setValue(value: number): void {
+      this.value = value;
    }
 
-   setFields(fields) {
-      this.value = this.bitmap.setFields(fields, value);
+   setFields(fields: { [key: string]: boolean }): void {
+      this.value = this.bitmap.setFields(fields, this.value);
    }
-   getValue() {
+
+   getValue(): number {
       return this.value;
    }
-   getFields() {
-      return this.bitmap.getFields(value);
+
+   getFields(): { [key: string]: boolean } {
+      return this.bitmap.getFields(this.value);
    }
 
-   toString() {
+   toString(): string {
       return 'NIY';
    }
 }
@@ -57,7 +80,11 @@ export class BMSPack {
    static MAX_MODULE_ADDR = 0x0a;
    static BROADCAST_ADDR = 0x3f;
 
-   constructor(serialDevice) {
+   private serial: SerialWrapper;
+   private modules: { [key: number]: BMSBoard };
+   private lock: AsyncLock;
+
+   constructor(serialDevice: string) {
       this.serial = new SerialWrapper(serialDevice, 612500);
       // Apperently, some modules can run at 631578
       // this.serial = new SerialWrapper(serialDevice, 631578 );
@@ -169,7 +196,7 @@ export class BMSPack {
    }
 
    //
-   async setBalanceTimer(seconds) {
+   async setBalanceTimer(seconds: number) {
       const isSeconds = seconds < 63;
       var count;
 
@@ -183,7 +210,7 @@ export class BMSPack {
    }
 
    // cells is two-dimensional array of booleans
-   async balance(cells) {
+   async balance(cells: boolean[][]) {
       for (var index in this.modules) {
          const subCells = cells[index];
 
@@ -236,7 +263,7 @@ export class BMSPack {
       }
    }
 
-   async pollModule(number) {
+   async pollModule(number: number) {
       var sendData = [number << 1, 0, 1]; // bytes to send
 
       return this.lock
@@ -257,7 +284,7 @@ export class BMSPack {
          });
    }
 
-   crc(data) {
+   crc(data: number[]): number {
       const generator = 0x07;
       var crc;
       var finalCRC;
@@ -279,7 +306,7 @@ export class BMSPack {
       return finalCRC;
    }
 
-   async readBytesFromDeviceRegister(device, register, byteCount) {
+   async readBytesFromDeviceRegister(device: number, register: number, byteCount: number) {
       var sendData = [device << 1, register, byteCount]; // bytes to send
 
       // TODO: add CRC check, retry on failed, return as soon as all data received
@@ -307,7 +334,7 @@ export class BMSPack {
       });
    }
 
-   async writeByteToDeviceRegister(device, register, byte) {
+   async writeByteToDeviceRegister(device: number, register: number, byte: number) {
       var sendData = [(device << 1) | 1, register, byte]; // bytes to send
 
       sendData.push(this.crc(sendData));
@@ -375,10 +402,10 @@ initPack(pack)
       console.error('Error: ', error);
    });
 
-async function initPack(pack) {
+async function initPack(pack: BMSPack) {
    await pack.init();
 }
 
-async function sleep(ms) {
+async function sleep(ms: number) {
    return new Promise(resolve => setTimeout(resolve, ms));
 }
