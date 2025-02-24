@@ -1,7 +1,7 @@
 import AsyncLock from 'async-lock';
 import { SerialWrapper } from './serial-wrapper';
 import { BMSBoard, BQAlerts, BQFaults } from './bms-board';
-import { sleep } from './utils';
+import { sleep, crc } from './utils';
 
 export class BMSPack {
    // static MAX_MODULE_ADDR = 0x3e
@@ -210,36 +210,13 @@ export class BMSPack {
          });
    }
 
-   crc(data: number[]): number {
-      const generator = 0x07;
-      var crc;
-      var finalCRC;
-
-      finalCRC = data.reduce((crc, byte) => {
-         // console.log( "data.reduce: crc=0x" + crc.toString(16) + ", byte=0x" + byte.toString(16) );
-         crc = crc ^ byte;
-         // console.log( "After xor, crc=0x" + crc.toString(16) );
-         for (var i = 0; i < 8; i++) {
-            if ((crc & 0x80) != 0) crc = ((crc << 1) & 0xff) ^ generator;
-            else crc = (crc << 1) & 0xff;
-            // console.log( "temp crc=0x" + crc.toString(16));
-         }
-         return crc;
-      }, 0x00);
-
-      // console.log( "CRC on " + data + " = 0x" + finalCRC.toString(16) );
-
-      return finalCRC;
-   }
-
    async readBytesFromDeviceRegister(device: number, register: number, byteCount: number) {
-      var sendData = [device << 1, register, byteCount]; // bytes to send
+      var sendData = [device << 1, register, byteCount];
 
       // TODO: add CRC check, retry on failed, return as soon as all data received
       return this.serial.write(sendData).then(async () => {
          var data = await this.serial.readBytes(byteCount + 4);
-         var crc = this.crc(data.slice(0, byteCount + 3));
-         // console.log( "Received data=" + data );
+         var checksum = crc(data.slice(0, byteCount + 3));
          if (data.length == byteCount + 4) {
             if (data[0] != sendData[0])
                throw 'first byte is ' + data[0] + ', not device id ' + device;
@@ -247,8 +224,8 @@ export class BMSPack {
                throw 'second byte is ' + data[1] + ', not register ' + register;
             if (data[2] != byteCount)
                throw 'third byte is ' + data[2] + ', not byte count ' + byteCount;
-            if (data[data.length - 1] != crc)
-               throw 'last byte is ' + data[data.length - 1] + ', not expected crc ' + crc;
+            if (data[data.length - 1] != checksum)
+               throw 'last byte is ' + data[data.length - 1] + ', not expected crc ' + checksum;
             return data.slice(3, 3 + byteCount);
          } else
             throw (
@@ -261,10 +238,9 @@ export class BMSPack {
    }
 
    async writeByteToDeviceRegister(device: number, register: number, byte: number) {
-      var sendData = [(device << 1) | 1, register, byte]; // bytes to send
+      var sendData = [(device << 1) | 1, register, byte];
 
-      sendData.push(this.crc(sendData));
-      // console.log( "writeBytes: sendData: " + sendData );
+      sendData.push(crc(sendData));
       this.serial.flushInput();
       return this.serial.write(sendData).then(async () => {
          const reply = await this.serial.readBytes(sendData.length);
