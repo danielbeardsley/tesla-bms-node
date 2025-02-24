@@ -1,4 +1,4 @@
-import { BMSPack } from '../index';
+import { BMSPack } from './bms-pack';
 
 interface BQRegisters {
    REG_DEV_STATUS: number;

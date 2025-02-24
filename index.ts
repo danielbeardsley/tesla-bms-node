@@ -1,7 +1,7 @@
+import { BMSPack } from "./src/bms-pack";
 
 var pack = new BMSPack('/dev/ttyUSB0');
 
-initPack(pack)
    .then(() => pack.wakeBoards())
    .then(async () => {
       for (var key in pack.modules) {
