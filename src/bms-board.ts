@@ -1,4 +1,4 @@
-import { BMSPack } from './bms-pack';
+import { TeslaComms } from './tesla-comms';
 
 enum BQRegisters {
    REG_DEV_STATUS = 0x00,
@@ -30,7 +30,7 @@ class BMSBoard {
    // registers for bq76PL536A-Q1 (https://www.ti.com/lit/ds/symlink/bq76pl536a-q1.pdf)
    static Registers = BQRegisters;
 
-   private pack: BMSPack;
+   private teslaComms: TeslaComms;
    private id: number;
    public cellVoltages: number[];
    public temperatures: number[];
@@ -40,21 +40,21 @@ class BMSBoard {
    private covFaults!: number;
    private cuvFaults!: number;
 
-   constructor(pack: BMSPack, id: number) {
-      this.pack = pack;
+   constructor(teslaComms: TeslaComms, id: number) {
+      this.teslaComms = teslaComms;
       this.id = id;
       this.cellVoltages = new Array(6).fill(0);
       this.temperatures = new Array(2).fill(0);
    }
 
    async readBytesFromRegister(register: number, byteCount: number) {
-      return this.pack.readBytesFromDeviceRegister(this.id, register, byteCount);
+      return this.teslaComms.readBytesFromDeviceRegister(this.id, register, byteCount);
    }
 
    async writeByteToRegister(register: number, byte: number) {
       // console.log( "BMS Board: writeByteToRegister(register=" + register + ")" )
 
-      return this.pack
+      return this.teslaComms
          .writeByteToDeviceRegister(this.id, register, byte)
          .then(() => this.readFaults());
       // .then( (faults) => console.log( "Faults: " + faults ) )

@@ -1,7 +1,8 @@
 import AsyncLock from 'async-lock';
 import { SerialWrapper } from './serial-wrapper';
 import { BMSBoard, BQAlerts, BQFaults } from './bms-board';
-import { sleep, crc } from './utils';
+import { sleep } from './utils';
+import { TeslaComms } from './tesla-comms';
 
 export class BMSPack {
    // static MAX_MODULE_ADDR = 0x3e
@@ -11,9 +12,11 @@ export class BMSPack {
    public modules: { [key: number]: BMSBoard };
    private serial: SerialWrapper;
    private lock: AsyncLock;
+   private teslaComms: TeslaComms;
 
    constructor(serialDevice: string) {
       this.serial = new SerialWrapper(serialDevice, 612500);
+      this.teslaComms = new TeslaComms(this.serial);
       // Apperently, some modules can run at 631578
       // this.serial = new SerialWrapper(serialDevice, 631578 );
       this.modules = {};
@@ -50,7 +53,7 @@ export class BMSPack {
       return (
          this.lock
             .acquire('key', async () =>
-               this.writeByteToDeviceRegister(
+               this.teslaComms.writeByteToDeviceRegister(
                   BMSPack.BROADCAST_ADDR,
                   BMSBoard.Registers.REG_IO_CONTROL,
                   0
@@ -62,7 +65,7 @@ export class BMSPack {
             .then(() => this.readAllIOControl())
             .then(() =>
                this.lock.acquire('key', async () =>
-                  this.writeByteToDeviceRegister(
+                  this.teslaComms.writeByteToDeviceRegister(
                      BMSPack.BROADCAST_ADDR,
                      BMSBoard.Registers.REG_ALERT_STATUS,
                      0x04
@@ -73,7 +76,7 @@ export class BMSPack {
             .then(() => this.checkAllStatuses())
             .then(() =>
                this.lock.acquire('key', async () =>
-                  this.writeByteToDeviceRegister(
+                  this.teslaComms.writeByteToDeviceRegister(
                      BMSPack.BROADCAST_ADDR,
                      BMSBoard.Registers.REG_ALERT_STATUS,
                      0
@@ -202,59 +205,11 @@ export class BMSPack {
          .then(reply => {
             if (reply.length > 4) {
                console.log('Found module #' + number + ': ', reply);
-               return new BMSBoard(this, number);
+               return new BMSBoard(this.teslaComms, number);
             } else {
                // console.log( "No module #" + number );
                return null;
             }
          });
-   }
-
-   async readBytesFromDeviceRegister(device: number, register: number, byteCount: number) {
-      var sendData = [device << 1, register, byteCount];
-
-      // TODO: add CRC check, retry on failed, return as soon as all data received
-      return this.serial.write(sendData).then(async () => {
-         var data = await this.serial.readBytes(byteCount + 4);
-         var checksum = crc(data.slice(0, byteCount + 3));
-         if (data.length == byteCount + 4) {
-            if (data[0] != sendData[0])
-               throw 'first byte is ' + data[0] + ', not device id ' + device;
-            if (data[1] != register)
-               throw 'second byte is ' + data[1] + ', not register ' + register;
-            if (data[2] != byteCount)
-               throw 'third byte is ' + data[2] + ', not byte count ' + byteCount;
-            if (data[data.length - 1] != checksum)
-               throw 'last byte is ' + data[data.length - 1] + ', not expected crc ' + checksum;
-            return data.slice(3, 3 + byteCount);
-         } else
-            throw (
-               'readBytesFromDeviceRegister: Expected ' +
-               (byteCount + 4) +
-               ' bytes, got ' +
-               data.length
-            );
-      });
-   }
-
-   async writeByteToDeviceRegister(device: number, register: number, byte: number) {
-      var sendData = [(device << 1) | 1, register, byte];
-
-      sendData.push(crc(sendData));
-      this.serial.flushInput();
-      return this.serial.write(sendData).then(async () => {
-         const reply = await this.serial.readBytes(sendData.length);
-
-         if (reply.length != sendData.length)
-            throw (
-               'writeByteToDeviceRegistr: Expected ' +
-               sendData.length +
-               ' bytes, got ' +
-               reply.length
-            );
-         for (var i = 0; i < reply.length; i++)
-            if (reply[i] != sendData[i])
-               throw 'Expected byte ' + i + ' to be ' + sendData[i] + ', was ' + reply[i];
-      });
    }
 }
