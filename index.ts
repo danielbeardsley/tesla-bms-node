@@ -80,8 +80,8 @@ export class BMSPack {
    static MAX_MODULE_ADDR = 0x0a;
    static BROADCAST_ADDR = 0x3f;
 
+   public modules: { [key: number]: BMSBoard };
    private serial: SerialWrapper;
-   private modules: { [key: number]: BMSBoard };
    private lock: AsyncLock;
 
    constructor(serialDevice: string) {
@@ -105,9 +105,7 @@ export class BMSPack {
    }
 
    async findBoards() {
-      // lock handling is in pollModule
-      var x;
-      // var modules = []
+      let x: number;
 
       for (x = 1; x < BMSPack.MAX_MODULE_ADDR; x++) {
          await this.pollModule(x).then(module => {
@@ -116,7 +114,6 @@ export class BMSPack {
             }
          });
       }
-      // console.log( this.modules );
    }
 
    async renumberBoardIDs() {}
@@ -198,15 +195,16 @@ export class BMSPack {
    //
    async setBalanceTimer(seconds: number) {
       const isSeconds = seconds < 63;
-      var count;
+      let count: number;
 
       if (isSeconds) count = seconds;
       else count = Math.ceil(seconds / 60);
 
-      for (var index in this.modules)
+      for (const index in this.modules) {
          await this.lock.acquire('key', () =>
             this.modules[index].setBalanceTimer(count, isSeconds)
          );
+      }
    }
 
    // cells is two-dimensional array of booleans
