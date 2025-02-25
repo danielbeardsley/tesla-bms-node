@@ -15,3 +15,12 @@ export function crc(data: number[]): number {
 
   return finalCRC;
 }
+
+export function bytesToUint16s(bytes: number[]) {
+  return bytes.reduce((acc, byte, index) => {
+    if (index % 2 === 0) {
+      acc.push((byte << 8) + bytes[index + 1]);
+    }
+    return acc;
+  }, [] as number[]);
+}

@@ -1,4 +1,5 @@
 import { TeslaComms } from './tesla-comms';
+import { bytesToUint16s } from './utils';
 
 export enum BQRegisters {
    REG_DEV_STATUS = 0x00,
@@ -123,15 +124,17 @@ class BMSBoard {
       var tempTemp, tempCalc, logTempTemp;
       var cellSum = 0;
 
-      this.moduleVolt = ((bytes[0] * 256 + bytes[1]) * 6.25) / (0.1875 * 2 ** 14); // 0.002034609;
+      const uint16s = bytesToUint16s(bytes);
+
+      this.moduleVolt = uint16s[0] * (6.25 / (0.1875 * 2 ** 14)); // 0.002034609;
       for (var i = 0; i < 6; i++) {
          const cellVoltage =
-            ((bytes[2 + i * 2] * 256 + bytes[2 + i * 2 + 1]) * 6250) / (16383 * 1000);
+            uint16s[i+1] * (6250 / (16383 * 1000));
          cellSum += cellVoltage;
          this.cellVoltages[i] = cellVoltage;
       }
 
-      tempTemp = 1.78 / ((bytes[14] * 256 + bytes[15] + 2) / 33046.0) - 3.57;
+      tempTemp = 1.78 / ((uint16s[7] + 2) / 33046.0) - 3.57;
 
       tempTemp = tempTemp * 1000;
       logTempTemp = Math.log(tempTemp);
@@ -142,7 +145,7 @@ class BMSBoard {
       // console.log( "Temp1 bytes=" + bytes[14] + ", " + bytes[15] + " = " + (bytes[14] * 256 + bytes[15]) )
 
       // TODO: This is from Arduino code, the constant for division is different above and below, which is right? Also the +2 looks strange
-      tempTemp = 1.78 / ((bytes[16] * 256 + bytes[17] + 2) / 33068.0) - 3.57;
+      tempTemp = 1.78 / ((uint16s[8] + 2) / 33068.0) - 3.57;
       tempTemp = tempTemp * 1000;
       logTempTemp = Math.log(tempTemp);
       tempCalc =
