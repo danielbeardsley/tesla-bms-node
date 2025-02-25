@@ -101,7 +101,6 @@ class BMSBoard {
          this.writeADCControl(false, true, true, true, 6)
             .then(() => this.writeIOControl(false, false, false, false, true, true)) // wait one ms here?
             .then(() => this.writeADCConvert(true))
-            // .then(() => new Promise(resolve => setTimeout(() => resolve(), 1000))) // waiting one second to test
             .then(() => this.readMultiRegisters())
       );
    }
@@ -191,7 +190,6 @@ class BMSBoard {
          (ts2connected ? 1 << 1 : 0) |
          (ts1connected ? 1 : 0);
 
-      // console.log( "writeIOControl: ts1connected = " + ts1connected + ", value=" + value );
       return this.writeByteToRegister(BMSBoard.Registers.REG_IO_CONTROL, value);
    }
 
@@ -212,7 +210,6 @@ class BMSBoard {
 
       if (cellCount > 1 && cellCount <= 6) value |= cellCount - 1;
 
-      // console.log( "writeADCControl(tempSensor1On=" + tempSensor1On+ "), value=" + value.toString(2) );
       return this.writeByteToRegister(BMSBoard.Registers.REG_ADC_CONTROL, value);
    }
 
@@ -229,7 +226,6 @@ class BMSBoard {
       const shouldBalance = this.cellVoltages.map(v => v > min + maxSpreadVolts);
       if (shouldBalance.some(b => b)) {
          await this.setBalanceTimer(balanceTimeSec);
-         console.log(`Balancing module ${this.id} for ${balanceTimeSec} seconds ${shouldBalance.map(b => b ? 'true' : 'false').join(', ')}`);
          this.balance(shouldBalance);
       }
    }
