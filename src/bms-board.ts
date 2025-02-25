@@ -226,8 +226,12 @@ class BMSBoard {
       const shouldBalance = this.cellVoltages.map(v => v > min + maxSpreadVolts);
       if (shouldBalance.some(b => b)) {
          await this.setBalanceTimer(balanceTimeSec);
-         this.balance(shouldBalance);
+         await this.balance(shouldBalance);
       }
+   }
+
+   async stopBalancing() {
+      return this.writeByteToRegister(BMSBoard.Registers.REG_BAL_CTRL, 0);
    }
 
    // cells is array of 6 booleans, true to balance

@@ -26,14 +26,15 @@ yargs(hideBin(process.argv))
         const teslaComms = await connect();
         try {
             const module = new BMSBoard(teslaComms, argv.module);
-            await module.balanceIfNeeded(0.1, 3600);
             while (true) {
-                await module.readValues();
+                await module.balanceIfNeeded(0.1, 3600);
                 const spread = module.getMaxVoltage() - module.getMinVoltage();
                 const cells = module.cellVoltages.map(v => v.toFixed(3)).join(', ');
                 const totalVolts = module.cellVoltages.reduce((a, b) => a + b, 0);
                 console.log(`Spread: ${(spread * 1000).toFixed(0)}mV, cells: ${cells}, total: ${totalVolts.toFixed(3)}V, moduleVolts: ${module.moduleVolt?.toFixed(3)}V`);
                 await sleep(30000);
+                await module.stopBalancing();
+                await sleep(30);
             }
         } finally {
             await teslaComms.close();
