@@ -159,6 +159,10 @@ class BMSBoard {
       return Math.min(...this.cellVoltages);
    }
 
+   getMaxVoltage() {
+      return Math.max(...this.cellVoltages);
+   }
+
    getMaxTemperature() {
       return Math.max(...this.temperatures);
    }
