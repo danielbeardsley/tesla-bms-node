@@ -1,6 +1,6 @@
 import { SerialWrapper } from './serial-wrapper';
 import { crc, sleep } from './utils';
-import { BQRegisters } from './tesla-module';
+import { Registers } from './tesla-module';
 
 export const BROADCAST_ADDR = 0x3F;
 export const RESET_VALUE = 0xA5;
@@ -18,7 +18,7 @@ export class TeslaComms {
 
    async renumberModules(maxModules: number): Promise<number> {
       // Reset all of the addresses to 0x00
-      await this.writeByteToDeviceRegister(BROADCAST_ADDR, BQRegisters.REG_RESET, RESET_VALUE);
+      await this.writeByteToDeviceRegister(BROADCAST_ADDR, Registers.REG_RESET, RESET_VALUE);
 
       let nextAddress = 1;
 
@@ -26,18 +26,18 @@ export class TeslaComms {
       try {
          for (let i = 0; i < maxModules; i++) {
             console.debug(`Trying next module...`);
-            await this.readBytesFromDeviceRegister(0x00, BQRegisters.REG_DEV_STATUS, 1);
+            await this.readBytesFromDeviceRegister(0x00, Registers.REG_DEV_STATUS, 1);
             console.debug(`Module found, assigning address ${nextAddress}`);
             await this.writeByteToDeviceRegister(
                0x00,
-               BQRegisters.REG_ADDR_CTRL,
+               Registers.REG_ADDR_CTRL,
                nextAddress | 0x80
             );
 
             // Read from the new address to make sure it works
             await this.readBytesFromDeviceRegister(
                nextAddress,
-               BQRegisters.REG_ADDR_CTRL,
+               Registers.REG_ADDR_CTRL,
                1
             );
             nextAddress++;

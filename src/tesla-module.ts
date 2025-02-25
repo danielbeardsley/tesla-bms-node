@@ -1,7 +1,9 @@
 import { TeslaComms } from './tesla-comms';
 import { bytesToUint16s } from './utils';
 
-export enum BQRegisters {
+// TODO: Move to class for the TI BQ76PL536A-Q1 chip
+// registers for bq76PL536A-Q1 (https://www.ti.com/lit/ds/symlink/bq76pl536a-q1.pdf)
+export enum Registers {
    REG_DEV_STATUS = 0x00,
    REG_GPAI = 0x01,
    REG_VCELL1 = 0x03,
@@ -27,9 +29,6 @@ export enum BQRegisters {
 }
 
 class TeslaModule {
-   // TODO: Move to class for the TI BQ76PL536A-Q1 chip
-   // registers for bq76PL536A-Q1 (https://www.ti.com/lit/ds/symlink/bq76pl536a-q1.pdf)
-   static Registers = BQRegisters;
 
    private teslaComms: TeslaComms;
    private id: number;
@@ -62,11 +61,11 @@ class TeslaModule {
    }
 
    async writeAlertStatus(alertStatus: BQAlerts) {
-      return this.writeByteToRegister(TeslaModule.Registers.REG_ALERT_STATUS, alertStatus.getByte());
+      return this.writeByteToRegister(Registers.REG_ALERT_STATUS, alertStatus.getByte());
    }
 
    async readStatus() {
-      var bytes = await this.readBytesFromRegister(TeslaModule.Registers.REG_ALERT_STATUS, 4);
+      var bytes = await this.readBytesFromRegister(Registers.REG_ALERT_STATUS, 4);
 
       this.alerts = new BQAlerts(bytes[0]);
       this.faults = new BQFaults(bytes[1]);
@@ -108,7 +107,7 @@ class TeslaModule {
 
    /**
    async readConfig() {
-      return this.readBytesFromRegister(TeslaModule.Registers.REG_FUNCTION_CONFIG, 8).then(
+      return this.readBytesFromRegister(Registers.REG_FUNCTION_CONFIG, 8).then(
          bytes => {}
       );
    }
@@ -116,11 +115,11 @@ class TeslaModule {
 
    // async readVoltages()
    // {
-   // 	var bytes = await this.readBytesFromRegister( TeslaModule.Registers.REG_ALERT_STATUS, 4 );
+   // 	var bytes = await this.readBytesFromRegister(Registers.REG_ALERT_STATUS, 4 );
    // }
 
    async readMultiRegisters() {
-      const bytes = await this.readBytesFromRegister(TeslaModule.Registers.REG_GPAI, 18);
+      const bytes = await this.readBytesFromRegister(Registers.REG_GPAI, 18);
 
       const uint16s = bytesToUint16s(bytes);
 
@@ -157,7 +156,7 @@ class TeslaModule {
    }
 
    async readFaults() {
-      return this.readBytesFromRegister(TeslaModule.Registers.REG_FAULT_STATUS, 1).then(
+      return this.readBytesFromRegister(Registers.REG_FAULT_STATUS, 1).then(
          bytes => new BQFaults(bytes[0])
       );
    }
@@ -178,11 +177,11 @@ class TeslaModule {
          (ts2connected ? 1 << 1 : 0) |
          (ts1connected ? 1 : 0);
 
-      return this.writeByteToRegister(TeslaModule.Registers.REG_IO_CONTROL, value);
+      return this.writeByteToRegister(Registers.REG_IO_CONTROL, value);
    }
 
    async readIOControl() {
-      return this.readBytesFromRegister(TeslaModule.Registers.REG_IO_CONTROL, 1).then(bytes => {
+      return this.readBytesFromRegister(Registers.REG_IO_CONTROL, 1).then(bytes => {
          return new BQIOControl(bytes[0]);
       });
    }
@@ -196,12 +195,12 @@ class TeslaModule {
 
       if (cellCount > 1 && cellCount <= 6) value |= cellCount - 1;
 
-      return this.writeByteToRegister(TeslaModule.Registers.REG_ADC_CONTROL, value);
+      return this.writeByteToRegister(Registers.REG_ADC_CONTROL, value);
    }
 
    async writeADCConvert(initiateConversion: boolean) {
       return this.writeByteToRegister(
-         TeslaModule.Registers.REG_ADC_CONVERT,
+         Registers.REG_ADC_CONVERT,
          initiateConversion ? 1 : 0
       );
    }
@@ -217,7 +216,7 @@ class TeslaModule {
    }
 
    async stopBalancing() {
-      return this.writeByteToRegister(TeslaModule.Registers.REG_BAL_CTRL, 0);
+      return this.writeByteToRegister(Registers.REG_BAL_CTRL, 0);
    }
 
    // cells is array of 6 booleans, true to balance
@@ -227,7 +226,7 @@ class TeslaModule {
       for (var i = 0; i < 6; i++) if (cells[i]) regValue = regValue | (1 << i);
 
       // console.log( "Module " + this.id + ": Writing " + regValue.toString(16) + " to REG_BAL_CTRL");
-      return this.writeByteToRegister(TeslaModule.Registers.REG_BAL_CTRL, regValue);
+      return this.writeByteToRegister(Registers.REG_BAL_CTRL, regValue);
    }
 
    async setBalanceTimer(seconds: number) {
@@ -236,7 +235,7 @@ class TeslaModule {
       // if seconds is greater than 60, we set the top bit to 1 to indicate minutes
       const regValue = seconds > 60 ? (Math.floor(seconds / 60) | 1 << 7) : seconds;
 
-      return this.writeByteToRegister(TeslaModule.Registers.REG_BAL_TIME, regValue);
+      return this.writeByteToRegister(Registers.REG_BAL_TIME, regValue);
    }
 
    toString() {

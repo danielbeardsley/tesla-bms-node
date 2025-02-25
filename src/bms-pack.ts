@@ -1,6 +1,6 @@
 import AsyncLock from 'async-lock';
 import { SerialWrapper } from './serial-wrapper';
-import { TeslaModule, BQAlerts, BQFaults } from './tesla-module';
+import { TeslaModule, BQAlerts, BQFaults, Registers } from './tesla-module';
 import { sleep } from './utils';
 import { TeslaComms, BROADCAST_ADDR } from './tesla-comms';
 
@@ -61,7 +61,7 @@ export class BMSPack {
             .acquire('key', async () =>
                this.teslaComms.writeByteToDeviceRegister(
                   BROADCAST_ADDR,
-                  TeslaModule.Registers.REG_IO_CONTROL,
+                  Registers.REG_IO_CONTROL,
                   0
                )
             )
@@ -73,7 +73,7 @@ export class BMSPack {
                this.lock.acquire('key', async () =>
                   this.teslaComms.writeByteToDeviceRegister(
                      BROADCAST_ADDR,
-                     TeslaModule.Registers.REG_ALERT_STATUS,
+                     Registers.REG_ALERT_STATUS,
                      0x04
                   )
                )
@@ -84,7 +84,7 @@ export class BMSPack {
                this.lock.acquire('key', async () =>
                   this.teslaComms.writeByteToDeviceRegister(
                      BROADCAST_ADDR,
-                     TeslaModule.Registers.REG_ALERT_STATUS,
+                     Registers.REG_ALERT_STATUS,
                      0
                   )
                )
