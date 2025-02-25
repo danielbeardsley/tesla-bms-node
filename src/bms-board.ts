@@ -34,7 +34,7 @@ class BMSBoard {
    private id: number;
    public cellVoltages: number[];
    public temperatures: number[];
-   private moduleVolt?: number;
+   public moduleVolt?: number;
    public alerts!: BQAlerts;
    public faults!: BQFaults;
    private covFaults!: number;
@@ -223,6 +223,17 @@ class BMSBoard {
       );
    }
 
+   async balanceIfNeeded(maxSpreadVolts: number, balanceTimeSec: number) {
+      await this.readValues();
+      const min = this.getMinVoltage();
+      const shouldBalance = this.cellVoltages.map(v => v > min + maxSpreadVolts);
+      if (shouldBalance.some(b => b)) {
+         await this.setBalanceTimer(balanceTimeSec);
+         console.log(`Balancing module ${this.id} for ${balanceTimeSec} seconds ${shouldBalance.map(b => b ? 'true' : 'false').join(', ')}`);
+         this.balance(shouldBalance);
+      }
+   }
+
    // cells is array of 6 booleans, true to balance
    async balance(cells: boolean[]) {
       var regValue = 0;
@@ -233,13 +244,11 @@ class BMSBoard {
       return this.writeByteToRegister(BMSBoard.Registers.REG_BAL_CTRL, regValue);
    }
 
-   // if not isSeconds, then the count is in minutes
-   async setBalanceTimer(count: number, isSeconds: boolean) {
-      if (count >= 64) throw 'Invalid count, must be 0-63';
+   async setBalanceTimer(seconds: number) {
+      if (seconds > 60*60) throw 'Invalid balance timer, must be 0-3600';
 
-      var regValue = count | (isSeconds ? 0 : 1 << 7);
-
-      // console.log( "Setting balance timer: " + count + (isSeconds ? " s" : " min"));
+      // if seconds is greater than 60, we set the top bit to 1 to indicate minutes
+      var regValue = seconds > 60 ? (Math.floor(seconds / 60) | 1 << 7) : seconds;
 
       return this.writeByteToRegister(BMSBoard.Registers.REG_BAL_TIME, regValue);
    }
