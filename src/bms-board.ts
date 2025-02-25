@@ -121,8 +121,6 @@ class BMSBoard {
 
    async readMultiRegisters() {
       const bytes = await this.readBytesFromRegister(BMSBoard.Registers.REG_GPAI, 18);
-      var tempTemp, tempCalc, logTempTemp;
-      var cellSum = 0;
 
       const uint16s = bytesToUint16s(bytes);
 
@@ -130,33 +128,20 @@ class BMSBoard {
       for (var i = 0; i < 6; i++) {
          const cellVoltage =
             uint16s[i+1] * (6250 / (16383 * 1000));
-         cellSum += cellVoltage;
          this.cellVoltages[i] = cellVoltage;
       }
 
-      tempTemp = 1.78 / ((uint16s[7] + 2) / 33046.0) - 3.57;
+      this.temperatures[0] = this.convertUint16ToTemp(uint16s[7])
+      this.temperatures[1] = this.convertUint16ToTemp(uint16s[8])
+   }
 
-      tempTemp = tempTemp * 1000;
-      logTempTemp = Math.log(tempTemp);
-      tempCalc =
+   private convertUint16ToTemp(uint16: number) {
+      const tempTemp = (1.78 / ((uint16 + 2) / 33046.0) - 3.57) * 1000;
+      const logTempTemp = Math.log(tempTemp);
+      const tempCalc =
          1.0 /
-         (0.0007610373573 + 0.0002728524832 * logTempTemp + logTempTemp ** 3 * 0.0000001022822735);
-      this.temperatures[0] = tempCalc - 273.15;
-      // console.log( "Temp1 bytes=" + bytes[14] + ", " + bytes[15] + " = " + (bytes[14] * 256 + bytes[15]) )
-
-      // TODO: This is from Arduino code, the constant for division is different above and below, which is right? Also the +2 looks strange
-      tempTemp = 1.78 / ((uint16s[8] + 2) / 33068.0) - 3.57;
-      tempTemp = tempTemp * 1000;
-      logTempTemp = Math.log(tempTemp);
-      tempCalc =
-         1.0 /
-         (0.0007610373573 + 0.0002728524832 * logTempTemp + logTempTemp ** 3 * 0.0000001022822735);
-      this.temperatures[1] = tempCalc - 273.15;
-      // console.log( "Temp1 bytes=" + bytes[16] + ", " + bytes[17] + " = " + (bytes[16] * 256 + bytes[17]) )
-
-      // console.log( "Temperatures: " + this.temperatures[0] + ", " + this.temperatures[1] )
-
-      //turning the temperature wires off here seems to cause weird temperature glitches
+         (0.0007610373573 + 0.0002728524832 * logTempTemp + 0.0000001022822735 * (logTempTemp ** 3));
+      return tempCalc - 273.15;
    }
 
    getMinVoltage() {
