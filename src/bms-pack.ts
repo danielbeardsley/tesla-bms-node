@@ -129,43 +129,6 @@ export class BMSPack {
       }, 0);
    }
 
-   //
-   async setBalanceTimer(seconds: number) {
-      const isSeconds = seconds < 63;
-      let count: number;
-
-      if (isSeconds) count = seconds;
-      else count = Math.ceil(seconds / 60);
-
-      for (const index in this.modules) {
-         await this.lock.acquire('key', () =>
-            this.modules[index].setBalanceTimer(count, isSeconds)
-         );
-      }
-   }
-
-   // cells is two-dimensional array of booleans
-   async balance(cells: boolean[][]) {
-      for (var index in this.modules) {
-         const subCells = cells[index];
-
-         if (subCells.reduce((acc, current) => current || acc, false)) {
-            let success = false;
-            while (!success)
-               try {
-                  await this.lock.acquire('key', () => this.modules[index].balance(subCells));
-                  success = true;
-               } catch (error) {
-                  // todo: limit number of retries
-                  console.log(
-                     'Call to balance module ' + index + ' failed.: ' + error.stack + ', retrying'
-                  );
-                  await sleep(50);
-               }
-         }
-      }
-   }
-
    async stopBalancing() {
       const falses = [false, false, false, false, false, false];
 
