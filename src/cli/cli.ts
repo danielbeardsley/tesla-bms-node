@@ -27,14 +27,13 @@ yargs(hideBin(process.argv))
         try {
             const module = new TeslaModule(teslaComms, argv.module);
             while (true) {
-                await module.balanceIfNeeded(0.1, 3600);
+                const result = await module.balanceIfNeeded(0.1, 60);
                 const spread = module.getMaxVoltage() - module.getMinVoltage();
                 const cells = module.cellVoltages.map(v => v.toFixed(3)).join(', ');
                 const totalVolts = module.cellVoltages.reduce((a, b) => a + b, 0);
-                console.log(`Spread: ${(spread * 1000).toFixed(0)}mV, cells: ${cells}, total: ${totalVolts.toFixed(3)}V, moduleVolts: ${module.moduleVolt?.toFixed(3)}V`);
-                await sleep(30000);
-                await module.stopBalancing();
-                await sleep(30);
+                const balanceMessage = result.map(b => b ? 'X': ' ').join('|');
+                console.log(`Spread: ${(spread * 1000).toFixed(0)}mV, balance: ${balanceMessage}, cells: ${cells}, total: ${totalVolts.toFixed(3)}V, moduleVolts: ${module.moduleVolt?.toFixed(3)}V`);
+                await sleep(60000);
             }
         } finally {
             await teslaComms.close();

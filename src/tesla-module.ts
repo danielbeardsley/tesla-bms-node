@@ -1,5 +1,5 @@
 import { TeslaComms } from './tesla-comms';
-import { bytesToUint16s } from './utils';
+import { bytesToUint16s, sleep } from './utils';
 
 // TODO: Move to class for the TI BQ76PL536A-Q1 chip
 // registers for bq76PL536A-Q1 (https://www.ti.com/lit/ds/symlink/bq76pl536a-q1.pdf)
@@ -205,7 +205,9 @@ class TeslaModule {
       );
    }
 
-   async balanceIfNeeded(maxSpreadVolts: number, balanceTimeSec: number) {
+   async balanceIfNeeded(maxSpreadVolts: number, balanceTimeSec: number) : Promise<boolean[]> {
+      await this.stopBalancing();
+      await sleep(100);
       await this.readValues();
       const min = this.getMinVoltage();
       const shouldBalance = this.cellVoltages.map(v => v > min + maxSpreadVolts);
@@ -213,6 +215,7 @@ class TeslaModule {
          await this.setBalanceTimer(balanceTimeSec);
          await this.balance(shouldBalance);
       }
+      return shouldBalance;
    }
 
    async stopBalancing() {
