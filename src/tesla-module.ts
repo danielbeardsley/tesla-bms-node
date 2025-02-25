@@ -26,7 +26,7 @@ export enum BQRegisters {
    REG_FUNCTION_CONFIG = 0x40
 }
 
-class BMSBoard {
+class TeslaModule {
    // TODO: Move to class for the TI BQ76PL536A-Q1 chip
    // registers for bq76PL536A-Q1 (https://www.ti.com/lit/ds/symlink/bq76pl536a-q1.pdf)
    static Registers = BQRegisters;
@@ -62,11 +62,11 @@ class BMSBoard {
    }
 
    async writeAlertStatus(alertStatus: BQAlerts) {
-      return this.writeByteToRegister(BMSBoard.Registers.REG_ALERT_STATUS, alertStatus.getByte());
+      return this.writeByteToRegister(TeslaModule.Registers.REG_ALERT_STATUS, alertStatus.getByte());
    }
 
    async readStatus() {
-      var bytes = await this.readBytesFromRegister(BMSBoard.Registers.REG_ALERT_STATUS, 4);
+      var bytes = await this.readBytesFromRegister(TeslaModule.Registers.REG_ALERT_STATUS, 4);
 
       this.alerts = new BQAlerts(bytes[0]);
       this.faults = new BQFaults(bytes[1]);
@@ -108,7 +108,7 @@ class BMSBoard {
 
    /**
    async readConfig() {
-      return this.readBytesFromRegister(BMSBoard.Registers.REG_FUNCTION_CONFIG, 8).then(
+      return this.readBytesFromRegister(TeslaModule.Registers.REG_FUNCTION_CONFIG, 8).then(
          bytes => {}
       );
    }
@@ -116,11 +116,11 @@ class BMSBoard {
 
    // async readVoltages()
    // {
-   // 	var bytes = await this.readBytesFromRegister( BMSBoard.Registers.REG_ALERT_STATUS, 4 );
+   // 	var bytes = await this.readBytesFromRegister( TeslaModule.Registers.REG_ALERT_STATUS, 4 );
    // }
 
    async readMultiRegisters() {
-      const bytes = await this.readBytesFromRegister(BMSBoard.Registers.REG_GPAI, 18);
+      const bytes = await this.readBytesFromRegister(TeslaModule.Registers.REG_GPAI, 18);
 
       const uint16s = bytesToUint16s(bytes);
 
@@ -157,7 +157,7 @@ class BMSBoard {
    }
 
    async readFaults() {
-      return this.readBytesFromRegister(BMSBoard.Registers.REG_FAULT_STATUS, 1).then(
+      return this.readBytesFromRegister(TeslaModule.Registers.REG_FAULT_STATUS, 1).then(
          bytes => new BQFaults(bytes[0])
       );
    }
@@ -178,11 +178,11 @@ class BMSBoard {
          (ts2connected ? 1 << 1 : 0) |
          (ts1connected ? 1 : 0);
 
-      return this.writeByteToRegister(BMSBoard.Registers.REG_IO_CONTROL, value);
+      return this.writeByteToRegister(TeslaModule.Registers.REG_IO_CONTROL, value);
    }
 
    async readIOControl() {
-      return this.readBytesFromRegister(BMSBoard.Registers.REG_IO_CONTROL, 1).then(bytes => {
+      return this.readBytesFromRegister(TeslaModule.Registers.REG_IO_CONTROL, 1).then(bytes => {
          return new BQIOControl(bytes[0]);
       });
    }
@@ -196,12 +196,12 @@ class BMSBoard {
 
       if (cellCount > 1 && cellCount <= 6) value |= cellCount - 1;
 
-      return this.writeByteToRegister(BMSBoard.Registers.REG_ADC_CONTROL, value);
+      return this.writeByteToRegister(TeslaModule.Registers.REG_ADC_CONTROL, value);
    }
 
    async writeADCConvert(initiateConversion: boolean) {
       return this.writeByteToRegister(
-         BMSBoard.Registers.REG_ADC_CONVERT,
+         TeslaModule.Registers.REG_ADC_CONVERT,
          initiateConversion ? 1 : 0
       );
    }
@@ -217,7 +217,7 @@ class BMSBoard {
    }
 
    async stopBalancing() {
-      return this.writeByteToRegister(BMSBoard.Registers.REG_BAL_CTRL, 0);
+      return this.writeByteToRegister(TeslaModule.Registers.REG_BAL_CTRL, 0);
    }
 
    // cells is array of 6 booleans, true to balance
@@ -227,7 +227,7 @@ class BMSBoard {
       for (var i = 0; i < 6; i++) if (cells[i]) regValue = regValue | (1 << i);
 
       // console.log( "Module " + this.id + ": Writing " + regValue.toString(16) + " to REG_BAL_CTRL");
-      return this.writeByteToRegister(BMSBoard.Registers.REG_BAL_CTRL, regValue);
+      return this.writeByteToRegister(TeslaModule.Registers.REG_BAL_CTRL, regValue);
    }
 
    async setBalanceTimer(seconds: number) {
@@ -236,11 +236,11 @@ class BMSBoard {
       // if seconds is greater than 60, we set the top bit to 1 to indicate minutes
       const regValue = seconds > 60 ? (Math.floor(seconds / 60) | 1 << 7) : seconds;
 
-      return this.writeByteToRegister(BMSBoard.Registers.REG_BAL_TIME, regValue);
+      return this.writeByteToRegister(TeslaModule.Registers.REG_BAL_TIME, regValue);
    }
 
    toString() {
-      return 'BMSBoard #' + this.id;
+      return 'TeslaModule #' + this.id;
    }
 }
 
@@ -356,4 +356,4 @@ class BQFaults {
    }
 }
 
-export { BMSBoard, BQAlerts, BQFaults };
+export { TeslaModule, BQAlerts, BQFaults };

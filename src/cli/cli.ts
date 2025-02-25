@@ -2,7 +2,7 @@ import yargs, {Argv} from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { TeslaComms } from '../tesla-comms';
 import { SerialWrapper } from '../serial-wrapper';
-import { BMSBoard } from '../bms-board';
+import { TeslaModule } from '../tesla-module';
 import { sleep } from '../utils';
 
 yargs(hideBin(process.argv))
@@ -25,7 +25,7 @@ yargs(hideBin(process.argv))
     async (argv: {module: number}) => {
         const teslaComms = await connect();
         try {
-            const module = new BMSBoard(teslaComms, argv.module);
+            const module = new TeslaModule(teslaComms, argv.module);
             while (true) {
                 await module.balanceIfNeeded(0.1, 3600);
                 const spread = module.getMaxVoltage() - module.getMinVoltage();

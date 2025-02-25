@@ -1,6 +1,6 @@
 import { SerialWrapper } from './serial-wrapper';
 import { crc, sleep } from './utils';
-import { BQRegisters } from './bms-board';
+import { BQRegisters } from './tesla-module';
 
 export const BROADCAST_ADDR = 0x3F;
 export const RESET_VALUE = 0xA5;

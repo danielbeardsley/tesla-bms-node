@@ -1,6 +1,6 @@
 import AsyncLock from 'async-lock';
 import { SerialWrapper } from './serial-wrapper';
-import { BMSBoard, BQAlerts, BQFaults } from './bms-board';
+import { TeslaModule, BQAlerts, BQFaults } from './tesla-module';
 import { sleep } from './utils';
 import { TeslaComms, BROADCAST_ADDR } from './tesla-comms';
 
@@ -8,7 +8,7 @@ export class BMSPack {
    // static MAX_MODULE_ADDR = 0x3e
    static MAX_MODULE_ADDR = 0x0a;
 
-   public modules: { [key: number]: BMSBoard };
+   public modules: { [key: number]: TeslaModule };
    private serial: SerialWrapper;
    private lock: AsyncLock;
    private teslaComms: TeslaComms;
@@ -42,7 +42,7 @@ export class BMSPack {
             this.teslaComms.pollModule(x)
          ).then(module => {
             if (module) {
-               this.modules[x] = new BMSBoard(this.teslaComms, module);
+               this.modules[x] = new TeslaModule(this.teslaComms, module);
                console.log(`Module ${x} found`);
             } else {
                console.log(`Module ${x} not found`)
@@ -61,7 +61,7 @@ export class BMSPack {
             .acquire('key', async () =>
                this.teslaComms.writeByteToDeviceRegister(
                   BROADCAST_ADDR,
-                  BMSBoard.Registers.REG_IO_CONTROL,
+                  TeslaModule.Registers.REG_IO_CONTROL,
                   0
                )
             )
@@ -73,7 +73,7 @@ export class BMSPack {
                this.lock.acquire('key', async () =>
                   this.teslaComms.writeByteToDeviceRegister(
                      BROADCAST_ADDR,
-                     BMSBoard.Registers.REG_ALERT_STATUS,
+                     TeslaModule.Registers.REG_ALERT_STATUS,
                      0x04
                   )
                )
@@ -84,7 +84,7 @@ export class BMSPack {
                this.lock.acquire('key', async () =>
                   this.teslaComms.writeByteToDeviceRegister(
                      BROADCAST_ADDR,
-                     BMSBoard.Registers.REG_ALERT_STATUS,
+                     TeslaModule.Registers.REG_ALERT_STATUS,
                      0
                   )
                )
