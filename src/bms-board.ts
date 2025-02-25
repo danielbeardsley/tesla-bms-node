@@ -37,8 +37,8 @@ class BMSBoard {
    public moduleVolt?: number;
    public alerts!: BQAlerts;
    public faults!: BQFaults;
-   private covFaults!: number;
-   private cuvFaults!: number;
+   public covFaults!: number;
+   public cuvFaults!: number;
 
    constructor(teslaComms: TeslaComms, id: number) {
       this.teslaComms = teslaComms;
@@ -105,11 +105,13 @@ class BMSBoard {
       );
    }
 
+   /**
    async readConfig() {
       return this.readBytesFromRegister(BMSBoard.Registers.REG_FUNCTION_CONFIG, 8).then(
          bytes => {}
       );
    }
+   */
 
    // async readVoltages()
    // {
@@ -180,9 +182,7 @@ class BMSBoard {
       ts1connected: boolean,
       ts2connected: boolean
    ) {
-      var value;
-
-      value =
+      const value =
          (auxConnected ? 1 << 7 : 0) |
          (gpioOutOpenDrain ? 1 << 6 : 0) |
          (gpioInHigh ? 1 << 5 : 0) |
@@ -243,10 +243,10 @@ class BMSBoard {
    }
 
    async setBalanceTimer(seconds: number) {
-      if (seconds > 60*60) throw 'Invalid balance timer, must be 0-3600';
+      if (seconds > 60*60) throw new Error('Invalid balance timer, must be 0-3600');
 
       // if seconds is greater than 60, we set the top bit to 1 to indicate minutes
-      var regValue = seconds > 60 ? (Math.floor(seconds / 60) | 1 << 7) : seconds;
+      const regValue = seconds > 60 ? (Math.floor(seconds / 60) | 1 << 7) : seconds;
 
       return this.writeByteToRegister(BMSBoard.Registers.REG_BAL_TIME, regValue);
    }

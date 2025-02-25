@@ -139,7 +139,7 @@ export class BMSPack {
    async checkAllStatuses() {
       for (var index in this.modules) {
          var faults = await this.lock.acquire('key', () => this.modules[index].readStatus());
-         // console.log( "Module " + index + ": " + faults );
+         console.log( "Module " + index + ": " + faults );
       }
    }
 
@@ -157,7 +157,7 @@ export class BMSPack {
    async readAllIOControl() {
       for (var index in this.modules) {
          var ioc = await this.lock.acquire('key', () => this.modules[index].readIOControl());
-         // console.log( "Module " + index + ": " + ioc );
+         console.log( "Module " + index + ": " + ioc );
       }
    }
 }

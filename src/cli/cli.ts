@@ -1,4 +1,4 @@
-import yargs from 'yargs/yargs';
+import yargs, {Argv} from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { TeslaComms } from '../tesla-comms';
 import { SerialWrapper } from '../serial-wrapper';
@@ -16,8 +16,8 @@ yargs(hideBin(process.argv))
     })
   .command('balance <module>',
     'Tell a module to balance itself and stream the voltages as they change',
-    (yargs) => {
-        yargs.positional('module', {
+    (args: Argv) => {
+        args.positional('module', {
             describe: 'module number',
             type: 'number',
         });

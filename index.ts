@@ -10,15 +10,11 @@ pack.init()
          var module = pack.modules[key];
          await module
             .readIOControl()
-            .then(ioControl => {})
             .then(() => {
                return module.readStatus();
             })
             .then(() => {
                return module.readValues();
-            })
-            .then(() => {
-               return module.readConfig();
             })
             .then(() => {
                return module.sleep();
