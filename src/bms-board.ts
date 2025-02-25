@@ -200,9 +200,7 @@ class BMSBoard {
    }
 
    async writeADCControl(adcOn: boolean, tempSensor1On: boolean, tempSensor2On: boolean, gpaiOn: boolean, cellCount: number) {
-      var value;
-
-      value =
+      let value =
          (adcOn ? 1 << 6 : 0) |
          (tempSensor2On ? 1 << 5 : 0) |
          (tempSensor1On ? 1 << 4 : 0) |
