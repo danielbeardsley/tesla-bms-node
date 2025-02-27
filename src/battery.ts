@@ -5,9 +5,6 @@ import { TeslaComms, BROADCAST_ADDR } from './tesla-comms';
 import type { Config } from './config';
 
 export class Battery {
-   // static MAX_MODULE_ADDR = 0x3e
-   static MAX_MODULE_ADDR = 0x0a;
-
    public modules: { [key: number]: TeslaModule };
    private config: Config;
    private lock: AsyncLock;
