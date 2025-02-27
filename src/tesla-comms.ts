@@ -46,7 +46,12 @@ export class TeslaComms {
          .catch(() => false);
    }
 
-   async readBytesFromDeviceRegister(device: number, register: number, byteCount: number, timeout: number = 100) {
+   async readBytesFromDeviceRegister(
+      device: number,
+      register: number,
+      byteCount: number,
+      timeout: number = 100
+   ) {
       const sendData = [device << 1, register, byteCount];
 
       // TODO: add CRC check, retry on failed, return as soon as all data received

@@ -39,7 +39,7 @@ export class Battery {
                   missingModules.push(moduleNumber);
                   console.log(`Module ${moduleNumber} not found`);
                }
-            })
+            });
       }
 
       if (missingModules.length > 0) {
