@@ -1,5 +1,4 @@
 import AsyncLock from 'async-lock';
-import { SerialWrapper } from './serial-wrapper';
 import { TeslaModule, BQAlerts, BQFaults, Registers } from './tesla-module';
 import { sleep } from './utils';
 import { TeslaComms, BROADCAST_ADDR } from './tesla-comms';
@@ -9,17 +8,13 @@ export class Battery {
    static MAX_MODULE_ADDR = 0x0a;
 
    public modules: { [key: number]: TeslaModule };
-   private serial: SerialWrapper;
    private lock: AsyncLock;
    private teslaComms: TeslaComms;
 
-   constructor(serialDevice: string) {
-      this.serial = new SerialWrapper(serialDevice, 612500);
-      this.teslaComms = new TeslaComms(this.serial);
-      // Apperently, some modules can run at 631578
-      // this.serial = new SerialWrapper(serialDevice, 631578 );
+   constructor(teslaComms: TeslaComms) {
       this.modules = {};
       this.lock = new AsyncLock();
+      this.teslaComms = teslaComms;
    }
 
    async init() {
@@ -28,10 +23,6 @@ export class Battery {
          return this.findBoards();
       });
       // console.log( "Pack.init exit" );
-   }
-
-   close() {
-      this.serial.close();
    }
 
    async findBoards() {
