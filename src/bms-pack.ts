@@ -35,21 +35,22 @@ export class BMSPack {
    }
 
    async findBoards() {
-      let x: number;
+      let moduleNumber: number;
 
-      for (x = 1; x < BMSPack.MAX_MODULE_ADDR; x++) {
-         await this.lock.acquire('key', () =>
-            this.teslaComms.pollModule(x)
-         ).then(module => {
-            if (module) {
-               this.modules[x] = new TeslaModule(this.teslaComms, module);
-               console.log(`Module ${x} found`);
-            } else {
-               console.log(`Module ${x} not found`)
-            }
-         }).catch(() => {
-            console.log(`Error polling module ${x}`);
-         });
+      for (moduleNumber = 1; moduleNumber < BMSPack.MAX_MODULE_ADDR; moduleNumber++) {
+         await this.lock
+            .acquire('key', () => this.teslaComms.pollModule(moduleNumber))
+            .then(module => {
+               if (module) {
+                  this.modules[moduleNumber] = new TeslaModule(this.teslaComms, moduleNumber);
+                  console.log(`Module ${moduleNumber} found`);
+               } else {
+                  console.log(`Module ${moduleNumber} not found`);
+               }
+            })
+            .catch(() => {
+               console.log(`Error polling module ${moduleNumber}`);
+            });
       }
    }
 
@@ -101,21 +102,23 @@ export class BMSPack {
    }
 
    hasAlert() {
-      for (var index in this.modules)
+      for (const index in this.modules) {
          if (!this.modules[index].alerts.equals(BQAlerts.none)) return true;
+      }
       return false;
    }
 
    hasFault() {
-      for (var index in this.modules)
+      for (const index in this.modules) {
          if (!this.modules[index].faults.equals(BQFaults.none)) return true;
+      }
       return false;
    }
 
    getMinVoltage() {
       console.log('getMinVoltage: values=' + Object.values(this.modules));
       return Object.values(this.modules).reduce((result, module) => {
-         var v = module.getMinVoltage();
+         const v = module.getMinVoltage();
          if (v < result) return v;
          else return result;
       }, 5);
@@ -123,29 +126,30 @@ export class BMSPack {
 
    getMaxTemperature() {
       return Object.values(this.modules).reduce((result, module) => {
-         var temperature = module.getMaxTemperature();
+         const temperature = module.getMaxTemperature();
          if (temperature > result) return temperature;
-         else return result;
+         return result;
       }, 0);
    }
 
    async stopBalancing() {
       const falses = [false, false, false, false, false, false];
 
-      for (var index in this.modules)
+      for (const index in this.modules) {
          await this.lock.acquire('key', () => this.modules[index].balance(falses));
+      }
    }
 
    async checkAllStatuses() {
-      for (var index in this.modules) {
-         var faults = await this.lock.acquire('key', () => this.modules[index].readStatus());
-         console.log( "Module " + index + ": " + faults );
+      for (const index in this.modules) {
+         const faults = await this.lock.acquire('key', () => this.modules[index].readStatus());
+         console.log('Module ' + index + ': ' + faults);
       }
    }
 
    async readAll() {
-      for (var key in this.modules) {
-         var module = this.modules[key];
+      for (const key in this.modules) {
+         const module = this.modules[key];
          await this.lock.acquire('key', () =>
             module
                .readStatus() // this reads faults and alerts
@@ -155,9 +159,9 @@ export class BMSPack {
    }
 
    async readAllIOControl() {
-      for (var index in this.modules) {
-         var ioc = await this.lock.acquire('key', () => this.modules[index].readIOControl());
-         console.log( "Module " + index + ": " + ioc );
+      for (const index in this.modules) {
+         const ioc = await this.lock.acquire('key', () => this.modules[index].readIOControl());
+         console.log(`Module ${index}: ${ioc}`);
       }
    }
 }
