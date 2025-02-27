@@ -5,7 +5,7 @@ const battery = new Battery('/dev/ttyUSB0');
 
 battery
    .init()
-   .then(() => battery.wakeBoards())
+   .then(() => battery.wakeModules())
    .then(async () => {
       for (const key in battery.modules) {
          const module = battery.modules[key];

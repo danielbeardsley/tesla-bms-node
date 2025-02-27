@@ -46,44 +46,13 @@ export class Battery {
       }
    }
 
-   async wakeBoards() {
-      return (
-         this.lock
-            .acquire('key', async () =>
-               this.teslaComms.writeByteToDeviceRegister(
-                  BROADCAST_ADDR,
-                  Registers.REG_IO_CONTROL,
-                  0
-               )
-            )
-            // return this.lock.acquire( 'key', () => 1)
-            .then(() => sleep(2))
-            .then(() => this.checkAllStatuses())
-            .then(() => this.readAllIOControl())
-            .then(() =>
-               this.lock.acquire('key', async () =>
-                  this.teslaComms.writeByteToDeviceRegister(
-                     BROADCAST_ADDR,
-                     Registers.REG_ALERT_STATUS,
-                     0x04
-                  )
-               )
-            )
-            .then(() => sleep(2))
-            .then(() => this.checkAllStatuses())
-            .then(() =>
-               this.lock.acquire('key', async () =>
-                  this.teslaComms.writeByteToDeviceRegister(
-                     BROADCAST_ADDR,
-                     Registers.REG_ALERT_STATUS,
-                     0
-                  )
-               )
-            )
-            .then(() => sleep(2))
-            .then(() => this.checkAllStatuses())
-            .then(() => console.log('Boards should be awake'))
-      );
+   async wakeModules() {
+      return this.lock
+         .acquire('key', async () =>
+            this.teslaComms.writeByteToDeviceRegister(BROADCAST_ADDR, Registers.REG_IO_CONTROL, 0)
+         )
+         .then(() => sleep(2))
+         .then(() => this.checkAllStatuses());
    }
 
    async sleep() {
