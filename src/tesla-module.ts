@@ -52,12 +52,9 @@ class TeslaModule {
    }
 
    async writeByteToRegister(register: number, byte: number) {
-      // console.log( "BMS Board: writeByteToRegister(register=" + register + ")" )
-
       return this.teslaComms
          .writeByteToDeviceRegister(this.id, register, byte)
          .then(() => this.readFaults());
-      // .then( (faults) => console.log( "Faults: " + faults ) )
    }
 
    async writeAlertStatus(alertStatus: BQAlerts) {
@@ -65,7 +62,7 @@ class TeslaModule {
    }
 
    async readStatus() {
-      var bytes = await this.readBytesFromRegister(Registers.REG_ALERT_STATUS, 4);
+      const bytes = await this.readBytesFromRegister(Registers.REG_ALERT_STATUS, 4);
 
       this.alerts = new BQAlerts(bytes[0]);
       this.faults = new BQFaults(bytes[1]);
@@ -124,7 +121,7 @@ class TeslaModule {
       const uint16s = bytesToUint16s(bytes);
 
       this.moduleVolt = uint16s[0] * (6.25 / (0.1875 * 2 ** 14)); // 0.002034609;
-      for (var i = 0; i < 6; i++) {
+      for (let i = 0; i < 6; i++) {
          const cellVoltage =
             uint16s[i+1] * (6250 / (16383 * 1000));
          this.cellVoltages[i] = cellVoltage;
@@ -224,9 +221,9 @@ class TeslaModule {
 
    // cells is array of 6 booleans, true to balance
    async balance(cells: boolean[]) {
-      var regValue = 0;
+      let regValue = 0;
 
-      for (var i = 0; i < 6; i++) if (cells[i]) regValue = regValue | (1 << i);
+      for (let i = 0; i < 6; i++) if (cells[i]) regValue = regValue | (1 << i);
 
       // console.log( "Module " + this.id + ": Writing " + regValue.toString(16) + " to REG_BAL_CTRL");
       return this.writeByteToRegister(Registers.REG_BAL_CTRL, regValue);
@@ -242,7 +239,7 @@ class TeslaModule {
    }
 
    toString() {
-      return 'TeslaModule #' + this.id;
+      return `TeslaModule #${this.id}`;
    }
 }
 
@@ -252,7 +249,7 @@ class BQIOControl {
       this.byteValue = byteValue;
    }
    toString(): string {
-      var result = 'IO Control: Aux: ';
+      let result = 'IO Control: Aux: ';
       if (this.byteValue & (1 << 7)) result += ' connected to REG50, ';
       else result += ' Open, ';
 
@@ -276,8 +273,8 @@ class BQIOControl {
       else result += ' Not connected';
 
       result += 'TS1: ';
-      if (this.byteValue & (1 << 0)) result += ' Connectetd';
-      if (this.byteValue == 0) result += ' Not connected';
+      if (this.byteValue & (1 << 0)) result += ' Connected';
+      if (this.byteValue === 0) result += ' Not connected';
 
       return result;
    }
@@ -310,14 +307,14 @@ class BQAlerts {
    }
 
    equals(other: BQAlerts): boolean {
-      var result = other.byteValue == this.byteValue;
+      const result = other.byteValue === this.byteValue;
 
       return result;
    }
 
    toString(): string {
-      var result = 'Alerts: ';
-      if (this.byteValue & (1 << 7)) result += ' Address has not been assigned';
+      let result = 'Alerts: ';
+      if (this.byteValue & (1 << 7)) result += ` Address has not been assigned`;
       if (this.byteValue & (1 << 6)) result += ' Group 3 protected registers are invalid';
       if (this.byteValue & (1 << 5)) result += ' Uncorrectable EPROM error';
       if (this.byteValue & (1 << 4)) result += ' Alert asserted';
@@ -325,7 +322,7 @@ class BQAlerts {
       if (this.byteValue & (1 << 2)) result += ' Sleep mode was activated';
       if (this.byteValue & (1 << 1)) result += ' Overtemperature on TS2';
       if (this.byteValue & (1 << 0)) result += ' Overtemperature on TS1';
-      if (this.byteValue == 0) result += ' None';
+      if (this.byteValue === 0) result += ' None';
 
       return result;
    }
@@ -341,18 +338,20 @@ class BQFaults {
    }
 
    equals(other: BQFaults): boolean {
-      return other.byteValue == this.byteValue;
+      const result = other.byteValue === this.byteValue;
+
+      return result;
    }
 
    toString(): string {
-      var result = 'Faults: ';
+      let result = 'Faults: ';
       if (this.byteValue & (1 << 5)) result += ' Internal Consistency Check Failed';
       if (this.byteValue & (1 << 4)) result += ' Fault Forced';
       if (this.byteValue & (1 << 3)) result += ' Power-on-reset occurred';
       if (this.byteValue & (1 << 2)) result += ' CRC error detected in last packet';
       if (this.byteValue & (1 << 1)) result += ' Undervoltage';
       if (this.byteValue & (1 << 0)) result += ' Overvoltage';
-      if (this.byteValue == 0) result += ' None';
+      if (this.byteValue === 0) result += ' None';
 
       return result;
    }

@@ -42,7 +42,7 @@ export class TeslaComms {
             );
             nextAddress++;
          }
-      } catch (error) {
+      } catch {
          console.debug(`Didn't find module ${nextAddress}, stopping renumbering`);
       }
       return nextAddress - 1;
@@ -64,36 +64,33 @@ export class TeslaComms {
    }
 
    async readBytesFromDeviceRegister(device: number, register: number, byteCount: number) {
-      var sendData = [device << 1, register, byteCount];
+      const sendData = [device << 1, register, byteCount];
 
       // TODO: add CRC check, retry on failed, return as soon as all data received
       return this.serial.write(sendData).then(async () => {
-         var data = await this.serial.readBytes(byteCount + 4);
+         const data = await this.serial.readBytes(byteCount + 4);
          // Saw this in other implementations, not sure why
          data[0] = data[0] & 0b01111111;
-         var checksum = crc(data.slice(0, byteCount + 3));
-         if (data.length == byteCount + 4) {
-            if (data[0] != sendData[0])
-               throw 'first byte is ' + data[0] + ', not device id ' + device;
-            if (data[1] != register)
-               throw 'second byte is ' + data[1] + ', not register ' + register;
-            if (data[2] != byteCount)
-               throw 'third byte is ' + data[2] + ', not byte count ' + byteCount;
-            if (data[data.length - 1] != checksum)
-               throw 'last byte is ' + data[data.length - 1] + ', not expected crc ' + checksum;
+         const checksum = crc(data.slice(0, byteCount + 3));
+         if (data.length === byteCount + 4) {
+            if (data[0] !== sendData[0])
+               throw new Error(`first byte is ${data[0]}, not device id ${device}`);
+            if (data[1] !== register)
+               throw new Error(`second byte is ${data[1]}, not register ${register}`);
+            if (data[2] !== byteCount)
+               throw new Error(`third byte is ${data[2]}, not byte count ${byteCount}`);
+            if (data[data.length - 1] !== checksum)
+               throw new Error(`last byte is ${data[data.length - 1]}, not expected crc ${checksum}`);
             return data.slice(3, 3 + byteCount);
          } else
-            throw (
-               'readBytesFromDeviceRegister: Expected ' +
-               (byteCount + 4) +
-               ' bytes, got ' +
-               data.length
+            throw new Error(
+               `readBytesFromDeviceRegister: Expected ${byteCount + 4} bytes, got ${data.length}`
             );
       });
    }
 
    async writeByteToDeviceRegister(device: number, register: number, byte: number) {
-      var sendData = [(device << 1) | 1, register, byte];
+      const sendData = [(device << 1) | 1, register, byte];
 
       sendData.push(crc(sendData));
       this.serial.flushInput();
@@ -102,16 +99,13 @@ export class TeslaComms {
          // Saw this in other implementations, not sure why
          reply[0] = reply[0] & 0b01111111;
 
-         if (reply.length != sendData.length)
-            throw (
-               'writeByteToDeviceRegistr: Expected ' +
-               sendData.length +
-               ' bytes, got ' +
-               reply.length
+         if (reply.length !== sendData.length)
+            throw new Error(
+               `writeByteToDeviceRegistr: Expected ${sendData.length} bytes, got ${reply.length}`
             );
-         for (var i = 0; i < reply.length; i++)
-            if (reply[i] != sendData[i])
-               throw 'Expected byte ' + i + ' to be ' + sendData[i] + ', was ' + reply[i];
+         for (let i = 0; i < reply.length; i++)
+            if (reply[i] !== sendData[i])
+               throw new Error(`Expected byte ${i} to be ${sendData[i]}, was ${reply[i]}`);
       });
    }
 }

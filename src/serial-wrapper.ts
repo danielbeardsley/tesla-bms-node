@@ -95,7 +95,9 @@ export class SerialWrapper {
         if (this.buffer.length < numBytes) {
           return false;
         }
-        timeoutid && clearTimeout(timeoutid);
+        if (timeoutid) {
+          clearTimeout(timeoutid);
+        }
         const buffer = this.buffer.slice(0, numBytes);
         this.buffer = this.buffer.slice(numBytes);
         resolve(buffer);

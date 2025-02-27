@@ -1,13 +1,13 @@
 import { BMSPack } from "./src/bms-pack";
 import { sleep } from "./src/utils";
 
-var pack = new BMSPack('/dev/ttyUSB0');
+const pack = new BMSPack('/dev/ttyUSB0');
 
 pack.init()
    .then(() => pack.wakeBoards())
    .then(async () => {
-      for (var key in pack.modules) {
-         var module = pack.modules[key];
+      for (const key in pack.modules) {
+         const module = pack.modules[key];
          await module
             .readIOControl()
             .then(() => {
