@@ -40,27 +40,18 @@ export class TeslaComms {
       return nextAddress - 1;
    }
 
-   async pollModule(number: number) {
-      const sendData = [number << 1, 0, 1]; // bytes to send
-
-      await this.serial.write(sendData);
-      await sleep(40);
-      const reply = await this.serial.readAll();
-
-      if (reply.length > 4) {
-         console.log('Found module #' + number + ': ', reply);
-         return number;
-      } else {
-         return null;
-      }
+   async isModuleAlive(number: number): Promise<boolean> {
+      return this.readBytesFromDeviceRegister(number, Registers.REG_DEV_STATUS, 1, 40)
+         .then(() => true)
+         .catch(() => false);
    }
 
-   async readBytesFromDeviceRegister(device: number, register: number, byteCount: number) {
+   async readBytesFromDeviceRegister(device: number, register: number, byteCount: number, timeout: number = 100) {
       const sendData = [device << 1, register, byteCount];
 
       // TODO: add CRC check, retry on failed, return as soon as all data received
       return this.serial.write(sendData).then(async () => {
-         const data = await this.serial.readBytes(byteCount + 4);
+         const data = await this.serial.readBytes(byteCount + 4, timeout);
          // Saw this in other implementations, not sure why
          data[0] = data[0] & 0b01111111;
          const checksum = crc(data.slice(0, byteCount + 3));

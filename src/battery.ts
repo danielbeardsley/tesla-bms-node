@@ -2,50 +2,52 @@ import AsyncLock from 'async-lock';
 import { TeslaModule, BQAlerts, BQFaults, Registers } from './tesla-module';
 import { sleep } from './utils';
 import { TeslaComms, BROADCAST_ADDR } from './tesla-comms';
+import type { Config } from './config';
 
 export class Battery {
    // static MAX_MODULE_ADDR = 0x3e
    static MAX_MODULE_ADDR = 0x0a;
 
    public modules: { [key: number]: TeslaModule };
+   private config: Config;
    private lock: AsyncLock;
    private teslaComms: TeslaComms;
 
-   constructor(teslaComms: TeslaComms) {
+   constructor(teslaComms: TeslaComms, config: Config) {
       this.modules = {};
       this.lock = new AsyncLock();
+      this.config = config;
       this.teslaComms = teslaComms;
    }
 
    async init() {
-      // console.log( "Pack.init entry" );
-      return this.serial.open().then(() => {
-         return this.findBoards();
-      });
-      // console.log( "Pack.init exit" );
+      await this.initModules();
    }
 
-   async findBoards() {
+   async initModules() {
       let moduleNumber: number;
+      const missingModules: number[] = [];
 
-      for (moduleNumber = 1; moduleNumber < Battery.MAX_MODULE_ADDR; moduleNumber++) {
+      for (moduleNumber = 1; moduleNumber < this.config.moduleCount; moduleNumber++) {
          await this.lock
-            .acquire('key', () => this.teslaComms.pollModule(moduleNumber))
-            .then(module => {
-               if (module) {
+            .acquire('key', () => this.teslaComms.isModuleAlive(moduleNumber))
+            .then(alive => {
+               if (alive) {
                   this.modules[moduleNumber] = new TeslaModule(this.teslaComms, moduleNumber);
                   console.log(`Module ${moduleNumber} found`);
                } else {
+                  missingModules.push(moduleNumber);
                   console.log(`Module ${moduleNumber} not found`);
                }
             })
-            .catch(() => {
-               console.log(`Error polling module ${moduleNumber}`);
-            });
+      }
+
+      if (missingModules.length > 0) {
+         const message = `Unable to communicate with modules: ${missingModules.join(', ')}`;
+         console.error(`${message}. Adjust config or use the renumber command`);
+         throw new Error(message);
       }
    }
-
-   async renumberBoardIDs() {}
 
    async wakeBoards() {
       return (
