@@ -4,7 +4,7 @@ import { TeslaModule, BQAlerts, BQFaults, Registers } from './tesla-module';
 import { sleep } from './utils';
 import { TeslaComms, BROADCAST_ADDR } from './tesla-comms';
 
-export class BMSPack {
+export class Battery {
    // static MAX_MODULE_ADDR = 0x3e
    static MAX_MODULE_ADDR = 0x0a;
 
@@ -37,7 +37,7 @@ export class BMSPack {
    async findBoards() {
       let moduleNumber: number;
 
-      for (moduleNumber = 1; moduleNumber < BMSPack.MAX_MODULE_ADDR; moduleNumber++) {
+      for (moduleNumber = 1; moduleNumber < Battery.MAX_MODULE_ADDR; moduleNumber++) {
          await this.lock
             .acquire('key', () => this.teslaComms.pollModule(moduleNumber))
             .then(module => {

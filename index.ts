@@ -1,14 +1,14 @@
-import { BMSPack } from './src/bms-pack';
+import { Battery } from './src/battery';
 import { sleep } from './src/utils';
 
-const pack = new BMSPack('/dev/ttyUSB0');
+const battery = new Battery('/dev/ttyUSB0');
 
-pack
+battery
    .init()
-   .then(() => pack.wakeBoards())
+   .then(() => battery.wakeBoards())
    .then(async () => {
-      for (const key in pack.modules) {
-         const module = pack.modules[key];
+      for (const key in battery.modules) {
+         const module = battery.modules[key];
          await module
             .readIOControl()
             .then(() => {
@@ -32,7 +32,7 @@ pack
    .then(async () => {
       while (true) {
          try {
-            await pack.modules[1].readValues();
+            await battery.modules[1].readValues();
          } catch (error) {
             console.error('Error reading values: ', error);
          }
