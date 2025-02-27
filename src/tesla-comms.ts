@@ -2,8 +2,8 @@ import { SerialWrapper } from './serial-wrapper';
 import { crc, sleep } from './utils';
 import { Registers } from './tesla-module';
 
-export const BROADCAST_ADDR = 0x3F;
-export const RESET_VALUE = 0xA5;
+export const BROADCAST_ADDR = 0x3f;
+export const RESET_VALUE = 0xa5;
 
 export class TeslaComms {
    private serial: SerialWrapper;
@@ -28,18 +28,10 @@ export class TeslaComms {
             console.debug(`Trying next module...`);
             await this.readBytesFromDeviceRegister(0x00, Registers.REG_DEV_STATUS, 1);
             console.debug(`Module found, assigning address ${nextAddress}`);
-            await this.writeByteToDeviceRegister(
-               0x00,
-               Registers.REG_ADDR_CTRL,
-               nextAddress | 0x80
-            );
+            await this.writeByteToDeviceRegister(0x00, Registers.REG_ADDR_CTRL, nextAddress | 0x80);
 
             // Read from the new address to make sure it works
-            await this.readBytesFromDeviceRegister(
-               nextAddress,
-               Registers.REG_ADDR_CTRL,
-               1
-            );
+            await this.readBytesFromDeviceRegister(nextAddress, Registers.REG_ADDR_CTRL, 1);
             nextAddress++;
          }
       } catch {
@@ -80,7 +72,9 @@ export class TeslaComms {
             if (data[2] !== byteCount)
                throw new Error(`third byte is ${data[2]}, not byte count ${byteCount}`);
             if (data[data.length - 1] !== checksum)
-               throw new Error(`last byte is ${data[data.length - 1]}, not expected crc ${checksum}`);
+               throw new Error(
+                  `last byte is ${data[data.length - 1]}, not expected crc ${checksum}`
+               );
             return data.slice(3, 3 + byteCount);
          } else
             throw new Error(

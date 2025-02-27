@@ -1,9 +1,10 @@
-import { BMSPack } from "./src/bms-pack";
-import { sleep } from "./src/utils";
+import { BMSPack } from './src/bms-pack';
+import { sleep } from './src/utils';
 
 const pack = new BMSPack('/dev/ttyUSB0');
 
-pack.init()
+pack
+   .init()
    .then(() => pack.wakeBoards())
    .then(async () => {
       for (const key in pack.modules) {

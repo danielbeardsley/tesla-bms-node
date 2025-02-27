@@ -2,111 +2,111 @@ import { SerialPort } from 'serialport';
 import { Buffer } from 'buffer';
 
 export class SerialWrapper {
-  private port!: SerialPort;
-  private buffer: number[];
-  private readQueue: (() => boolean)[];
-  private device: string;
-  private speed: number;
+   private port!: SerialPort;
+   private buffer: number[];
+   private readQueue: (() => boolean)[];
+   private device: string;
+   private speed: number;
 
-  constructor(device: string, speed: number) {
-    this.device = device;
-    this.speed = speed;
-    this.buffer = [];
-    this.readQueue = [];
-  }
+   constructor(device: string, speed: number) {
+      this.device = device;
+      this.speed = speed;
+      this.buffer = [];
+      this.readQueue = [];
+   }
 
-  async open(): Promise<SerialWrapper> {
-    return new Promise((resolve, reject) => {
-      this.port = new SerialPort({
-        path: this.device,
-        baudRate: this.speed
+   async open(): Promise<SerialWrapper> {
+      return new Promise((resolve, reject) => {
+         this.port = new SerialPort({
+            path: this.device,
+            baudRate: this.speed,
+         });
+
+         this.port.on('error', err => {
+            if (err) console.log('Error: ', err);
+         });
+
+         this.port.on('data', (data: Buffer) => {
+            this.buffer.push(...data);
+            this.processReadQueue();
+         });
+
+         this.port.on('open', () => resolve(this));
+         this.port.on('error', err => {
+            if (err) reject(err);
+         });
       });
+   }
 
-      this.port.on('error', (err) => {
-        if (err) console.log('Error: ', err);
+   close(): void {
+      this.port.close();
+   }
+
+   async write(buffer: number[] | Buffer): Promise<void> {
+      return new Promise((resolve, reject) => {
+         this.port.write(buffer, (err?: Error | null) => {
+            if (err) reject(err);
+            else {
+               this.port.drain((error?: Error | null) => {
+                  if (error) reject(error);
+                  else resolve();
+               });
+            }
+         });
       });
+   }
 
-      this.port.on('data', (data: Buffer) => {
-        this.buffer.push(...data);
-        this.processReadQueue();
-      });
-
-      this.port.on('open', () => resolve(this));
-      this.port.on('error', (err) => {
-        if (err) reject(err);
-      });
-    });
-  }
-
-  close(): void {
-    this.port.close();
-  }
-
-  async write(buffer: number[] | Buffer): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.port.write(buffer, (err?: Error | null) => {
-        if (err) reject(err);
-        else {
-          this.port.drain((error?: Error | null) => {
-            if (error) reject(error);
-            else resolve();
-          });
-        }
-      });
-    });
-  }
-
-  /**
-   * Let the first function in the queue know that there is data to read.
-   */
-  private processReadQueue(): void {
-    while (this.readQueue.length && this.buffer.length) {
-      // If the reader is unhappy with the data, we will wait
-      if (!this.readQueue[0]()) {
-        return;
+   /**
+    * Let the first function in the queue know that there is data to read.
+    */
+   private processReadQueue(): void {
+      while (this.readQueue.length && this.buffer.length) {
+         // If the reader is unhappy with the data, we will wait
+         if (!this.readQueue[0]()) {
+            return;
+         }
+         // Otherwise, we will remove the reader from the queue cause they
+         // were satisfied with the data.
+         this.readQueue.shift();
       }
-      // Otherwise, we will remove the reader from the queue cause they
-      // were satisfied with the data.
-      this.readQueue.shift();
-    }
-  }
+   }
 
-  readAll(): number[] {
-    const buffer = this.buffer;
-    this.buffer = [];
-    return buffer;
-  }
+   readAll(): number[] {
+      const buffer = this.buffer;
+      this.buffer = [];
+      return buffer;
+   }
 
-  /**
-   * Return a promise that will resolve when the requested number of bytes
-   * have been read. If the timeout is reached, the promise will reject.
-   */
-  async readBytes(numBytes: number, timeout: number = 100): Promise<number[]> {
-    return new Promise((resolve, reject) => {
-      const timeoutid: NodeJS.Timeout | null = 
-        timeout > 0
-          ? setTimeout(() => {
-              reject(new Error(`Timeout waiting for ${numBytes} bytes`));
-              this.readQueue.shift();
-            }, timeout)
-          : null;
+   /**
+    * Return a promise that will resolve when the requested number of bytes
+    * have been read. If the timeout is reached, the promise will reject.
+    */
+   async readBytes(numBytes: number, timeout: number = 100): Promise<number[]> {
+      return new Promise((resolve, reject) => {
+         const timeoutid: NodeJS.Timeout | null =
+            timeout > 0
+               ? setTimeout(() => {
+                    reject(new Error(`Timeout waiting for ${numBytes} bytes`));
+                    this.readQueue.shift();
+                 }, timeout)
+               : null;
 
-      this.readQueue.push(() => {
-        if (this.buffer.length < numBytes) {
-          return false;
-        }
-        if (timeoutid) {
-          clearTimeout(timeoutid);
-        }
-        const buffer = this.buffer.slice(0, numBytes);
-        this.buffer = this.buffer.slice(numBytes);
-        resolve(buffer);
-        return true;
+         this.readQueue.push(() => {
+            if (this.buffer.length < numBytes) {
+               return false;
+            }
+            if (timeoutid) {
+               clearTimeout(timeoutid);
+            }
+            const buffer = this.buffer.slice(0, numBytes);
+            this.buffer = this.buffer.slice(numBytes);
+            resolve(buffer);
+            return true;
+         });
       });
-    });
-  }
+   }
 
-  flushInput(): void {
-    this.buffer = [];
-  }
-} 
+   flushInput(): void {
+      this.buffer = [];
+   }
+}

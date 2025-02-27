@@ -10,9 +10,9 @@ export enum Registers {
    REG_VCELL2 = 0x05,
    REG_VCELL3 = 0x07,
    REG_VCELL4 = 0x09,
-   REG_VCELL5 = 0x0B,
-   REG_VCELL6 = 0x0D,
-   REG_TEMPERATURE1 = 0x0F,
+   REG_VCELL5 = 0x0b,
+   REG_VCELL6 = 0x0d,
+   REG_TEMPERATURE1 = 0x0f,
    REG_TEMPERATURE2 = 0x11,
    REG_ALERT_STATUS = 0x20,
    REG_FAULT_STATUS = 0x21,
@@ -23,13 +23,12 @@ export enum Registers {
    REG_BAL_CTRL = 0x32,
    REG_BAL_TIME = 0x33,
    REG_ADC_CONVERT = 0x34,
-   REG_ADDR_CTRL = 0x3B,
-   REG_RESET = 0x3C,
-   REG_FUNCTION_CONFIG = 0x40
+   REG_ADDR_CTRL = 0x3b,
+   REG_RESET = 0x3c,
+   REG_FUNCTION_CONFIG = 0x40,
 }
 
 class TeslaModule {
-
    private teslaComms: TeslaComms;
    private id: number;
    public cellVoltages: number[];
@@ -94,12 +93,10 @@ class TeslaModule {
       //ADC Auto mode, read every ADC input we can (Both Temps, Pack, 6 cells)
       //enable temperature measurement VSS pins
       //start all ADC conversions
-      return (
-         this.writeADCControl(false, true, true, true, 6)
-            .then(() => this.writeIOControl(false, false, false, false, true, true)) // wait one ms here?
-            .then(() => this.writeADCConvert(true))
-            .then(() => this.readMultiRegisters())
-      );
+      return this.writeADCControl(false, true, true, true, 6)
+         .then(() => this.writeIOControl(false, false, false, false, true, true)) // wait one ms here?
+         .then(() => this.writeADCConvert(true))
+         .then(() => this.readMultiRegisters());
    }
 
    /**
@@ -122,13 +119,12 @@ class TeslaModule {
 
       this.moduleVolt = uint16s[0] * (6.25 / (0.1875 * 2 ** 14)); // 0.002034609;
       for (let i = 0; i < 6; i++) {
-         const cellVoltage =
-            uint16s[i+1] * (6250 / (16383 * 1000));
+         const cellVoltage = uint16s[i + 1] * (6250 / (16383 * 1000));
          this.cellVoltages[i] = cellVoltage;
       }
 
-      this.temperatures[0] = this.convertUint16ToTemp(uint16s[7])
-      this.temperatures[1] = this.convertUint16ToTemp(uint16s[8])
+      this.temperatures[0] = this.convertUint16ToTemp(uint16s[7]);
+      this.temperatures[1] = this.convertUint16ToTemp(uint16s[8]);
    }
 
    private convertUint16ToTemp(uint16: number) {
@@ -136,7 +132,7 @@ class TeslaModule {
       const logTempTemp = Math.log(tempTemp);
       const tempCalc =
          1.0 /
-         (0.0007610373573 + 0.0002728524832 * logTempTemp + 0.0000001022822735 * (logTempTemp ** 3));
+         (0.0007610373573 + 0.0002728524832 * logTempTemp + 0.0000001022822735 * logTempTemp ** 3);
       return tempCalc - 273.15;
    }
 
@@ -183,7 +179,13 @@ class TeslaModule {
       });
    }
 
-   async writeADCControl(adcOn: boolean, tempSensor1On: boolean, tempSensor2On: boolean, gpaiOn: boolean, cellCount: number) {
+   async writeADCControl(
+      adcOn: boolean,
+      tempSensor1On: boolean,
+      tempSensor2On: boolean,
+      gpaiOn: boolean,
+      cellCount: number
+   ) {
       let value =
          (adcOn ? 1 << 6 : 0) |
          (tempSensor2On ? 1 << 5 : 0) |
@@ -196,13 +198,10 @@ class TeslaModule {
    }
 
    async writeADCConvert(initiateConversion: boolean) {
-      return this.writeByteToRegister(
-         Registers.REG_ADC_CONVERT,
-         initiateConversion ? 1 : 0
-      );
+      return this.writeByteToRegister(Registers.REG_ADC_CONVERT, initiateConversion ? 1 : 0);
    }
 
-   async balanceIfNeeded(maxSpreadVolts: number, balanceTimeSec: number) : Promise<boolean[]> {
+   async balanceIfNeeded(maxSpreadVolts: number, balanceTimeSec: number): Promise<boolean[]> {
       await this.stopBalancing();
       await sleep(100);
       await this.readValues();
@@ -230,10 +229,10 @@ class TeslaModule {
    }
 
    async setBalanceTimer(seconds: number) {
-      if (seconds > 60*60) throw new Error('Invalid balance timer, must be 0-3600');
+      if (seconds > 60 * 60) throw new Error('Invalid balance timer, must be 0-3600');
 
       // if seconds is greater than 60, we set the top bit to 1 to indicate minutes
-      const regValue = seconds > 60 ? (Math.floor(seconds / 60) | 1 << 7) : seconds;
+      const regValue = seconds > 60 ? Math.floor(seconds / 60) | (1 << 7) : seconds;
 
       return this.writeByteToRegister(Registers.REG_BAL_TIME, regValue);
    }

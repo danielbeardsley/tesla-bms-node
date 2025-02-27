@@ -38,18 +38,19 @@ export class BMSPack {
       let moduleNumber: number;
 
       for (moduleNumber = 1; moduleNumber < BMSPack.MAX_MODULE_ADDR; moduleNumber++) {
-         await this.lock.acquire('key', () =>
-            this.teslaComms.pollModule(moduleNumber)
-         ).then(module => {
-            if (module) {
-               this.modules[moduleNumber] = new TeslaModule(this.teslaComms, moduleNumber);
-               console.log(`Module ${moduleNumber} found`);
-            } else {
-               console.log(`Module ${moduleNumber} not found`)
-            }
-         }).catch(() => {
-            console.log(`Error polling module ${moduleNumber}`);
-         });
+         await this.lock
+            .acquire('key', () => this.teslaComms.pollModule(moduleNumber))
+            .then(module => {
+               if (module) {
+                  this.modules[moduleNumber] = new TeslaModule(this.teslaComms, moduleNumber);
+                  console.log(`Module ${moduleNumber} found`);
+               } else {
+                  console.log(`Module ${moduleNumber} not found`);
+               }
+            })
+            .catch(() => {
+               console.log(`Error polling module ${moduleNumber}`);
+            });
       }
    }
 
@@ -142,7 +143,7 @@ export class BMSPack {
    async checkAllStatuses() {
       for (const index in this.modules) {
          const faults = await this.lock.acquire('key', () => this.modules[index].readStatus());
-         console.log( "Module " + index + ": " + faults );
+         console.log('Module ' + index + ': ' + faults);
       }
    }
 
