@@ -33,7 +33,7 @@ class TeslaModule {
    private id: number;
    public cellVoltages: number[];
    public temperatures: number[];
-   public moduleVolt?: number;
+   public moduleVolts?: number;
    public alerts!: BQAlerts;
    public faults!: BQFaults;
    public covFaults!: number;
@@ -112,7 +112,7 @@ class TeslaModule {
 
       const uint16s = bytesToUint16s(bytes);
 
-      this.moduleVolt = uint16s[0] * (6.25 / (0.1875 * 2 ** 14)); // 0.002034609;
+      this.moduleVolts = uint16s[0] * (6.25 / (0.1875 * 2 ** 14)); // 0.002034609;
       for (let i = 0; i < 6; i++) {
          const cellVoltage = uint16s[i + 1] * (6250 / (16383 * 1000));
          this.cellVoltages[i] = cellVoltage;
