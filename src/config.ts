@@ -1,4 +1,5 @@
 import { z } from "zod";
+import config from '../config.json';
 
 const ConfigSchema = z.object({
    // Number of modules in the pack
@@ -17,3 +18,7 @@ export function validateConfig(json: object) {
 
 // extract the inferred type
 export type Config = z.infer<typeof ConfigSchema>;
+
+export function getConfig(): Config {
+   return validateConfig(config);
+}

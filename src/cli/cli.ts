@@ -5,9 +5,7 @@ import { SerialWrapper } from '../battery/serial-wrapper';
 import { TeslaModule } from '../battery/tesla-module';
 import { Battery } from '../battery/battery';
 import { sleep } from '../utils';
-import { validateConfig } from '../config';
-import type { Config } from '../config';
-import config from '../../config.json';
+import { getConfig } from '../config';
 
 interface ModuleArgs {
    module: number;
@@ -68,7 +66,7 @@ yargs(hideBin(process.argv))
    )
    .parse();
 
-async function connect() {
+async function getTeslaComms() {
    const config = getConfig();
    const serialConfig = config.battery.serialPort;
    const serial = new SerialWrapper(serialConfig.deviceName, serialConfig.baud);
@@ -78,13 +76,9 @@ async function connect() {
 
 async function getBattery() {
    const config = getConfig();
-   const teslaComms = await connect();
+   const teslaComms = await getTeslaComms();
    const battery = new Battery(teslaComms, config);
    await battery.init();
    await battery.readAll();
    return battery;
-}
-
-function getConfig(): Config {
-   return validateConfig(config);
 }
