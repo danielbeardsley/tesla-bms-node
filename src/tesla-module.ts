@@ -148,6 +148,10 @@ class TeslaModule {
       return Math.max(...this.temperatures);
    }
 
+   getMinTemperature() {
+      return Math.min(...this.temperatures);
+   }
+
    async readFaults() {
       return this.readBytesFromRegister(Registers.REG_FAULT_STATUS, 1).then(
          bytes => new BQFaults(bytes[0])

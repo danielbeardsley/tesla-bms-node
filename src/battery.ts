@@ -21,6 +21,10 @@ export class Battery {
       await this.initModules();
    }
 
+   close() {
+      this.teslaComms.close();
+   }
+
    async initModules() {
       let moduleNumber: number;
       const missingModules: number[] = [];
@@ -74,21 +78,26 @@ export class Battery {
       return false;
    }
 
-   getMinVoltage() {
-      console.log('getMinVoltage: values=' + Object.values(this.modules));
-      return Object.values(this.modules).reduce((result, module) => {
-         const v = module.getMinVoltage();
-         if (v < result) return v;
-         else return result;
-      }, 5);
+   getCellVoltageRange() {
+      const modules = Object.values(this.modules);
+      const min = Math.min(...modules.map((m) => m.getMinVoltage()));
+      const max = Math.max(...modules.map((m) => m.getMaxVoltage()));
+      return {
+         min,
+         max,
+         spread: max - min,
+      };
    }
 
-   getMaxTemperature() {
-      return Object.values(this.modules).reduce((result, module) => {
-         const temperature = module.getMaxTemperature();
-         if (temperature > result) return temperature;
-         return result;
-      }, 0);
+   getTemperatureRange() {
+      const modules = Object.values(this.modules);
+      const min = Math.min(...modules.map((m) => m.getMinTemperature()));
+      const max = Math.max(...modules.map((m) => m.getMaxTemperature()));
+      return {
+         min,
+         max,
+         spread: max - min,
+      };
    }
 
    async stopBalancing() {

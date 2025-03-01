@@ -3,7 +3,11 @@ import { hideBin } from 'yargs/helpers';
 import { TeslaComms } from '../tesla-comms';
 import { SerialWrapper } from '../serial-wrapper';
 import { TeslaModule } from '../tesla-module';
+import { Battery } from '../battery';
 import { sleep } from '../utils';
+import { validateConfig } from '../config';
+import type { Config } from '../config';
+import config from '../../config.json';
 
 interface ModuleArgs {
    module: number;
@@ -19,6 +23,17 @@ yargs(hideBin(process.argv))
          const moduleCount = await teslaComms.renumberModules(64);
          console.log(`Renumbered ${moduleCount} modules`);
          await teslaComms.close();
+      }
+   )
+   .command(
+      'cell-voltages',
+      'return the cell voltage range for the whole battery',
+      () => {},
+      async () => {
+         const battery = await getBattery();
+         const range = battery.getCellVoltageRange();
+         console.log(`Cell voltage spread:${(range.spread*1000).toFixed(0)}mV range: ${range.min.toFixed(3)}V - ${range.max.toFixed(3)}V`);
+         battery.close();
       }
    )
    .command<ModuleArgs>(
@@ -58,4 +73,18 @@ async function connect() {
    await serial.open();
    const teslaComms = new TeslaComms(serial);
    return teslaComms;
+}
+
+async function getBattery() {
+   const serial = new SerialWrapper('/dev/ttyUSB0', 612500);
+   await serial.open();
+   const teslaComms = new TeslaComms(serial);
+   const battery = new Battery(teslaComms, getConfig());
+   await battery.init();
+   await battery.readAll();
+   return battery;
+}
+
+function getConfig(): Config {
+   return validateConfig(config);
 }
