@@ -107,11 +107,6 @@ class TeslaModule {
    }
    */
 
-   // async readVoltages()
-   // {
-   // 	var bytes = await this.readBytesFromRegister(Registers.REG_ALERT_STATUS, 4 );
-   // }
-
    async readMultiRegisters() {
       const bytes = await this.readBytesFromRegister(Registers.REG_GPAI, 18);
 
