@@ -1,4 +1,4 @@
-import { Battery } from './src/battery';
+import { Battery } from './src/battery/battery';
 import { sleep } from './src/utils';
 
 const battery = new Battery('/dev/ttyUSB0');

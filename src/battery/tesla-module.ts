@@ -1,5 +1,5 @@
 import { TeslaComms } from './tesla-comms';
-import { bytesToUint16s, sleep } from './utils';
+import { bytesToUint16s, sleep } from '../utils';
 
 // TODO: Move to class for the TI BQ76PL536A-Q1 chip
 // registers for bq76PL536A-Q1 (https://www.ti.com/lit/ds/symlink/bq76pl536a-q1.pdf)

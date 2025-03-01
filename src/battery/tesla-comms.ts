@@ -1,5 +1,5 @@
 import { SerialWrapper } from './serial-wrapper';
-import { crc, sleep } from './utils';
+import { crc, sleep } from '../utils';
 import { Registers } from './tesla-module';
 
 export const BROADCAST_ADDR = 0x3f;

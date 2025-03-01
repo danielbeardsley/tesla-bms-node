@@ -1,8 +1,8 @@
 import AsyncLock from 'async-lock';
 import { TeslaModule, BQAlerts, BQFaults, Registers } from './tesla-module';
-import { sleep } from './utils';
+import { sleep } from '../utils';
 import { TeslaComms, BROADCAST_ADDR } from './tesla-comms';
-import type { Config } from './config';
+import type { Config } from '../config';
 
 export class Battery {
    public modules: { [key: number]: TeslaModule };
