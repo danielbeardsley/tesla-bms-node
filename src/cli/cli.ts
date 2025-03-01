@@ -69,17 +69,17 @@ yargs(hideBin(process.argv))
    .parse();
 
 async function connect() {
-   const serial = new SerialWrapper('/dev/ttyUSB0', 612500);
+   const config = getConfig();
+   const serialConfig = config.battery.serialPort;
+   const serial = new SerialWrapper(serialConfig.deviceName, serialConfig.baud);
    await serial.open();
-   const teslaComms = new TeslaComms(serial);
-   return teslaComms;
+   return new TeslaComms(serial);
 }
 
 async function getBattery() {
-   const serial = new SerialWrapper('/dev/ttyUSB0', 612500);
-   await serial.open();
-   const teslaComms = new TeslaComms(serial);
-   const battery = new Battery(teslaComms, getConfig());
+   const config = getConfig();
+   const teslaComms = await connect();
+   const battery = new Battery(teslaComms, config);
    await battery.init();
    await battery.readAll();
    return battery;
