@@ -2,7 +2,9 @@ import { z } from "zod";
 
 const ConfigSchema = z.object({
    // Number of modules in the pack
-   moduleCount: z.number().int().min(1).max(64),
+   battery: z.object({
+      moduleCount: z.number().int().min(1).max(64),
+   }),
 });
 
 export function validateConfig(json: object) {

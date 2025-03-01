@@ -29,7 +29,7 @@ export class Battery {
       let moduleNumber: number;
       const missingModules: number[] = [];
 
-      for (moduleNumber = 1; moduleNumber <= this.config.moduleCount; moduleNumber++) {
+      for (moduleNumber = 1; moduleNumber <= this.config.battery.moduleCount; moduleNumber++) {
          await this.lock
             .acquire('key', () => this.teslaComms.isModuleAlive(moduleNumber))
             .then(alive => {
