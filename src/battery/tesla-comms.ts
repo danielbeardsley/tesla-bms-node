@@ -8,12 +8,14 @@ export const RESET_VALUE = 0xa5;
 export class TeslaComms {
    private serial: SerialWrapper;
 
+   static BAUD = 612500;
+
    constructor(serialWrapper: SerialWrapper) {
       this.serial = serialWrapper;
    }
 
-   async close() {
-      await this.serial.close();
+   close() {
+      this.serial.close();
    }
 
    async renumberModules(maxModules: number): Promise<number> {
