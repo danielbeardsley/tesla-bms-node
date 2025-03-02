@@ -9,6 +9,10 @@ const ConfigSchema = z.object({
          deviceName: z.string().min(1), // like "/dev/ttyUSB0"
       }),
    }),
+   bms: z.object({
+      // How often to check the battery and inform the inverter
+      intervalMs: z.number().int().min(1000),
+   }),
 });
 
 export function validateConfig(json: object) {

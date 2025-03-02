@@ -1,44 +1,31 @@
 import { Battery } from './src/battery/battery';
-import { sleep } from './src/utils';
+import { TeslaComms } from './src/battery/tesla-comms';
+import { SerialWrapper } from './src/battery/serial-wrapper';
+import { getConfig } from './src/config';
+import { BMS } from './src/bms/bms';
+import { logger } from './src/logger';
 
-const battery = new Battery('/dev/ttyUSB0');
+async function getTeslaComms() {
+   const config = getConfig();
+   const serialConfig = config.battery.serialPort;
+   const serial = new SerialWrapper(serialConfig.deviceName, TeslaComms.BAUD);
+   await serial.open();
+   return new TeslaComms(serial);
+}
 
-battery
-   .init()
-   .then(() => battery.wakeModules())
-   .then(async () => {
-      for (const key in battery.modules) {
-         const module = battery.modules[key];
-         await module
-            .readIOControl()
-            .then(() => {
-               return module.readStatus();
-            })
-            .then(() => {
-               return module.readValues();
-            })
-            .then(() => {
-               return module.sleep();
-            })
-            .then(() => {
-               // return module.readStatus();
-            })
-            .then(() => {
-               console.log(module.cellVoltages);
-               console.log(module.temperatures);
-            });
-      }
-   })
-   .then(async () => {
-      while (true) {
-         try {
-            await battery.modules[1].readValues();
-         } catch (error) {
-            console.error('Error reading values: ', error);
-         }
-         await sleep(1000);
-      }
-   })
-   .catch(error => {
-      console.error('Error: ', error);
-   });
+async function getBattery() {
+   const config = getConfig();
+   const teslaComms = await getTeslaComms();
+   const battery = new Battery(teslaComms, config);
+   await battery.init();
+   await battery.readAll();
+   return battery;
+}
+
+async function main() {
+   const battery = await getBattery();
+   const bms = new BMS(battery, getConfig());
+   bms.startMonitoring();
+}
+
+main().then(()=> logger.info('exiting!'));
