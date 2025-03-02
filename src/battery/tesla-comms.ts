@@ -10,6 +10,7 @@ export class TeslaComms {
 
    static BAUD = 612500;
 
+
    constructor(serialWrapper: SerialWrapper) {
       this.serial = serialWrapper;
    }

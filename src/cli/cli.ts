@@ -69,7 +69,7 @@ yargs(hideBin(process.argv))
 async function getTeslaComms() {
    const config = getConfig();
    const serialConfig = config.battery.serialPort;
-   const serial = new SerialWrapper(serialConfig.deviceName, serialConfig.baud);
+   const serial = new SerialWrapper(serialConfig.deviceName, TeslaComms.BAUD);
    await serial.open();
    return new TeslaComms(serial);
 }
