@@ -62,7 +62,7 @@ export class Battery {
             });
       }
 
-      logger.info(`Found modules: ${found.join(', ')} - missing: ${missing.join(', ')}`);
+      logger.info(`Found modules: [${found.join(', ')}]` + (missing.length > 0 ? ` - missing: [${missing.join(', ')}]` : ''));
       return { found, missing };
    }
 
