@@ -10,6 +10,11 @@ export const logger = createLogger({
     format.colorize(),
     format.splat(),
     format.simple(),
+    format.printf(
+        info =>
+          // https://stackoverflow.com/a/69044670/20358783 more detailLocaleString
+          `${info.timestamp} ${info.level}: ${info.message}`
+      ),
   ),
   transports: [
     new transports.Console(),
