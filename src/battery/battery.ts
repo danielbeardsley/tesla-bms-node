@@ -3,6 +3,7 @@ import { TeslaModule, BQAlerts, BQFaults, Registers } from './tesla-module';
 import { sleep } from '../utils';
 import { TeslaComms, BROADCAST_ADDR } from './tesla-comms';
 import type { Config } from '../config';
+import { logger } from '../logger';
 
 export class Battery {
    public modules: { [key: number]: TeslaModule };
@@ -17,37 +18,52 @@ export class Battery {
       this.teslaComms = teslaComms;
    }
 
-   async init() {
-      await this.initModules();
+   async init(renumberOnFailure: boolean = true) {
+      const { found, missing } = await this.findModules();
+      if (missing.length > 0) {
+         const missingIds = missing.join(', ');
+         if (renumberOnFailure) {
+            logger.error("Unable to communicate with modules: %s - trying to renumber them", missingIds);
+            await this.teslaComms.renumberModules(this.config.battery.moduleCount);
+            await this.init(false);
+            return;
+         }
+         const msg = `Unable to communicate with modules: ${missingIds} - giving up`;
+         logger.error(msg);
+         throw new Error(msg);
+      }
+
+      for (const moduleNumber of found) {
+         this.modules[moduleNumber] = new TeslaModule(this.teslaComms, moduleNumber);
+      }
    }
 
    close() {
       this.teslaComms.close();
    }
 
-   async initModules() {
+   private async findModules() {
+      logger.info('Trying to find %d modules', this.config.battery.moduleCount);
       let moduleNumber: number;
-      const missingModules: number[] = [];
+      const missing: number[] = [];
+      const found: number[] = [];
 
       for (moduleNumber = 1; moduleNumber <= this.config.battery.moduleCount; moduleNumber++) {
          await this.lock
             .acquire('key', () => this.teslaComms.isModuleAlive(moduleNumber))
             .then(alive => {
                if (alive) {
-                  this.modules[moduleNumber] = new TeslaModule(this.teslaComms, moduleNumber);
-                  console.log(`Module ${moduleNumber} found`);
+                  found.push(moduleNumber);
+                  logger.debug(`Module ${moduleNumber} found`);
                } else {
-                  missingModules.push(moduleNumber);
-                  console.log(`Module ${moduleNumber} not found`);
+                  missing.push(moduleNumber);
+                  logger.warn(`Module ${moduleNumber} not found`);
                }
             });
       }
 
-      if (missingModules.length > 0) {
-         const message = `Unable to communicate with modules: ${missingModules.join(', ')}`;
-         console.error(`${message}. Adjust config or use the renumber command`);
-         throw new Error(message);
-      }
+      logger.info(`Found modules: ${found.join(', ')} - missing: ${missing.join(', ')}`);
+      return { found, missing };
    }
 
    async wakeModules() {

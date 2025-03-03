@@ -200,6 +200,12 @@ class TeslaModule {
       return this.writeByteToRegister(Registers.REG_ADC_CONVERT, initiateConversion ? 1 : 0);
    }
 
+   async isModuleAlive(): Promise<boolean> {
+      return this.teslaComms.readBytesFromDeviceRegister(this.id, Registers.REG_DEV_STATUS, 1, 40)
+         .then(() => true)
+         .catch(() => false);
+   }
+
    async balanceIfNeeded(maxSpreadVolts: number, balanceTimeSec: number): Promise<boolean[]> {
       await this.stopBalancing();
       await sleep(100);
