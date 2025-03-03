@@ -74,12 +74,6 @@ export class SerialWrapper {
       }
    }
 
-   readAll(): number[] {
-      const buffer = this.buffer;
-      this.buffer = [];
-      return buffer;
-   }
-
    /**
     * Return a promise that will resolve when the requested number of bytes
     * have been read. If the timeout is reached, the promise will reject.
