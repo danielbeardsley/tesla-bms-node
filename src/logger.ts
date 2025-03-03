@@ -9,6 +9,7 @@ export const logger = createLogger({
     format.errors({ stack: true }),
     format.colorize(),
     format.splat(),
+    format.simple(),
   ),
   transports: [
     new transports.Console(),
