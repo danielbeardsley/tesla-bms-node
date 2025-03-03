@@ -1,5 +1,6 @@
 import { TeslaComms } from './tesla-comms';
 import { bytesToUint16s, sleep } from '../utils';
+import { logger } from '../logger';
 
 // TODO: Move to class for the TI BQ76PL536A-Q1 chip
 // registers for bq76PL536A-Q1 (https://www.ti.com/lit/ds/symlink/bq76pl536a-q1.pdf)
@@ -62,7 +63,8 @@ class TeslaModule {
 
    async readStatus() {
       const bytes = await this.readBytesFromRegister(Registers.REG_ALERT_STATUS, 4);
-
+      logger.verbose('Read status for module %d', this.id);
+      logger.debug('Status: %s', bytes.join(', '));
       this.alerts = new BQAlerts(bytes[0]);
       this.faults = new BQFaults(bytes[1]);
       this.covFaults = bytes[2];
@@ -70,6 +72,7 @@ class TeslaModule {
    }
 
    async sleep() {
+      logger.verbose('Sleeping module %d', this.id);
       // write 1 to IO_CONTROL[SLEEP]
       // turns off TS1, TS2, enter sleep mode
       return (
@@ -82,6 +85,7 @@ class TeslaModule {
    }
 
    async wake() {
+      logger.verbose('Waking module %d', this.id);
       // write 0 to IO_CONTROL[SLEEP]
       return this.writeIOControl(false, false, false, false, true, true).then(() =>
          this.readIOControl()
@@ -90,6 +94,7 @@ class TeslaModule {
    }
 
    async readValues() {
+      logger.verbose('Reading values for module %d', this.id);
       //ADC Auto mode, read every ADC input we can (Both Temps, Pack, 6 cells)
       //enable temperature measurement VSS pins
       //start all ADC conversions
@@ -108,6 +113,7 @@ class TeslaModule {
    */
 
    async readMultiRegisters() {
+      logger.debug('Reading multi registers for module %d', this.id);
       const bytes = await this.readBytesFromRegister(Registers.REG_GPAI, 18);
 
       const uint16s = bytesToUint16s(bytes);
@@ -120,6 +126,7 @@ class TeslaModule {
 
       this.temperatures[0] = this.convertUint16ToTemp(uint16s[7]);
       this.temperatures[1] = this.convertUint16ToTemp(uint16s[8]);
+      logger.verbose('Module %d: cell volts: %s temps: %s', this.id, this.cellVoltagesString(), this.temperaturesString());
    }
 
    private convertUint16ToTemp(uint16: number) {
@@ -147,7 +154,16 @@ class TeslaModule {
       return Math.min(...this.temperatures);
    }
 
+   cellVoltagesString() {
+      return this.cellVoltages.map(v => v.toFixed(3)).join(', ');
+   }
+
+   temperaturesString() {
+      return this.temperatures.map(t => t.toFixed(1)).join(', ');
+   }
+
    async readFaults() {
+      logger.debug('Reading faults for module %d', this.id);
       return this.readBytesFromRegister(Registers.REG_FAULT_STATUS, 1).then(
          bytes => new BQFaults(bytes[0])
       );
@@ -169,10 +185,12 @@ class TeslaModule {
          (ts2connected ? 1 << 1 : 0) |
          (ts1connected ? 1 : 0);
 
+      logger.verbose('Writing IO control for module %d: aux: %s gpioOut: %s gpioIn: %s sleep: %s ts1: %s ts2: %s', this.id, auxConnected, gpioOutOpenDrain, gpioInHigh, sleep, ts1connected, ts2connected);
       return this.writeByteToRegister(Registers.REG_IO_CONTROL, value);
    }
 
    async readIOControl() {
+      logger.verbose('Reading IO control for module %d', this.id);
       return this.readBytesFromRegister(Registers.REG_IO_CONTROL, 1).then(bytes => {
          return new BQIOControl(bytes[0]);
       });
@@ -187,31 +205,36 @@ class TeslaModule {
    ) {
       let value =
          (adcOn ? 1 << 6 : 0) |
-         (tempSensor2On ? 1 << 5 : 0) |
          (tempSensor1On ? 1 << 4 : 0) |
+         (tempSensor2On ? 1 << 5 : 0) |
          (gpaiOn ? 1 << 3 : 0);
 
       if (cellCount > 1 && cellCount <= 6) value |= cellCount - 1;
 
+      logger.verbose('Writing ADC control for module %d: adcOn: %s temp1: %s temp2: %s gpai: %s cellCount: %s', this.id, adcOn, tempSensor1On, tempSensor2On, gpaiOn, cellCount);
       return this.writeByteToRegister(Registers.REG_ADC_CONTROL, value);
    }
 
    async writeADCConvert(initiateConversion: boolean) {
+      logger.verbose('Writing ADC conversion for module %d: %s', this.id, initiateConversion ? 'on' : 'off');
       return this.writeByteToRegister(Registers.REG_ADC_CONVERT, initiateConversion ? 1 : 0);
    }
 
    async isModuleAlive(): Promise<boolean> {
+      logger.verbose('Checking if module %d is alive', this.id);
       return this.teslaComms.readBytesFromDeviceRegister(this.id, Registers.REG_DEV_STATUS, 1, 40)
          .then(() => true)
          .catch(() => false);
    }
 
    async balanceIfNeeded(maxSpreadVolts: number, balanceTimeSec: number): Promise<boolean[]> {
+      logger.verbose('Balancing module %d if needed', this.id);
       await this.stopBalancing();
       await sleep(100);
       await this.readValues();
       const min = this.getMinVoltage();
       const shouldBalance = this.cellVoltages.map(v => v > min + maxSpreadVolts);
+      logger.verbose('Module %d cells need balancing? %s', this.id, shouldBalance.join(', '));
       if (shouldBalance.some(b => b)) {
          await this.setBalanceTimer(balanceTimeSec);
          await this.balance(shouldBalance);
@@ -225,6 +248,7 @@ class TeslaModule {
 
    // cells is array of 6 booleans, true to balance
    async balance(cells: boolean[]) {
+      logger.verbose('Balancing module %d cells: %s', this.id, cells.join(', '));
       let regValue = 0;
 
       for (let i = 0; i < 6; i++) if (cells[i]) regValue = regValue | (1 << i);
