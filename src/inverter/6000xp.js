@@ -1,5 +1,31 @@
 const net = require('net');
 
+const Protocol = {
+  WriteSingle: 1,
+  WriteMulti: 2,
+}
+
+const TcpFunction = {
+  Heartbeat: 193,
+  TranslatedData: 194,
+  ReadParam: 195,
+  WriteParam: 196,
+} // }}}
+
+const DeviceFunction = {
+  ReadHold: 3,
+  ReadInput: 4,
+  WriteSingle: 6,
+  WriteMulti: 16,
+  // UpdatePrepare = 33
+  // UpdateSendData = 34
+  // UpdateReset = 35
+  // ReadHoldError = 131
+  // ReadInputError = 132
+  // WriteSingleError = 134
+  // WriteMultiError = 144
+} // }}}
+
 // Define the inverter's IP details
 const HOST = '192.168.1.213';
 const PORT = 8000;
@@ -21,21 +47,110 @@ function createHeartbeatPacket(serialNumber) {
 }
 
 // Helper function to create a translated data packet
-function createTranslatedDataPacket(serialNumber, deviceFunction, inverterSerialNumber, dataLength) {
+function createWriteRegisterPacket(serialNumber, inverterSerialNumber, dataLength) {
   const packet = Buffer.alloc(19 + dataLength); // Adjust size for data length
   packet.writeUInt16LE(0xa11a, 0); // Prefix
   packet.writeUInt16LE(2, 2); // Protocol version
   packet.writeUInt16LE(19 + dataLength, 4); // Packet length
   packet.writeUInt8(1, 6); // Address
-  packet.writeUInt8(0xc2, 7); // TCP Function: Translated Data
+  packet.writeUInt8(TcpFunction.WriteParam, 7); // TCP Function
   packet.write(serialNumber, 8, 10, 'ascii'); // Serial Number
   packet.writeUInt8(0, 18); // Address (0 for writing, 1 for reading)
-  packet.writeUInt8(deviceFunction, 19); // Device Function
+  packet.writeUInt8(DeviceFunction.WriteSingle, 19); // Device Function
   packet.write(inverterSerialNumber, 20, 10, 'ascii'); // Inverter Serial Number
   packet.writeUInt16LE(dataLength, 30); // Data Length
   // Write payload data starting at offset 32
   return packet;
 }
+/**
+ * 
+ * let data_bytes = data.bytes();
+        let data_length = data_bytes.len() as u8;
+        let frame_length = (18 + data_length) as u16;
+
+        // debug!("data_length={}, frame_length={}", data_length, frame_length);
+
+        let mut r = vec![0; frame_length as usize];
+
+        r[0] = 161;
+        r[1] = 26;
+        r[2..4].copy_from_slice(&data.protocol().to_le_bytes());
+        r[4..6].copy_from_slice(&(frame_length - 6).to_le_bytes());
+        r[6] = 1; // unsure what this is, always seems to be 1
+        r[7] = data.tcp_function() as u8;
+
+        r[8..18].copy_from_slice(&data.datalog().data());
+        // WIP - trying to work out how to learn the inverter sn
+        //r[8..18].copy_from_slice(&[0; 10]);
+
+        r[18..].copy_from_slice(&data_bytes);
+
+        r} dataLength 
+ */
+
+        /*
+        let mut data = vec![0; 16];
+
+        // data[2] (address) is 0 when writing to inverter, 1 when reading from it
+        data[3] = self.device_function as u8;
+
+        // experimental: looks like maybe you don't need to fill this in..
+        data[4..14].copy_from_slice(&self.inverter.data());
+        //data[4..14].copy_from_slice(&[0; 10]);
+
+        data[14..16].copy_from_slice(&self.register.to_le_bytes());
+
+        if self.device_function == DeviceFunction::WriteMulti {
+            let register_count = self.pairs().len() as u16;
+            data.extend_from_slice(&register_count.to_le_bytes());
+        }
+
+        if Self::has_value_length_byte(PacketSource::Client, self.protocol(), self.device_function)
+        {
+            let len = self.values.len() as u8;
+            data.extend_from_slice(&[len]);
+        }
+
+        let mut m = Vec::new();
+        for i in &self.values {
+            m.extend_from_slice(&i.to_le_bytes());
+        }
+        data.append(&mut m);
+
+        // the first two bytes are the data length, excluding checksum which we'll add next
+        let data_length = data.len() as u16;
+        data[0..2].copy_from_slice(&data_length.to_le_bytes());
+
+        // checksum does not include the first two bytes (data length)
+        data.extend_from_slice(&Self::checksum(&data[2..]));
+        */
+
+// Helper function to create a translated data packet
+function createWriteRegisterPacketNew(register, value) {
+  const packet = Buffer.alloc(19);
+  packet.writeUInt16LE(18, 0); // length, excluding checksum
+  packet.writeUInt8(0, 2); // Address (0 for writing, 1 for reading)
+  packet.writeUInt8(DeviceFunction.WriteSingle, 3); // Device Function
+  packet.write(INVERTER_SERIAL_NUMBER, 4, 10, 'ascii'); // Inverter Serial Number
+  packet.writeUInt16LE(register, 14);
+  packet.writeUInt16LE(value, 16); // Data Length
+  packet.writeUInt8(crc(packet.slice(2).values()), 18); // Data Length
+  return packet;
+}
+
+function createFrame(packet) {
+  const frameLength = packet.length + 18 - 6;
+  const frame = new Buffer();
+  frame.writeUInt16LE(0xa11a, 0); // Prefix
+  frame.writeUInt16LE(Protocol.WriteSingle, 2); // Protocol version 2= multi write, 1=single write
+  frame.writeUInt16LE(frameLength, 4); // Frame length
+  frame.writeUInt8(1, 6); // Address (which inverter)
+  frame.writeUInt8(TcpFunction.TranslatedData, 7); // TCP Function
+  frame.write(DATALOG_SERIAL_NUMBER, 8, 10, 'ascii'); // Serial Number
+  frame.write(packet, 19)
+  return frame;
+}
+
 
 // Helper function to parse the response
 function parseResponse(data) {
@@ -187,6 +302,8 @@ client.on('close', () => {
 client.on('error', (err) => {
   console.error('Error:', err);
 });
+
+const packet = createWriteRegisterPacket(DATALOG_SERIAL_NUMBER, )
 
 function interpretRegister0(value) {
   switch (value) {
@@ -617,3 +734,17 @@ function getRegisterInfo(address) {
     divider: 1
   };
 };
+
+function crc(data) {
+   const generator = 0x07;
+   const finalCRC = data.reduce((crc, byte) => {
+      crc = crc ^ byte;
+      for (let i = 0; i < 8; i++) {
+         if ((crc & 0x80) !== 0) crc = ((crc << 1) & 0xff) ^ generator;
+         else crc = (crc << 1) & 0xff;
+      }
+      return crc;
+   }, 0x00);
+
+   return finalCRC;
+}
