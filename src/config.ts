@@ -12,10 +12,19 @@ const ConfigSchema = z.object({
          cellVDiffMax: z.number().min(0.001).max(0.5),
          onlyAbove: z.number().min(0).max(5),
       }),
+      charging: z.object({
+         amps: z.number(),
+         volts: z.number(),
+         maxCellVolt: z.number(),
+      }),
+      discharging: z.object({
+         maxAmps: z.number(),
+         minCellVolt: z.number(),
+      })
    }),
    bms: z.object({
       // How often to check the battery and inform the inverter
-      intervalMs: z.number().int().min(1000),
+      intervalS: z.number().int().min(1),
    }),
 });
 
