@@ -227,19 +227,14 @@ class TeslaModule {
          .catch(() => false);
    }
 
-   async balanceIfNeeded(maxSpreadVolts: number, balanceTimeSec: number): Promise<boolean[]> {
-      logger.verbose('Balancing module %d if needed', this.id);
-      await this.stopBalancing();
-      await sleep(100);
-      await this.readValues();
-      const min = this.getMinVoltage();
-      const shouldBalance = this.cellVoltages.map(v => v > min + maxSpreadVolts);
-      logger.verbose('Module %d cells need balancing? %s', this.id, shouldBalance.join(', '));
+   async balanceCellsAbove(balanceAboveV: number, balanceTimeSec: number): Promise<number> {
+      const shouldBalance = this.cellVoltages.map(v => v > balanceAboveV);
+      logger.verbose('Balancing module %d, cells need balancing? %s', this.id, shouldBalance.join(', '));
       if (shouldBalance.some(b => b)) {
          await this.setBalanceTimer(balanceTimeSec);
          await this.balance(shouldBalance);
       }
-      return shouldBalance;
+      return shouldBalance.filter(should => should).length;
    }
 
    async stopBalancing() {

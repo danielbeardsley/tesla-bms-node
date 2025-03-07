@@ -118,6 +118,24 @@ export class Battery {
       };
    }
 
+   /**
+    * Note: Caller should stop balancing and read all values first
+    */
+   async balance(forSeconds: number): Promise<number> {
+      const {min} = this.getCellVoltageRange();
+      const maxDiff = this.config.battery.balance.cellVDiffMax;
+      const balanceAboveV = min + maxDiff;
+      logger.verbose("Balancing all cells %sV above %sV for %d sec", maxDiff.toFixed(3), balanceAboveV.toFixed(3), forSeconds);
+      let cellsAbove = 0;
+      for (const index in this.modules) {
+         await this.lock.acquire('key', async () => {
+            cellsAbove += await this.modules[index].balanceCellsAbove(balanceAboveV, forSeconds);
+         });
+      }
+      logger.info("Balancing initiated on %d cells", cellsAbove);
+      return cellsAbove;
+   }
+
    async stopBalancing() {
       const falses = [false, false, false, false, false, false];
 

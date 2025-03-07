@@ -8,6 +8,10 @@ const ConfigSchema = z.object({
       serialPort: z.object({
          deviceName: z.string().min(1), // like "/dev/ttyUSB0"
       }),
+      balance: z.object({
+         cellVDiffMax: z.number().min(0.001).max(0.5),
+         onlyAbove: z.number().min(0).max(5),
+      }),
    }),
    bms: z.object({
       // How often to check the battery and inform the inverter
