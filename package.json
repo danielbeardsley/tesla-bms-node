@@ -7,6 +7,7 @@
     "format": "biome format --fix",
     "build": "tsc",
     "dev": "tsc --watch",
+    "test": "vitest",
     "start": "node dist/index.js",
     "clean": "rm -rf dist",
     "cli": "node dist/src/cli/cli.js",
@@ -31,6 +32,7 @@
     "@types/yargs": "^17.0.33",
     "eslint": "^9.21.0",
     "typescript": "^5.7.3",
-    "typescript-eslint": "^8.25.0"
+    "typescript-eslint": "^8.25.0",
+    "vitest": "^3.0.8"
   }
 }
