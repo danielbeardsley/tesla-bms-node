@@ -25,7 +25,8 @@ async function getBattery() {
 async function main() {
    const battery = await getBattery();
    const bms = new BMS(battery, getConfig());
-   bms.startMonitoring();
+   bms.init();
+   bms.start();
 }
 
 main().then(()=> logger.info('exiting!'));
