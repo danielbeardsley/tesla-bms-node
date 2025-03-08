@@ -22,7 +22,7 @@ class BMS {
         if (this.timeout) {
             throw new Error("BMS already running");
         }
-        this.workLoop();
+        void this.workLoop();
     }
 
     public stopMonitoring() {
