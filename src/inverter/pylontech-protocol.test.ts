@@ -3,12 +3,12 @@ import { parseRequest } from './pylontech-protocol';
 
 describe('parseRequest', () => {
     it('should parse a valid request', () => {
-        const buffer = Buffer.from("~01AB00~");
+        const buffer = Buffer.from("~01464200~");
         const result = parseRequest(buffer);
         expect(result).toEqual({
             startByte: 0x7E,
             address: 1,
-            command: "AB",
+            command: "FB",
             datalength: 0,
             data: Buffer.alloc(0),
             endByte: 0x7E
@@ -16,12 +16,12 @@ describe('parseRequest', () => {
     });
 
     it('should parse a valid request with data', () => {
-        const buffer = Buffer.from("~01AB01D~");
+        const buffer = Buffer.from("~01464301D~");
         const result = parseRequest(buffer);
         expect(result).toEqual({
             startByte: 0x7E,
             address: 1,
-            command: "AB",
+            command: "FC",
             datalength: 1,
             data: Buffer.from("D"),
             endByte: 0x7E
