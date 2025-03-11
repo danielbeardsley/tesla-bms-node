@@ -7,12 +7,10 @@ export enum Command {
 }
 
 export const Request = new Parser()
-.uint8('startByte', { assert: 0x7E })
-.string('address', asciiNumber(2))
-.string('command', hexString(4))
-.string('datalength', asciiNumber(2))
+.string('address', asciiNumber(2)) // 2 bytes of a base-10 number encoded as ascii like "01"
+.string('command', hexString(4)) // 4 bytes of hex encoded as ascii like "4642"
+.string('datalength', asciiNumber(2)) // 2 bytes of a base-10 number encoded as ascii like "64"
 .buffer('data', { length: 'datalength' })
-.uint8('endByte', { assert: 0x7E })
 
 export function parseRequest(buffer: Buffer) {
     return Request.parse(buffer);
