@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { parseRequest } from './pylontech-protocol';
+import { parsePacket } from './pylontech-packet';
 
-describe('parseRequest', () => {
-    it('should parse a valid request', () => {
+describe('parsePacket', () => {
+    it('should parse a valid packet', () => {
         const buffer = Buffer.from("01464200");
-        const result = parseRequest(buffer);
+        const result = parsePacket(buffer);
         expect(result).toEqual({
             address: 1,
             command: "FB",
@@ -13,9 +13,9 @@ describe('parseRequest', () => {
         });
     });
 
-    it('should parse a valid request with data', () => {
+    it('should parse a valid packet with data', () => {
         const buffer = Buffer.from("01464301D");
-        const result = parseRequest(buffer);
+        const result = parsePacket(buffer);
         expect(result).toEqual({
             address: 1,
             command: "FC",
@@ -24,8 +24,8 @@ describe('parseRequest', () => {
         });
     });
 
-    it('should throw an error for an invalid request buffer', () => {
+    it('should throw an error for an invalid packet', () => {
         // non-acii number
-        expect(() => parseRequest(Buffer.from("XXAB00"))).toThrow();
+        expect(() => parsePacket(Buffer.from("XXAB00"))).toThrow();
     });
 });

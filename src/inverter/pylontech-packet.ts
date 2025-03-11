@@ -6,14 +6,14 @@ export enum Command {
    GetBatteryAlarms = "FW",
 }
 
-export const Request = new Parser()
+export const packetParser = new Parser()
 .string('address', asciiNumber(2)) // 2 bytes of a base-10 number encoded as ascii like "01"
 .string('command', hexString(4)) // 4 bytes of hex encoded as ascii like "4642"
 .string('datalength', asciiNumber(2)) // 2 bytes of a base-10 number encoded as ascii like "64"
 .buffer('data', { length: 'datalength' })
 
-export function parseRequest(buffer: Buffer) {
-    return Request.parse(buffer);
+export function parsePacket(buffer: Buffer) {
+    return packetParser.parse(buffer);
 }
 
 function asciiNumber(bytes: number) {
