@@ -9,7 +9,8 @@ export enum Command {
 export const packetParser = new Parser()
 .string('address', asciiNumber(2)) // 2 bytes of a base-10 number encoded as ascii like "01"
 .string('command', hexString(4)) // 4 bytes of hex encoded as ascii like "4642" -> "0x46, 0x42" -> "FB"
-.string('datalength', asciiNumber(2)) // 2 bytes of a base-10 number encoded as ascii like "64"
+.string('lengthChecksum', hexNumber(1)) // 1 bytes of a hex-encoded checksum on the length field
+.string('datalength', hexNumber(3)) // 3 bytes of a hex-encoded length
 .buffer('data', { length: 'datalength' })
 
 export function parsePacket(buffer: Buffer) {
@@ -23,16 +24,44 @@ export function generatePacket(address: number, command: Command, data: Buffer) 
    return Buffer.concat([
       Buffer.from(address.toString().padStart(2, '0')),
       stringToHexBuffer(command),
-      Buffer.from(data.length.toString().padStart(2, '0')),
+      Buffer.from(lengthChecksum(data.length)),
       data,
    ]);
+}
+
+/**
+ * Computes the checksum for the *length* value
+ * and returns 4-byte string composed of 1 hex char
+ * for the checksum of the length followed by 3 hex chars for the length
+ */
+function lengthChecksum(length: number) {
+   if (length > 0xFFF) {
+      throw new Error('Packet data too long, must be less than 4096 bytes');
+   }
+   let sum = (length & 0x0F) +
+               ((length >> 4) & 0x0F) +
+               ((length >> 8) & 0x0F);
+
+   sum = (~(sum % 16) + 1) & 0x0F; // Modulo 16, invert bits, add one
+
+   // Format sum and payloadLen as hex strings
+   return sum.toString(16).toUpperCase() +
+      length.toString(16).toUpperCase().padStart(3, '0');
+}
+
+function hexNumber(bytes: number) {
+   return {
+      length: bytes,
+      formatter: (str: string) => parseInt(str, 16),
+      assert: (str: string|number) => typeof str == 'string' && isHexString(str),
+   };
 }
 
 function asciiNumber(bytes: number) {
    return {
       length: bytes,
       formatter: (str: string) => parseInt(str, 10),
-      assert: (str: string|number) => typeof str == 'string' && /^[0-9]+$/.test(str),
+      assert: (str: string|number) => typeof str == 'string' && isIntString(str),
    };
 }
 
@@ -44,10 +73,18 @@ function hexString(length: number) {
    return {
       length: length,
       formatter: (str: string) => Buffer.from(str, 'hex').toString('ascii'),
-      assert: (str: string|number) => typeof str == 'string' && /^[0-9A-B]+$/.test(str),
+      assert: (str: string|number) => typeof str == 'string' && isHexString(str),
    };
 }
 
 function stringToHexBuffer(str: string): Buffer {
    return Buffer.from(Buffer.from(str, 'ascii').toString('hex'));
+}
+
+function isHexString(str: string): boolean {
+   return /^[0-9A-F]+$/.test(str);
+}
+
+function isIntString(str: string): boolean {
+   return /^[0-9]+$/.test(str);
 }
