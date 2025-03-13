@@ -56,15 +56,15 @@ describe('parsePacket', () => {
 
 describe('generatePacket', () => {
     it('should generate a valid packet', () => {
-        const buffer = Buffer.from("200146420000");
+        const expected = Buffer.from("200146420000");
         const result = generatePacket(1, Command.GetBatteryStatus, Buffer.alloc(0));
-        expect(result).toEqual(buffer);
+        assertSameBuffer(expected, result);
     });
 
     it('should generate a valid packet with data', () => {
-        const buffer = Buffer.from("20014656F001D");
+        const expected = Buffer.from("20014656F001D");
         const result = generatePacket(1, Command.GetCellVoltages, Buffer.from("D"));
-        expect(result).toEqual(buffer);
+        assertSameBuffer(expected, result);
     });
 
     it('should throw an error for an invalid packet', () => {
@@ -72,3 +72,7 @@ describe('generatePacket', () => {
         expect(() => generatePacket(1, Command.GetBatteryStatus, Buffer.from("X".repeat(4096)))).toThrow();
     });
 });
+
+function assertSameBuffer(expected: Buffer, value: Buffer) {
+    expect(value.toString()).toEqual(expected.toString());
+}
