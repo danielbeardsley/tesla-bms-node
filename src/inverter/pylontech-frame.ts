@@ -6,8 +6,9 @@ export function decodeFrame(buffer: Buffer) {
    if (buffer[0] != 0x7E) {
       throw new Error('Invalid start byte');
    }
-   if (buffer[buffer.length - 1] != 0x7E) {
-      throw new Error('Invalid end byte');
+   const endByte = buffer[buffer.length - 1];
+   if (endByte != 0x7E && endByte != 0x0D) {
+      throw new Error('Invalid end byte, expecting 0x7E or 0x0D but got 0x' + endByte.toString(16));
    }
 
    const data = buffer.subarray(1, -5);

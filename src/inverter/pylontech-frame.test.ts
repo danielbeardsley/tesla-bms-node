@@ -12,15 +12,22 @@ describe('decodeFrame', () => {
         expect(result).toEqual(Buffer.from("123ABC"));
     });
 
+    it('should decode a frame with a carriage return end byte', () => {
+        const result = decodeFrame(Buffer.from("~123ABCFEA4\r"));
+        expect(result).toEqual(Buffer.from("123ABC"));
+    });
+
     it('should throw an error for an invalid request buffer', () => {
         // missing start byte
-        expect(() => decodeFrame(Buffer.from("01AB00"))).toThrow();
+        expect(() => decodeFrame(Buffer.from("123ABCFEA4~"))).toThrow();
         // missing end byte
-        expect(() => decodeFrame(Buffer.from("~01AB00~"))).toThrow();
+        expect(() => decodeFrame(Buffer.from("~123ABCFEA4"))).toThrow();
         // too short
         expect(() => decodeFrame(Buffer.from("~00~"))).toThrow();
-        // bad checksum
-        expect(() => decodeFrame(Buffer.from("~XX0000~"))).toThrow();
+        // incorrect checksum
+        expect(() => decodeFrame(Buffer.from("~123ABC0000~"))).toThrow();
+        // checksum with non-hex characters
+        expect(() => decodeFrame(Buffer.from("~123ABC____~"))).toThrow();
     });
 });
 
