@@ -1,23 +1,30 @@
 import { Parser } from 'binary-parser';
+import type { Command } from './pylontech-command';
+
+export type Packet = {
+   version: number;
+   address: number;
+   command: string;
+   lengthChecksum: number;
+   datalength: number;
+   data: Buffer;
+}
 
 const PYLONTECH_VERSION = 0x20;
 
-export enum Command {
-   GetBatteryStatus = "FB",
-   GetCellVoltages = "FV",
-   GetBatteryAlarms = "FW",
-}
+const CID1 = 0x46;
 
 export const packetParser = new Parser()
 .string('version', hexNumber(2)) // 2 bytes of a hex-encoded version number
 .string('address', hexNumber(2)) // 2 bytes of a hex-encoded device address
-.string('command', hexString(4)) // 4 bytes of hex encoded as ascii like "4642" -> "0x46, 0x42" -> "FB"
+.string('cid1', hexNumber(2)) // 2 bytes of hex encoded "control identify code", always 0x46
+.string('command', hexNumber(2)) // 2 bytes of hex encoded as ascii like "42" -> 0x42 -> 66
 .string('lengthChecksum', hexNumber(1)) // 1 bytes of a hex-encoded checksum on the length field
 .string('datalength', hexNumber(3)) // 3 bytes of a hex-encoded length
 .buffer('data', { length: 'datalength' })
 .buffer('_extra', { length: 1 }) // We always expect this to be empty, indicating there's no extra data
 
-export function parsePacket(buffer: Buffer) {
+export function parsePacket(buffer: Buffer): Packet {
    const packet = packetParser.parse(buffer);
    if (packet.data.length !== packet.datalength) {
       throw new Error('Data length does not match length field, expected ' + packet.datalength + ' but got ' + packet.data.length);
@@ -26,6 +33,7 @@ export function parsePacket(buffer: Buffer) {
       throw new Error('Extra data found at end of packet');
    }
    delete packet._extra;
+   delete packet.cid1;
    return packet;
 }
 
@@ -36,7 +44,8 @@ export function generatePacket(address: number, command: Command, data: Buffer) 
    return Buffer.concat([
       Buffer.from(toHex(PYLONTECH_VERSION, 2)),
       Buffer.from(toHex(address, 2)),
-      stringToHexBuffer(command),
+      Buffer.from(toHex(CID1, 2)),
+      Buffer.from(toHex(command, 2)),
       Buffer.from(lengthChecksum(data.length)),
       data,
    ]);

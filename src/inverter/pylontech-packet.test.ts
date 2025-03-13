@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { Command, generatePacket, parsePacket } from './pylontech-packet';
+import { generatePacket, parsePacket } from './pylontech-packet';
+import { Command } from './pylontech-command';
 
 describe('parsePacket', () => {
     it('should parse a valid packet', () => {
@@ -8,7 +9,7 @@ describe('parsePacket', () => {
         expect(result).toEqual({
             version: 32,
             address: 1,
-            command: "FB",
+            command: 0x42,
             datalength: 0,
             data: Buffer.alloc(0),
             lengthChecksum: 0,
@@ -21,7 +22,7 @@ describe('parsePacket', () => {
         expect(result).toEqual({
             version: 32,
             address: 1,
-            command: "FC",
+            command: 0x43,
             datalength: 1,
             data: Buffer.from("D"),
             lengthChecksum: 15,
@@ -34,7 +35,7 @@ describe('parsePacket', () => {
         expect(result).toEqual({
             version: 32,
             address: 1,
-            command: "FC",
+            command: 0x43,
             datalength: 0,
             data: Buffer.alloc(0),
             lengthChecksum: 8, // The value from the packet, but it's not the right checksum
@@ -56,13 +57,13 @@ describe('parsePacket', () => {
 describe('generatePacket', () => {
     it('should generate a valid packet', () => {
         const expected = Buffer.from("200146420000");
-        const result = generatePacket(1, Command.GetBatteryStatus, Buffer.alloc(0));
+        const result = generatePacket(1, Command.GetBatteryValues, Buffer.alloc(0));
         assertSameBuffer(expected, result);
     });
 
     it('should generate a valid packet with data', () => {
-        const expected = Buffer.from("20014656F001D");
-        const result = generatePacket(1, Command.GetCellVoltages, Buffer.from("D"));
+        const expected = Buffer.from("20014651F001D");
+        const result = generatePacket(1, Command.GetManfuacturerInfo, Buffer.from("D"));
         assertSameBuffer(expected, result);
     });
 
