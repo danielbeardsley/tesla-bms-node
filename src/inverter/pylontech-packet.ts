@@ -79,22 +79,6 @@ function hexNumber(bytes: number) {
    };
 }
 
-/**
- * Will take something like "4642" and read it as 0x46, 0x42
- * and then interpret those bytes as a string => "FB"
- */
-function hexString(length: number) {
-   return {
-      length: length,
-      formatter: (str: string) => Buffer.from(str, 'hex').toString('ascii'),
-      assert: (str: string|number) => typeof str == 'string' && isHexString(str),
-   };
-}
-
-function stringToHexBuffer(str: string): Buffer {
-   return Buffer.from(Buffer.from(str, 'ascii').toString('hex'));
-}
-
 function toHex(num: number, length: number): string {
    return num.toString(16).toUpperCase().padStart(length, '0');
 }
