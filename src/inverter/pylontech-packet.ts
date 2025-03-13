@@ -20,7 +20,7 @@ export const packetParser = new Parser()
 export function parsePacket(buffer: Buffer) {
    const packet = packetParser.parse(buffer);
    if (packet.data.length !== packet.datalength) {
-      throw new Error('Data length does not match length field');
+      throw new Error('Data length does not match length field, expected ' + packet.datalength + ' but got ' + packet.data.length);
    }
    if (packet._extra.length !== 0) {
       throw new Error('Extra data found at end of packet');
