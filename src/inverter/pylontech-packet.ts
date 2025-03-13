@@ -12,13 +12,22 @@ export const packetParser = new Parser()
 .string('lengthChecksum', hexNumber(1)) // 1 bytes of a hex-encoded checksum on the length field
 .string('datalength', hexNumber(3)) // 3 bytes of a hex-encoded length
 .buffer('data', { length: 'datalength' })
+.buffer('_extra', { length: 1 }) // We always expect this to be empty, indicating there's no extra data
 
 export function parsePacket(buffer: Buffer) {
-    return packetParser.parse(buffer);
+   const packet = packetParser.parse(buffer);
+   if (packet.data.length !== packet.datalength) {
+      throw new Error('Data length does not match length field');
+   }
+   if (packet._extra.length !== 0) {
+      throw new Error('Extra data found at end of packet');
+   }
+   delete packet._extra;
+   return packet;
 }
 
 export function generatePacket(address: number, command: Command, data: Buffer) {
-   if (data.length > 100) {
+   if (data.length > 0xfff) {
       throw new Error('Data too long');
    }
    return Buffer.concat([

@@ -39,9 +39,15 @@ describe('parsePacket', () => {
         });
     });
 
-    it('should throw an error for an invalid packet', () => {
+    it('should throw an error for invalid packets', () => {
         // non-acii number
         expect(() => parsePacket(Buffer.from("XXAB00"))).toThrow();
+        // data(0) < length(16)
+        expect(() => parsePacket(Buffer.from("014643800F"))).toThrow();
+        // data(2) > length(0)
+        expect(() => parsePacket(Buffer.from("0146438000FF"))).toThrow();
+        // non-hex bytes
+        expect(() => parsePacket(Buffer.from("01XX438000FF"))).toThrow();
     });
 });
 
@@ -60,6 +66,6 @@ describe('generatePacket', () => {
 
     it('should throw an error for an invalid packet', () => {
         // data too long
-        expect(() => generatePacket(1, Command.GetBatteryStatus, Buffer.from("X".repeat(101)))).toThrow();
+        expect(() => generatePacket(1, Command.GetBatteryStatus, Buffer.from("X".repeat(4096)))).toThrow();
     });
 });
