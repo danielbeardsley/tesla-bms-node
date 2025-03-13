@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { Command, generatePacket, parsePacket } from './pylontech-packet';
 
-
 describe('parsePacket', () => {
     it('should parse a valid packet', () => {
         const buffer = Buffer.from("200146420000");

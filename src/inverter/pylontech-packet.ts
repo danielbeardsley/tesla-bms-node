@@ -70,14 +70,6 @@ function hexNumber(bytes: number) {
    };
 }
 
-function asciiNumber(bytes: number) {
-   return {
-      length: bytes,
-      formatter: (str: string) => parseInt(str, 10),
-      assert: (str: string|number) => typeof str == 'string' && isIntString(str),
-   };
-}
-
 /**
  * Will take something like "4642" and read it as 0x46, 0x42
  * and then interpret those bytes as a string => "FB"
@@ -100,8 +92,4 @@ function toHex(num: number, length: number): string {
 
 function isHexString(str: string): boolean {
    return /^[0-9A-F]+$/.test(str);
-}
-
-function isIntString(str: string): boolean {
-   return /^[0-9]+$/.test(str);
 }
