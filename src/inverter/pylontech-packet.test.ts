@@ -69,7 +69,7 @@ describe('generatePacket', () => {
 
     it('should throw an error for an invalid packet', () => {
         // data too long
-        expect(() => generatePacket(1, Command.GetBatteryStatus, Buffer.from("X".repeat(4096)))).toThrow();
+        expect(() => generatePacket(1, Command.GetBatteryValues, Buffer.from("X".repeat(4096)))).toThrow();
     });
 });
 
