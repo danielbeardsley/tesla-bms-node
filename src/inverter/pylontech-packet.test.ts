@@ -4,9 +4,10 @@ import { Command, generatePacket, parsePacket } from './pylontech-packet';
 
 describe('parsePacket', () => {
     it('should parse a valid packet', () => {
-        const buffer = Buffer.from("0146420000");
+        const buffer = Buffer.from("200146420000");
         const result = parsePacket(buffer);
         expect(result).toEqual({
+            version: 32,
             address: 1,
             command: "FB",
             datalength: 0,
@@ -16,9 +17,10 @@ describe('parsePacket', () => {
     });
 
     it('should parse a valid packet with data', () => {
-        const buffer = Buffer.from("014643F001D");
+        const buffer = Buffer.from("20014643F001D");
         const result = parsePacket(buffer);
         expect(result).toEqual({
+            version: 32,
             address: 1,
             command: "FC",
             datalength: 1,
@@ -28,9 +30,10 @@ describe('parsePacket', () => {
     });
 
     it('should parse but not care about the length checksum', () => {
-        const buffer = Buffer.from("0146438000");
+        const buffer = Buffer.from("200146438000");
         const result = parsePacket(buffer);
         expect(result).toEqual({
+            version: 32,
             address: 1,
             command: "FC",
             datalength: 0,
@@ -43,23 +46,23 @@ describe('parsePacket', () => {
         // non-acii number
         expect(() => parsePacket(Buffer.from("XXAB00"))).toThrow();
         // data(0) < length(16)
-        expect(() => parsePacket(Buffer.from("014643800F"))).toThrow();
+        expect(() => parsePacket(Buffer.from("20014643800F"))).toThrow();
         // data(2) > length(0)
-        expect(() => parsePacket(Buffer.from("0146438000FF"))).toThrow();
+        expect(() => parsePacket(Buffer.from("200146438000FF"))).toThrow();
         // non-hex bytes
-        expect(() => parsePacket(Buffer.from("01XX438000FF"))).toThrow();
+        expect(() => parsePacket(Buffer.from("2001XX438000FF"))).toThrow();
     });
 });
 
 describe('generatePacket', () => {
     it('should generate a valid packet', () => {
-        const buffer = Buffer.from("0146420000");
+        const buffer = Buffer.from("200146420000");
         const result = generatePacket(1, Command.GetBatteryStatus, Buffer.alloc(0));
         expect(result).toEqual(buffer);
     });
 
     it('should generate a valid packet with data', () => {
-        const buffer = Buffer.from("014656F001D");
+        const buffer = Buffer.from("20014656F001D");
         const result = generatePacket(1, Command.GetCellVoltages, Buffer.from("D"));
         expect(result).toEqual(buffer);
     });

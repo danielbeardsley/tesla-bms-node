@@ -1,5 +1,7 @@
 import { Parser } from 'binary-parser';
 
+const PYLONTECH_VERSION = 0x20;
+
 export enum Command {
    GetBatteryStatus = "FB",
    GetCellVoltages = "FV",
@@ -7,7 +9,8 @@ export enum Command {
 }
 
 export const packetParser = new Parser()
-.string('address', asciiNumber(2)) // 2 bytes of a base-10 number encoded as ascii like "01"
+.string('version', hexNumber(2)) // 2 bytes of a hex-encoded version number
+.string('address', hexNumber(2)) // 2 bytes of a hex-encoded device address
 .string('command', hexString(4)) // 4 bytes of hex encoded as ascii like "4642" -> "0x46, 0x42" -> "FB"
 .string('lengthChecksum', hexNumber(1)) // 1 bytes of a hex-encoded checksum on the length field
 .string('datalength', hexNumber(3)) // 3 bytes of a hex-encoded length
@@ -31,7 +34,8 @@ export function generatePacket(address: number, command: Command, data: Buffer) 
       throw new Error('Data too long');
    }
    return Buffer.concat([
-      Buffer.from(address.toString().padStart(2, '0')),
+      Buffer.from(toHex(PYLONTECH_VERSION, 2)),
+      Buffer.from(toHex(address, 2)),
       stringToHexBuffer(command),
       Buffer.from(lengthChecksum(data.length)),
       data,
@@ -88,6 +92,10 @@ function hexString(length: number) {
 
 function stringToHexBuffer(str: string): Buffer {
    return Buffer.from(Buffer.from(str, 'ascii').toString('hex'));
+}
+
+function toHex(num: number, length: number): string {
+   return num.toString(16).toUpperCase().padStart(length, '0');
 }
 
 function isHexString(str: string): boolean {
