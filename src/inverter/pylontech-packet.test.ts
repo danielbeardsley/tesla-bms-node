@@ -55,9 +55,15 @@ describe('parsePacket', () => {
 });
 
 describe('generatePacket', () => {
-    it('should generate a valid packet', () => {
+    it('should generate a valid packet with empty data', () => {
         const expected = Buffer.from("200146420000");
         const result = generatePacket(1, Command.GetBatteryValues, Buffer.alloc(0));
+        assertSameBuffer(expected, result);
+    });
+
+    it('should generate a valid packet with no data arg', () => {
+        const expected = Buffer.from("200146420000");
+        const result = generatePacket(1, Command.GetBatteryValues);
         assertSameBuffer(expected, result);
     });
 

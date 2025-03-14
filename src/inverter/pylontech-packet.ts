@@ -37,7 +37,8 @@ export function parsePacket(buffer: Buffer): Packet {
    return packet;
 }
 
-export function generatePacket(address: number, command: Command, data: Buffer) {
+export function generatePacket(address: number, command: Command, data?: Buffer) {
+   data = data || Buffer.alloc(0);
    if (data.length > 0xfff) {
       throw new Error('Data too long');
    }
