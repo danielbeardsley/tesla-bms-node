@@ -80,8 +80,16 @@ function hexNumber(bytes: number) {
    };
 }
 
-function toHex(num: number, length: number): string {
+export function toHex(num: number, length: number): string {
+   if (num >= Math.pow(16, length)) {
+      throw new Error(`Number (${num}) too large to be represented by ${length} hex chars`);
+   }
    return num.toString(16).toUpperCase().padStart(length, '0');
+}
+
+export function strToHexSized(str: string, size: number): string {
+   const paddedStr = str.substring(0, size).padEnd(size, ' ');
+   return Buffer.from(paddedStr).toString('hex').toUpperCase();
 }
 
 function isHexString(str: string): boolean {
