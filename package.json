@@ -18,7 +18,6 @@
   "dependencies": {
     "@biomejs/biome": "^1.8.3",
     "async-lock": "^1.2.8",
-    "binary-parser": "^2.2.1",
     "serialport": "^12.0.0",
     "smart-buffer": "^4.2.0",
     "winston": "^3.17.0",
