@@ -78,14 +78,6 @@ function lengthChecksum(length: number) {
       length.toString(16).toUpperCase().padStart(3, '0');
 }
 
-function hexNumber(bytes: number) {
-   return {
-      length: bytes,
-      formatter: (str: string) => parseInt(str, 16),
-      assert: (str: string|number) => typeof str == 'string' && isHexString(str),
-   };
-}
-
 export function toHex(num: number, length: number): string {
    if (num >= Math.pow(16, length)) {
       throw new Error(`Number (${num}) too large to be represented by ${length} hex chars`);
@@ -104,16 +96,4 @@ export function strToHexSized(str: string, size: number): string {
 
 function isHexString(str: string): boolean {
    return /^[0-9A-F]+$/.test(str);
-}
-
-function hexString(length: string|number): {
-   length: number|string,
-   formatter: (buffer: Buffer) => Buffer,
-} {
-   return {
-      length,
-      formatter: (hexBuffer: Buffer) =>  {
-         return Buffer.from(hexBuffer.toString(), 'hex');
-      },
-   };
 }
