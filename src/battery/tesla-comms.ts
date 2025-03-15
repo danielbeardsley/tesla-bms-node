@@ -1,4 +1,4 @@
-import { SerialWrapper } from './serial-wrapper';
+import { SerialWrapper } from '../comms/serial-wrapper';
 import { crc } from '../utils';
 import { Registers } from './tesla-module';
 import { logger } from '../logger';

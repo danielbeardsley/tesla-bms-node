@@ -1,7 +1,7 @@
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { TeslaComms } from '../battery/tesla-comms';
-import { SerialWrapper } from '../battery/serial-wrapper';
+import { SerialWrapper } from '../comms/serial-wrapper';
 import { TeslaModule } from '../battery/tesla-module';
 import { Battery } from '../battery/battery';
 import { sleep } from '../utils';

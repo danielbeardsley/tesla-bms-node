@@ -1,6 +1,6 @@
 import { Battery } from './src/battery/battery';
 import { TeslaComms } from './src/battery/tesla-comms';
-import { SerialWrapper } from './src/battery/serial-wrapper';
+import { SerialWrapper } from './src/comms/serial-wrapper';
 import { getConfig } from './src/config';
 import { BMS } from './src/bms/bms';
 import { logger } from './src/logger';
