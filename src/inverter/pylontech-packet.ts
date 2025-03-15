@@ -21,12 +21,12 @@ export const packetParser = new Parser()
 .string('command', hexNumber(2)) // 2 bytes of hex encoded as ascii like "42" -> 0x42 -> 66
 .string('lengthChecksum', hexNumber(1)) // 1 bytes of a hex-encoded checksum on the length field
 .string('datalength', hexNumber(3)) // 3 bytes of a hex-encoded length
-.buffer('data', { length: 'datalength' })
+.buffer('data', hexString('datalength')) // Variable length data field,
 .buffer('_extra', { length: 1 }) // We always expect this to be empty, indicating there's no extra data
 
 export function parsePacket(buffer: Buffer): Packet {
    const packet = packetParser.parse(buffer);
-   if (packet.data.length !== packet.datalength) {
+   if (packet.data.length * 2 !== packet.datalength) {
       throw new Error('Data length does not match length field, expected ' + packet.datalength + ' but got ' + packet.data.length);
    }
    if (packet._extra.length !== 0) {
@@ -47,8 +47,8 @@ export function generatePacket(address: number, command: Command, data?: Buffer)
       Buffer.from(toHex(address, 2)),
       Buffer.from(toHex(CID1, 2)),
       Buffer.from(toHex(command, 2)),
-      Buffer.from(lengthChecksum(data.length)),
-      data,
+      Buffer.from(lengthChecksum(data.length * 2)), // bytes * 2 cause it ends up encoded as hex chars
+      Buffer.from(bufferToHex(data)),
    ]);
 }
 
@@ -87,6 +87,10 @@ export function toHex(num: number, length: number): string {
    return num.toString(16).toUpperCase().padStart(length, '0');
 }
 
+export function bufferToHex(buffer: Buffer): string {
+   return buffer.toString('hex').toUpperCase();
+}
+
 export function strToHexSized(str: string, size: number): string {
    const paddedStr = str.substring(0, size).padEnd(size, ' ');
    return Buffer.from(paddedStr).toString('hex').toUpperCase();
@@ -94,4 +98,16 @@ export function strToHexSized(str: string, size: number): string {
 
 function isHexString(str: string): boolean {
    return /^[0-9A-F]+$/.test(str);
+}
+
+function hexString(length: string|number): {
+   length: number|string,
+   formatter: (buffer: Buffer) => Buffer,
+} {
+   return {
+      length,
+      formatter: (hexBuffer: Buffer) =>  {
+         return Buffer.from(hexBuffer.toString(), 'hex');
+      },
+   };
 }

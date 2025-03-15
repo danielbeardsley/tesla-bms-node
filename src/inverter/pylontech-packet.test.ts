@@ -17,14 +17,14 @@ describe('parsePacket', () => {
     });
 
     it('should parse a valid packet with data', () => {
-        const buffer = Buffer.from("20014643F001D");
+        const buffer = Buffer.from("20014643F002AD");
         const result = parsePacket(buffer);
         expect(result).toEqual({
             version: 32,
             address: 1,
             command: 0x43,
-            datalength: 1,
-            data: Buffer.from("D"),
+            datalength: 2,
+            data: Buffer.from("AD", 'hex'),
             lengthChecksum: 15,
         });
     });
@@ -68,8 +68,8 @@ describe('generatePacket', () => {
     });
 
     it('should generate a valid packet with data', () => {
-        const expected = Buffer.from("20014651F001D");
-        const result = generatePacket(1, Command.GetManfuacturerInfo, Buffer.from("D"));
+        const expected = Buffer.from("20014651E002AD");
+        const result = generatePacket(1, Command.GetManfuacturerInfo, Buffer.from("AD", 'hex'));
         assertSameBuffer(expected, result);
     });
 
