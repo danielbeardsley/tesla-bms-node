@@ -1,8 +1,15 @@
 
 export enum Command {
-   GetProtocolVersion = 0x4F,
-   GetManfuacturerInfo = 0x51,
-   GetBatteryValues = 0x42,
+   GetBatteryValues = 0x42, // 66
+   GetAlarmInfo = 0x44, // 68
+   GetSystemParameters = 0x47, // 71
+   GetProtocolVersion = 0x4F, // 79
+   GetManfuacturerInfo = 0x51, // 81
+   GetChargeParameters = 0x92, // 146
+   GetSerialNumber = 0x93, // 147
+   SetChargeParameters = 0x94, // 148
+   TurnOff = 0x95, // 149
+   GetFirmwareInfo = 0x96, // 150
 }
 
 export enum ReturnCode {
