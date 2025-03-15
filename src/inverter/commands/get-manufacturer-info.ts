@@ -1,5 +1,6 @@
-import { generatePacket, toHex, strToHexSized } from '../pylontech-packet';
-import { Command } from '../pylontech-command';
+import { generatePacket } from '../pylontech-packet';
+import { ReturnCode } from '../pylontech-command';
+import { SmartBuffer } from 'smart-buffer';
 
 export type GetManufacturerInfoResponse = {
    batteryName: string;
@@ -9,15 +10,15 @@ export type GetManufacturerInfoResponse = {
 
 export const Response = {
    generate: (address: number, data: GetManufacturerInfoResponse): Buffer => {
-      const dataBuffer = Buffer.from(
-         strToHexSized(data.batteryName, 10) +
-         toHex(data.softwareVersion, 2) +
-         strToHexSized(data.manufacturerName, 20)
-      );
+      const b = new SmartBuffer();
+      b.writeString(limitAndPad(data.batteryName, 10))
+      b.writeUInt16BE(data.softwareVersion)
+      b.writeString(limitAndPad(data.manufacturerName, 20))
 
-      if (dataBuffer.length !== 64) {
-         throw new Error('Data length must be 64 bytes');
-      }
-      return generatePacket(address, Command.GetManfuacturerInfo, dataBuffer)
+      return generatePacket(address, ReturnCode.Normal, b.toBuffer());
    }
+}
+
+function limitAndPad(str: string, length: number) {
+   return str.substring(0, length).padEnd(length, ' ');
 }

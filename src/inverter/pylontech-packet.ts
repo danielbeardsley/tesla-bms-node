@@ -1,5 +1,5 @@
 import { SmartBuffer } from 'smart-buffer';
-import type { Command } from './pylontech-command';
+import type { Command, ReturnCode } from './pylontech-command';
 
 export type Packet = {
    version: number;
@@ -43,7 +43,7 @@ export function parsePacket(buffer: Buffer): Packet {
    };
 }
 
-export function generatePacket(address: number, command: Command, data?: Buffer) {
+export function generatePacket(address: number, command: Command|ReturnCode, data?: Buffer) {
    data = data || Buffer.alloc(0);
    if (data.length > 0xfff) {
       throw new Error('Data too long');
