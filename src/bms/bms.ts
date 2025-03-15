@@ -22,14 +22,14 @@ class BMS {
         if (this.timeout) {
             throw new Error("BMS already running");
         }
-        void this.workLoop();
+        void this.monitorBattery();
     }
 
-    public stopMonitoring() {
+    public stopMonitoringBattery() {
         clearInterval(this.timeout);
     }
 
-    private async workLoop() {
+    private async monitorBattery() {
         const now = Date.now();
         try {
             logger.debug("Starting work loop");
@@ -38,7 +38,7 @@ class BMS {
             logger.error(err)
         }
         logger.debug("Finished work loop in %d ms", Date.now() - now);
-        this.timeout = setTimeout(this.workLoop, this.config.bms.intervalS);
+        this.timeout = setTimeout(this.monitorBattery, this.config.bms.intervalS);
     }
 
     private async work() {
