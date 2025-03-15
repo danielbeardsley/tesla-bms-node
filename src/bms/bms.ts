@@ -1,20 +1,38 @@
 import { logger } from '../logger';
 import { Battery } from '../battery/battery';
 import { Config } from '../config';
+import { Pylontech } from '../inverter/pylontech';
+import { Command } from '../inverter/pylontech-command';
+import type { Packet } from '../inverter/pylontech-packet';
 
 class BMS {
     private battery: Battery;
     private timeout: NodeJS.Timeout;
     private config: Config;
+    private inverter: Pylontech;
 
-    constructor(battery: Battery, config: Config) {
+    constructor(battery: Battery, inverter: Pylontech, config: Config) {
         this.battery = battery;
         this.config = config;
+        this.inverter = inverter;
     }
 
     async init() {
         await this.battery.init();
         await this.battery.readAll();
+    }
+
+    private async listenForInverterPacket() {
+        try {
+            const packet = await this.inverter.readPacket(5000);
+            await this.handlePacket(packet);
+        } finally {
+            setTimeout(this.listenForInverterPacket.bind(this), 0);
+        }
+    }
+
+    private async handlePacket(packet: Packet) {
+        logger.debug('Received packet', packet);
     }
 
     public start() {
@@ -23,6 +41,7 @@ class BMS {
             throw new Error("BMS already running");
         }
         void this.monitorBattery();
+        void this.listenForInverterPacket();
     }
 
     public stopMonitoringBattery() {
