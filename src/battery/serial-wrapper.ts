@@ -74,6 +74,34 @@ export class SerialWrapper {
       }
    }
 
+   async readTillDelimiter(delimiter: number, timeout: number = 100): Promise<number[]> {
+      logger.silly('Reading till delimiter %d with timeout %d ms', delimiter, timeout);
+      return new Promise((resolve, reject) => {
+         const timeoutid: NodeJS.Timeout | null =
+            timeout > 0
+               ? setTimeout(() => {
+                    reject(new Error(`Timeout waiting for 0x${delimiter.toString(16)} bytes`));
+                    this.readQueue.shift();
+                 }, timeout)
+               : null;
+
+         this.readQueue.push(() => {
+            const delimiterIndex = this.buffer.indexOf(delimiter);
+            if (delimiterIndex === -1) {
+               return false;
+            }
+            if (timeoutid) {
+               clearTimeout(timeoutid);
+            }
+            const buffer = this.buffer.slice(0, delimiterIndex + 1);
+            this.buffer = this.buffer.slice(delimiterIndex + 1);
+            logger.silly('Found %d bytes before delimiter', buffer.length);
+            resolve(buffer);
+            return true;
+         });
+      });
+   }
+
    /**
     * Return a promise that will resolve when the requested number of bytes
     * have been read. If the timeout is reached, the promise will reject.
