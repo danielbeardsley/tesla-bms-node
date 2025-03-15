@@ -1,10 +1,10 @@
-import { Parser } from 'binary-parser';
+import { SmartBuffer } from 'smart-buffer';
 import type { Command } from './pylontech-command';
 
 export type Packet = {
    version: number;
    address: number;
-   command: string;
+   command: number;
    lengthChecksum: number;
    datalength: number;
    data: Buffer;
@@ -14,27 +14,33 @@ const PYLONTECH_VERSION = 0x20;
 
 const CID1 = 0x46;
 
-export const packetParser = new Parser()
-.string('version', hexNumber(2)) // 2 bytes of a hex-encoded version number
-.string('address', hexNumber(2)) // 2 bytes of a hex-encoded device address
-.string('cid1', hexNumber(2)) // 2 bytes of hex encoded "control identify code", always 0x46
-.string('command', hexNumber(2)) // 2 bytes of hex encoded as ascii like "42" -> 0x42 -> 66
-.string('lengthChecksum', hexNumber(1)) // 1 bytes of a hex-encoded checksum on the length field
-.string('datalength', hexNumber(3)) // 3 bytes of a hex-encoded length
-.buffer('data', hexString('datalength')) // Variable length data field,
-.buffer('_extra', { length: 1 }) // We always expect this to be empty, indicating there's no extra data
-
 export function parsePacket(buffer: Buffer): Packet {
-   const packet = packetParser.parse(buffer);
-   if (packet.data.length * 2 !== packet.datalength) {
-      throw new Error('Data length does not match length field, expected ' + packet.datalength + ' but got ' + packet.data.length);
+   const binary = Buffer.from(buffer.toString(), 'hex');
+   const reader = SmartBuffer.fromBuffer(binary);
+
+   const version        = reader.readUInt8();
+   const address        = reader.readUInt8();
+                          reader.readUInt8(); // cid1, always 0x46, ignored
+   const command        = reader.readUInt8();
+   const lengthField    = reader.readUInt16BE();
+   const lengthChecksum = (lengthField & 0xF000) >> 12;
+   const datalength     = lengthField & 0x0FFF;
+   const data           = reader.readBuffer(Math.ceil(datalength / 2));
+
+   if (data.length * 2 !== datalength) {
+      throw new Error('Data length does not match length field, expected ' + datalength + ' but got ' + data.length * 2);
    }
-   if (packet._extra.length !== 0) {
-      throw new Error('Extra data found at end of packet');
+   if (reader.remaining() > 0) {
+      throw new Error('Extra data found at end of packet: ' + reader.remaining() + ' bytes');
    }
-   delete packet._extra;
-   delete packet.cid1;
-   return packet;
+   return {
+      version,
+      address,
+      command,
+      lengthChecksum,
+      datalength,
+      data,
+   };
 }
 
 export function generatePacket(address: number, command: Command, data?: Buffer) {
