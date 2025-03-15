@@ -26,6 +26,12 @@ const ConfigSchema = z.object({
       // How often to check the battery and inform the inverter
       intervalS: z.number().int().min(1),
    }),
+   inverter: z.object({
+      serialPort: z.object({
+         deviceName: z.string().min(1),
+         baudRate: z.number().int().min(1),
+      }),
+   }),
 });
 
 export function validateConfig(json: object) {

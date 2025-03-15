@@ -6,6 +6,7 @@ import { TeslaModule } from '../battery/tesla-module';
 import { Battery } from '../battery/battery';
 import { sleep } from '../utils';
 import { getConfig } from '../config';
+import { Pylontech } from 'src/inverter/pylontech';
 
 interface ModuleArgs {
    module: number;
@@ -32,6 +33,22 @@ yargs(hideBin(process.argv))
          const range = battery.getCellVoltageRange();
          console.log(`Cell voltage spread:${(range.spread*1000).toFixed(0)}mV range: ${range.min.toFixed(3)}V - ${range.max.toFixed(3)}V`);
          battery.close();
+      }
+   )
+   .command(
+      'log-inverter-requests',
+      'log all requests from the inverter',
+      () => {},
+      async () => {
+         const inverter = await getInverter();
+         while (true) {
+            try {
+               const packet = await inverter.readPacket();
+               console.log("Received Packet:", packet);
+            } catch (e) {
+               console.log("Error Reading packet", e);
+            }
+         }
       }
    )
    .command<ModuleArgs>(
@@ -81,4 +98,13 @@ async function getBattery() {
    await battery.init();
    await battery.readAll();
    return battery;
+}
+
+async function getInverter() {
+   const config = getConfig();
+   const inverterConfig = config.inverter.serialPort;
+   const serial = new SerialWrapper(
+      inverterConfig.deviceName,
+      inverterConfig.baudRate);
+   return new Pylontech(serial);
 }

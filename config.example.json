@@ -1,0 +1,30 @@
+{
+   "battery": {
+      "moduleCount": 1,
+      "serialPort": {
+         "deviceName": "/dev/ttyUSB0"
+      },
+      "balance": {
+         "cellVDiffMax": 0.10,
+         "onlyAbove": 3.5
+      },
+      "charging": {
+         "amps": 100,
+         "volts": 50,
+         "maxCellVolt": 4.1
+      },
+      "discharging": {
+         "maxAmps": 100,
+         "minCellVolt": 3.1
+      }
+   },
+   "bms": {
+      "intervalS": 30
+   },
+   "inverter": {
+      "serialPort": {
+         "deviceName": "/dev/ttyUSB1",
+         "baudRate": 9600
+      }
+   }
+}
