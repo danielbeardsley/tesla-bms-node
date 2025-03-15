@@ -43,7 +43,7 @@ describe('parsePacket', () => {
     });
 
     it('should throw an error for invalid packets', () => {
-        // non-acii number
+        // non-hex string
         expect(() => parsePacket(Buffer.from("XXAB00"))).toThrow();
         // data(0) < length(16)
         expect(() => parsePacket(Buffer.from("20014643800F"))).toThrow();

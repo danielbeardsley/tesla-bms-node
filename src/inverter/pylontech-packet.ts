@@ -15,6 +15,10 @@ const PYLONTECH_VERSION = 0x20;
 const CID1 = 0x46;
 
 export function parsePacket(buffer: Buffer): Packet {
+   if (!isHexString(buffer.toString())) {
+      throw new Error('Buffer is not a hex string');
+   }
+
    const binary = Buffer.from(buffer.toString(), 'hex');
    const reader = SmartBuffer.fromBuffer(binary);
 
