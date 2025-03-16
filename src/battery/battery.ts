@@ -105,6 +105,16 @@ export class Battery {
       return sum / (moduleVolts.length / 2);
    }
 
+   getCapacityAh() {
+      return this.config.battery.capacityPerModuleAh * this.config.battery.moduleCount / 2
+   }
+
+   getRemainingAh() {
+      const bat = this.config.battery;
+      const voltPercent = (this.getVoltage() - bat.voltsEmpty) / (bat.voltsFull - bat.voltsEmpty);
+      return this.getCapacityAh() * voltPercent;
+   }
+
    getCellVoltageRange() {
       const modules = Object.values(this.modules);
       const min = Math.min(...modules.map((m) => m.getMinVoltage()));

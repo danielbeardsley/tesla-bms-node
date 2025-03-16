@@ -4,6 +4,10 @@ import { Config } from '../config';
 import { Pylontech } from '../inverter/pylontech';
 import { Command } from '../inverter/pylontech-command';
 import type { Packet } from '../inverter/pylontech-packet';
+// =========
+import GetBatteryValues from '../inverter/commands/get-battery-values';
+
+const BATTERY_ADDRESS = 2;
 
 class BMS {
     private battery: Battery;
@@ -32,7 +36,34 @@ class BMS {
     }
 
     private async handlePacket(packet: Packet) {
+        if (packet.address !== BATTERY_ADDRESS) {
+            return;
+        }
+        let responsePacket: Buffer|null = null;
+
+        if (packet.command === Command.GetBatteryValues) {
+            const modules = Object.values(this.battery.modules);
+            responsePacket = GetBatteryValues.Response.generate(packet.address, {
+                infoFlag: 0,
+                batteryNumber: 1,
+                battery: {
+                    cellVolts: modules.flatMap(module => module.cellVoltages),
+                    temperaturesC: modules.flatMap(module => module.temperatures),
+                    currentA: 0,
+                    voltage: this.battery.getVoltage(),
+                    cycleCount: 0,
+                    totalCapacityAh: this.battery.getCapacityAh(),
+                    remainingCapacityAh: this.battery.getRemainingAh(),
+                }
+            });
+
+        } else if (packet.command === Command.GetAlarmInfo) {
+        }
+
         logger.debug('Received packet', packet);
+        if (responsePacket) {
+            await this.inverter.writePacket(responsePacket);
+        }
     }
 
     public start() {

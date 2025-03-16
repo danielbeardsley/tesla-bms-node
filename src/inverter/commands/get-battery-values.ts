@@ -18,13 +18,15 @@ export type GetBatteryValuesResponse = {
    battery: BatteryInfo;
 }
 
-export const Response = {
-   generate: (address: number, data: GetBatteryValuesResponse): Buffer => {
-      const out = new SmartBuffer();
-      out.writeUInt8(data.infoFlag);
-      out.writeUInt16BE(data.batteryNumber);
-      outputBatteryInfo(out, data.battery);
-      return generatePacket(address, ReturnCode.Normal, out.toBuffer());
+export default {
+   Response: {
+      generate: (address: number, data: GetBatteryValuesResponse): Buffer => {
+         const out = new SmartBuffer();
+         out.writeUInt8(data.infoFlag);
+         out.writeUInt16BE(data.batteryNumber);
+         outputBatteryInfo(out, data.battery);
+         return generatePacket(address, ReturnCode.Normal, out.toBuffer());
+      }
    }
 }
 

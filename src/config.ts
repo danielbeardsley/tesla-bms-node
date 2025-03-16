@@ -20,10 +20,14 @@ const ConfigSchema = z.object({
       discharging: z.object({
          maxAmps: z.number(),
          minCellVolt: z.number(),
-      })
+      }),
+      capacityPerModuleAh: z.number().min(0),
+      // These are used to anchonr the 0% and 100% SoC voltages
+      voltsEmpty: z.number(),
+      voltsFull: z.number(),
    }),
    bms: z.object({
-      // How often to check the battery and inform the inverter
+      // How often to read the stats of the battery
       intervalS: z.number().int().min(1),
    }),
    inverter: z.object({
