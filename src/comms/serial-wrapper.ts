@@ -5,7 +5,7 @@ import { logger } from '../logger';
 export class SerialWrapper {
    private port!: SerialPort;
    private buffer: number[];
-   private readQueue: (() => boolean)[];
+   private readQueue: ((cancelled?: boolean) => boolean)[];
    private device: string;
    private speed: number;
 
@@ -35,6 +35,9 @@ export class SerialWrapper {
             logger.error('Error on serial port');
             logger.error(err);
             if (err) reject(err);
+         });
+         this.port.on('close', () => {
+            this.cancelReadQueue();
          });
       });
    }
@@ -74,6 +77,11 @@ export class SerialWrapper {
       }
    }
 
+   private cancelReadQueue(): void {
+      this.readQueue.forEach(reader => reader(true));
+      this.readQueue = [];
+   }
+
    async readTillDelimiter(delimiter: number, timeout: number = 100): Promise<number[]> {
       logger.silly('Reading till delimiter %d with timeout %d ms', delimiter, timeout);
       return new Promise((resolve, reject) => {
@@ -85,7 +93,11 @@ export class SerialWrapper {
                  }, timeout)
                : null;
 
-         this.readQueue.push(() => {
+         this.readQueue.push((cancelled?: boolean) => {
+            if (cancelled) {
+               reject(new Error('Port closed'));
+               return false;
+            }
             const delimiterIndex = this.buffer.indexOf(delimiter);
             if (delimiterIndex === -1) {
                return false;
