@@ -6,13 +6,13 @@ import { TeslaModule } from '../battery/tesla-module';
 import { Battery } from '../battery/battery';
 import { sleep } from '../utils';
 import { getConfig } from '../config';
-import { Pylontech } from 'src/inverter/pylontech';
+import { Pylontech } from '../inverter/pylontech';
 
 interface ModuleArgs {
    module: number;
 }
 
-yargs(hideBin(process.argv))
+const result = yargs(hideBin(process.argv))
    .command(
       'renumber',
       're-index and re-number the modules',
@@ -46,7 +46,7 @@ yargs(hideBin(process.argv))
                const packet = await inverter.readPacket();
                console.log("Received Packet:", packet);
             } catch (e) {
-               console.log("Error Reading packet", e);
+               console.error("Error Reading packet", e);
             }
          }
       }
@@ -81,7 +81,14 @@ yargs(hideBin(process.argv))
          }
       }
    )
-   .parse();
+   .parse() as unknown as Promise<void>;
+
+// Hold the node process open.
+const timeoutid = setInterval(() => {}, 5000);
+// Close the timer when the commands are done.
+result.finally(() => {
+   clearInterval(timeoutid);
+});
 
 async function getTeslaComms() {
    const config = getConfig();
@@ -106,5 +113,6 @@ async function getInverter() {
    const serial = new SerialWrapper(
       inverterConfig.deviceName,
       inverterConfig.baudRate);
+   serial.open();
    return new Pylontech(serial);
 }
