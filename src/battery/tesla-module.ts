@@ -34,7 +34,7 @@ class TeslaModule {
    private id: number;
    public cellVoltages: number[];
    public temperatures: number[];
-   public moduleVolts?: number;
+   public moduleVolts: number;
    public alerts!: BQAlerts;
    public faults!: BQFaults;
    public covFaults!: number;
@@ -45,6 +45,7 @@ class TeslaModule {
       this.id = id;
       this.cellVoltages = new Array(6).fill(0);
       this.temperatures = new Array(2).fill(0);
+      this.moduleVolts = 0;
    }
 
    async readBytesFromRegister(register: number, byteCount: number) {

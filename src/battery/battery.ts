@@ -96,6 +96,15 @@ export class Battery {
       return false;
    }
 
+   /**
+    * Calculates the whole battery voltage from the voltage of each module
+    */
+   getVoltage() {
+      const moduleVolts = Object.values(this.modules).map(module => module.moduleVolts)
+      const sum = moduleVolts.reduce((acc, v) => acc + v, 0);
+      return sum / (moduleVolts.length / 2);
+   }
+
    getCellVoltageRange() {
       const modules = Object.values(this.modules);
       const min = Math.min(...modules.map((m) => m.getMinVoltage()));
