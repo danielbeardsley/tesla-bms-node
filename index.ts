@@ -3,6 +3,7 @@ import { TeslaComms } from './src/battery/tesla-comms';
 import { SerialWrapper } from './src/comms/serial-wrapper';
 import { getConfig } from './src/config';
 import { BMS } from './src/bms/bms';
+import { Pylontech } from './src/inverter/pylontech';
 import { logger } from './src/logger';
 
 async function getTeslaComms() {
@@ -22,9 +23,20 @@ async function getBattery() {
    return battery;
 }
 
+async function getInverter() {
+   const config = getConfig();
+   const inverterConfig = config.inverter.serialPort;
+   const serial = new SerialWrapper(
+      inverterConfig.deviceName,
+      inverterConfig.baudRate);
+   await serial.open();
+   return new Pylontech(serial);
+}
+
 async function main() {
    const battery = await getBattery();
-   const bms = new BMS(battery, getConfig());
+   const inverter = await getInverter();
+   const bms = new BMS(battery, inverter, getConfig());
    bms.init();
    bms.start();
 }
