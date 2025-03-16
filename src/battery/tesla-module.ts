@@ -29,7 +29,12 @@ export enum Registers {
    REG_FUNCTION_CONFIG = 0x40,
 }
 
-class TeslaModule {
+export interface BatteryModuleI {
+   cellVoltages: number[];
+   temperatures: number[];
+}
+
+class TeslaModule implements BatteryModuleI {
    private teslaComms: TeslaComms;
    private id: number;
    public cellVoltages: number[];

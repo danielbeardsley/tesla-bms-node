@@ -1,11 +1,16 @@
 import AsyncLock from 'async-lock';
-import { TeslaModule, BQAlerts, BQFaults, Registers } from './tesla-module';
+import { TeslaModule, BQAlerts, BQFaults, Registers, BatteryModule } from './tesla-module';
 import { sleep } from '../utils';
 import { TeslaComms, BROADCAST_ADDR } from './tesla-comms';
 import type { Config } from '../config';
 import { logger } from '../logger';
 
-export class Battery {
+export interface BatteryI {
+   modules: { [key: number]: BatteryModuleI };
+   init: (renumber: boolean) => Promise<void>;
+}
+
+export class Battery implements BatteryI {
    public modules: { [key: number]: TeslaModule };
    private config: Config;
    private lock: AsyncLock;
