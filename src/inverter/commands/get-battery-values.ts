@@ -23,7 +23,7 @@ export default {
       generate: (address: number, data: GetBatteryValuesResponse): Buffer => {
          const out = new SmartBuffer();
          out.writeUInt8(data.infoFlag);
-         out.writeUInt16BE(data.batteryNumber);
+         out.writeUInt8(data.batteryNumber);
          outputBatteryInfo(out, data.battery);
          return generatePacket(address, ReturnCode.Normal, out.toBuffer());
       }
