@@ -34,16 +34,16 @@ describe('decodeFrame', () => {
 describe('encodeFrame', () => {
    it('should encode an empty frame', () => {
       const result = encodeFrame(Buffer.alloc(0));
-      expect(result).toEqual(Buffer.from("~0000~"));
+      expect(result).toEqual(Buffer.from("~0000\r"));
    });
 
    it('should encode a frame with data', () => {
       const result = encodeFrame(Buffer.from("123ABC"));
-      expect(result).toEqual(Buffer.from("~123ABCFEA4~"));
+      expect(result).toEqual(Buffer.from("~123ABCFEA4\r"));
    });
 
    it('should handle long frames', () => {
       const result = encodeFrame(Buffer.from("asdlfkjawefwiafjoi4jfqoi34fjwlefjaliejfaw"));
-      expect(result).toEqual(Buffer.from("~asdlfkjawefwiafjoi4jfqoi34fjwlefjaliejfawEFB6~"));
+      expect(result).toEqual(Buffer.from("~asdlfkjawefwiafjoi4jfqoi34fjwlefjaliejfawEFB6\r"));
    });
 });

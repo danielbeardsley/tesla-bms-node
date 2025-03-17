@@ -26,7 +26,7 @@ export function decodeFrame(buffer: Buffer) {
  */
 export function encodeFrame(data: Buffer) {
    return concatBuffers([
-      '~', data, hexChecksum(data), '~',
+      '~', data, hexChecksum(data), "\r",
    ]);
 }
 
