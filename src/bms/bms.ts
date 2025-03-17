@@ -49,7 +49,7 @@ class BMS {
         if (packet.command === Command.GetBatteryValues) {
             responsePacket = GetBatteryValues.Response.generate(packet.address, {
                 infoFlag: 0,
-                batteryNumber: 1,
+                batteryNumber: packet.address,
                 battery: {
                     cellVolts: modules.flatMap(module => module.cellVoltages),
                     temperaturesC: modules.flatMap(module => module.temperatures),
