@@ -29,8 +29,10 @@ class BMS {
 
     private async listenForInverterPacket() {
         try {
-            const packet = await this.inverter.readPacket(5000);
+            const packet = await this.inverter.readPacket();
             await this.handlePacket(packet);
+        } catch (e) {
+            logger.error("Failed when reading inverter packet", e)
         } finally {
             setTimeout(this.listenForInverterPacket.bind(this), 0);
         }
