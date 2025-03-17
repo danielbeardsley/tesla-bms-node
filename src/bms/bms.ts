@@ -98,7 +98,7 @@ class BMS {
             logger.error(err)
         }
         logger.debug("Finished work loop in %d ms", Date.now() - now);
-        this.timeout = setTimeout(this.monitorBattery, this.config.bms.intervalS);
+        this.timeout = setTimeout(this.monitorBattery.bind(this), this.config.bms.intervalS * 1000);
     }
 
     private async work() {
