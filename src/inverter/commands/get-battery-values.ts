@@ -39,6 +39,12 @@ function outputBatteryInfo(out: SmartBuffer, battery: BatteryInfo) {
    for (const cellVolt of battery.cellVolts) {
       out.writeUInt16BE(voltToPylonVolt(cellVolt));
    }
+   // Protocol requires minimum of 5 temps
+   // So repeat the last one
+   if (battery.temperaturesC.length < 5) {
+      const temps = battery.temperaturesC;
+      temps.fill(temps[temps.length - 1], temps.length, 4);
+   }
    out.writeUInt8(battery.temperaturesC.length);
    for (const temp of battery.temperaturesC) {
       out.writeUInt16BE(tempCToPylonTemp(temp));
