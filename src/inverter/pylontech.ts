@@ -1,5 +1,5 @@
 import { SerialWrapper } from "../comms/serial-wrapper";
-import { logger } from "../logger";
+import { inverterLogger as logger } from "../logger";
 import { decodeFrame, encodeFrame } from "./pylontech-frame";
 import { Packet, parsePacket } from "./pylontech-packet";
 
@@ -15,17 +15,18 @@ export class Pylontech {
    readPacket(timeout?: number): Promise<Packet> {
       return this.serial.readTillDelimiter(PLYONTECH_DELIMITER, timeout || 0)
       .then(frame => {
-         logger.debug('Inverter: Received frame: %s', frame);
+         logger.silly('Received frame: %s', frame);
          const data = decodeFrame(Buffer.from(frame));
-         logger.debug('Inverter: Decoded data: %s', data.toString());
+         logger.silly('Decoded data: %s', data.toString());
          const packet = parsePacket(data);
-         logger.debug('Inverter: Parsed packet %j', packet);
+         logger.debug('Parsed packet %j', packet);
          return packet;
       });
    }
 
    async writePacket(packet: Buffer): Promise<void> {
       logger.debug('Writing packet of length %d', packet.length);
+      logger.silly('Writing packet %s', packet.toString());
       const frame = encodeFrame(packet);
       await this.serial.write(frame);
    }

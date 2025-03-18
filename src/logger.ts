@@ -13,10 +13,13 @@ export const logger = createLogger({
     format.printf(
         info =>
           // https://stackoverflow.com/a/69044670/20358783 more detailLocaleString
-          `${info.timestamp} ${info.level}: ${info.message}`
+          `${info.timestamp} ${info.level}: ${info.label || 'main'}: ${info.message}`
       ),
   ),
   transports: [
     new transports.Console(),
   ]
 });
+
+export const inverterLogger = logger.child({label: 'inverter'});
+export const batteryLogger = logger.child({label: 'battery'});

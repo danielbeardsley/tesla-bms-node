@@ -1,10 +1,11 @@
-import { logger } from '../logger';
+import { logger, inverterLogger, batteryLogger } from '../logger';
 import { Battery } from '../battery/battery';
 import { Config } from '../config';
 import { Pylontech } from '../inverter/pylontech';
 import { Command } from '../inverter/pylontech-command';
 import type { Packet } from '../inverter/pylontech-packet';
 // =========
+import GetChargeDischargeInfo from '../inverter/commands/get-charge-discharge-info';
 import GetBatteryValues from '../inverter/commands/get-battery-values';
 import GetAlarmInfo, { AlarmState } from '../inverter/commands/get-alarm-info';
 
@@ -20,9 +21,12 @@ class BMS {
         this.battery = battery;
         this.config = config;
         this.inverter = inverter;
+        inverterLogger.info("Using config %j", config.inverter);
+        batteryLogger.info("Using config %j", config.battery);
     }
 
     async init() {
+        // TODO: Remove these calls from index.ts
         await this.battery.init();
         await this.battery.readAll();
     }
@@ -40,9 +44,10 @@ class BMS {
 
     private async handlePacket(packet: Packet) {
         if (packet.address !== BATTERY_ADDRESS) {
+            inverterLogger.silly('Received packet not for us at address: %d', packet.address);
             return;
         }
-        logger.debug('Received packet', packet);
+        inverterLogger.verbose('Received packet %j', packet);
         let responsePacket: Buffer|null = null;
         const modules = Object.values(this.battery.modules);
 
@@ -71,6 +76,16 @@ class BMS {
                 batteryVolts: AlarmState.Normal,
                 dischargeCurrent: AlarmState.Normal,
             });
+        } else if (packet.command === Command.GetChargeDischargeInfo) {
+            const cellVoltageRange = this.battery.getCellVoltageRange();
+            responsePacket = GetChargeDischargeInfo.Response.generate(packet.address, {
+                chargeVoltLimit: this.config.battery.charging.maxVolts,
+                dischargeVoltLimit: this.config.battery.discharging.minVolts,
+                chargeCurrentLimit: this.config.battery.charging.maxAmps,
+                dischargeCurrentLimit: this.config.battery.discharging.maxAmps,
+                chargingEnabled: cellVoltageRange.max < this.config.battery.charging.maxCellVolt,
+                dischargingEnabled: cellVoltageRange.min > this.config.battery.discharging.minCellVolt,
+            });
         }
 
         if (responsePacket) {
@@ -79,7 +94,7 @@ class BMS {
     }
 
     public start() {
-        logger.info(`Starting Battery monitoring every $ds`, this.config.bms.intervalS);
+        batteryLogger.info(`Starting Battery monitoring every $ds`, this.config.bms.intervalS);
         if (this.timeout) {
             throw new Error("BMS already running");
         }
@@ -94,12 +109,12 @@ class BMS {
     private async monitorBattery() {
         const now = Date.now();
         try {
-            logger.debug("Starting work loop");
+            batteryLogger.debug("Starting work loop");
             await this.work();
         } catch (err) {
             logger.error(err)
         }
-        logger.debug("Finished work loop in %d ms", Date.now() - now);
+        batteryLogger.debug("Finished work loop in %d ms", Date.now() - now);
         this.timeout = setTimeout(this.monitorBattery.bind(this), this.config.bms.intervalS * 1000);
     }
 
@@ -108,19 +123,7 @@ class BMS {
         await this.battery.readAll();
         const range = await this.battery.getCellVoltageRange();
         await this.battery.balance(this.config.bms.intervalS);
-        logger.debug(`Cell voltage spread:${(range.spread*1000).toFixed(0)}mV range: ${range.min.toFixed(3)}V - ${range.max.toFixed(3)}V`);
-        const chargeParams = this.getChargeParameters();
-    }
-
-    private getChargeParameters() {
-        const cellVoltageRange = this.battery.getCellVoltageRange();
-        return {
-            chargeCurrent: this.config.battery.charging.amps,
-            chargeVolts: this.config.battery.charging.volts,
-            maxDischargeAmps: this.config.battery.discharging.maxAmps,
-            canCharge: cellVoltageRange.max >= this.config.battery.charging.maxCellVolt,
-            canDischarge: cellVoltageRange.min <= this.config.battery.discharging.minCellVolt,
-        };
+        batteryLogger.debug(`Cell voltage spread:${(range.spread*1000).toFixed(0)}mV range: ${range.min.toFixed(3)}V - ${range.max.toFixed(3)}V`);
     }
 }
 

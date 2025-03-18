@@ -1,5 +1,6 @@
 import { SmartBuffer } from 'smart-buffer';
 import type { Command, ReturnCode } from './pylontech-command';
+import { inverterLogger as logger } from '../logger';
 
 export type Packet = {
    version: number;
@@ -15,6 +16,7 @@ const PYLONTECH_VERSION = 0x20;
 const CID1 = 0x46;
 
 export function parsePacket(buffer: Buffer): Packet {
+   logger.silly('Parsing packet: %j', buffer);
    if (!isHexString(buffer.toString())) {
       throw new Error('Buffer is not a hex string');
    }
@@ -37,7 +39,7 @@ export function parsePacket(buffer: Buffer): Packet {
    if (reader.remaining() > 0) {
       throw new Error('Extra data found at end of packet: ' + reader.remaining() + ' bytes');
    }
-   return {
+   const parsedPacket = {
       version,
       address,
       command,
@@ -45,10 +47,13 @@ export function parsePacket(buffer: Buffer): Packet {
       datalength,
       data,
    };
+   logger.debug('Parsed packet: %j', parsedPacket);
+   return parsedPacket;
 }
 
 export function generatePacket(address: number, command: Command|ReturnCode, data?: Buffer) {
    data = data || Buffer.alloc(0);
+   logger.silly('Generating packet with data: %j', data);
    if (data.length > 0xfff) {
       throw new Error('Data too long');
    }

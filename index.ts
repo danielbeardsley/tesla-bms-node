@@ -4,7 +4,7 @@ import { SerialWrapper } from './src/comms/serial-wrapper';
 import { getConfig } from './src/config';
 import { BMS } from './src/bms/bms';
 import { Pylontech } from './src/inverter/pylontech';
-import { logger } from './src/logger';
+import { batteryLogger, inverterLogger, logger } from './src/logger';
 
 async function getTeslaComms() {
    const config = getConfig();
@@ -16,7 +16,9 @@ async function getTeslaComms() {
 
 async function getBattery() {
    const config = getConfig();
+   batteryLogger.info('Starting battery communications');
    const teslaComms = await getTeslaComms();
+   batteryLogger.info('Serial port open');
    const battery = new Battery(teslaComms, config);
    await battery.init();
    await battery.readAll();
@@ -25,11 +27,13 @@ async function getBattery() {
 
 async function getInverter() {
    const config = getConfig();
+   inverterLogger.info('Starting inverter communications');
    const inverterConfig = config.inverter.serialPort;
    const serial = new SerialWrapper(
       inverterConfig.deviceName,
       inverterConfig.baudRate);
    await serial.open();
+   inverterLogger.info('Serial port open');
    return new Pylontech(serial);
 }
 

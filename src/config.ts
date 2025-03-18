@@ -13,12 +13,13 @@ const ConfigSchema = z.object({
          onlyAbove: z.number().min(0).max(5),
       }),
       charging: z.object({
-         amps: z.number(),
-         volts: z.number(),
+         maxAmps: z.number(),
+         maxVolts: z.number(),
          maxCellVolt: z.number(),
       }),
       discharging: z.object({
          maxAmps: z.number(),
+         minVolts: z.number(),
          minCellVolt: z.number(),
       }),
       capacityPerModuleAh: z.number().min(0),

@@ -1,6 +1,7 @@
 import { generatePacket } from '../pylontech-packet';
 import { ReturnCode } from '../pylontech-command';
 import { SmartBuffer } from 'smart-buffer';
+import { inverterLogger as logger } from '../../logger';
 
 type AlarmInfo = {
    cellVolts: AlarmState[];
@@ -20,6 +21,7 @@ export enum AlarmState {
 export default {
    Response: {
       generate: (address: number, data: AlarmInfo): Buffer => {
+         logger.verbose("Generting alarm values packet %j", data);
          const out = new SmartBuffer();
          out.writeUInt8(address); // "Command value"
          out.writeUInt8(data.cellVolts.length);

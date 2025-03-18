@@ -1,0 +1,41 @@
+import { generatePacket } from '../pylontech-packet';
+import { ReturnCode } from '../pylontech-command';
+import { SmartBuffer } from 'smart-buffer';
+import { inverterLogger as logger } from '../../logger';
+
+type ChargeInfo = {
+   chargeVoltLimit: number;
+   dischargeVoltLimit: number;
+   chargeCurrentLimit: number;
+   dischargeCurrentLimit: number;
+   chargingEnabled: boolean;
+   dischargingEnabled: boolean;
+}
+
+export default {
+   Response: {
+      generate: (address: number, data: ChargeInfo): Buffer => {
+         logger.verbose("Generting charge info %j", data);
+         const out = new SmartBuffer();
+         out.writeUInt8(address); // "Command value"
+         out.writeUInt16BE(voltsToPylonVolts(data.chargeVoltLimit));
+         out.writeUInt16BE(voltsToPylonVolts(data.dischargeVoltLimit));
+         out.writeUInt16BE(data.chargeCurrentLimit);
+         out.writeUInt16BE(data.dischargeCurrentLimit);
+         out.writeUInt8(
+            bit(7, data.chargingEnabled) |
+            bit(6, data.dischargingEnabled)
+         );
+         logger.silly("Generated charge info packet: %s", out.toBuffer().toString('hex'));
+         return generatePacket(address, ReturnCode.Normal, out.toBuffer());
+      }
+   }
+}
+
+function bit(pos: number, value: boolean): number {
+   return value ? 1 << pos : 0;
+}
+
+function voltsToPylonVolts(v: number): number {
+   return Math.round(v * 1000);
+}

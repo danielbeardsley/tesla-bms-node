@@ -1,6 +1,7 @@
 import { generatePacket } from '../pylontech-packet';
 import { ReturnCode } from '../pylontech-command';
 import { SmartBuffer } from 'smart-buffer';
+import { inverterLogger as logger } from '../../logger';
 
 type BatteryInfo = {
    cellVolts: number[];
@@ -21,11 +22,14 @@ export type GetBatteryValuesResponse = {
 export default {
    Response: {
       generate: (address: number, data: GetBatteryValuesResponse): Buffer => {
+         logger.verbose("Generting battery values packet %j", data);
          const out = new SmartBuffer();
          out.writeUInt8(data.infoFlag);
          out.writeUInt8(data.batteryNumber);
          outputBatteryInfo(out, data.battery);
-         return generatePacket(address, ReturnCode.Normal, out.toBuffer());
+         const packet = generatePacket(address, ReturnCode.Normal, out.toBuffer());
+         logger.silly("Generated packet: %s", packet.toString());
+         return packet;
       }
    }
 }
