@@ -121,7 +121,7 @@ class BMS {
     private async work() {
         await this.battery.stopBalancing();
         await this.battery.readAll();
-        const range = await this.battery.getCellVoltageRange();
+        const range = this.battery.getCellVoltageRange();
         await this.battery.balance(this.config.bms.intervalS);
         batteryLogger.debug(`Cell voltage spread:${(range.spread*1000).toFixed(0)}mV range: ${range.min.toFixed(3)}V - ${range.max.toFixed(3)}V`);
     }
