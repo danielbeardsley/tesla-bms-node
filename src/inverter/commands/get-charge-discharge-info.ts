@@ -20,8 +20,8 @@ export default {
          out.writeUInt8(address); // "Command value"
          out.writeUInt16BE(voltsToPylonVolts(data.chargeVoltLimit));
          out.writeUInt16BE(voltsToPylonVolts(data.dischargeVoltLimit));
-         out.writeUInt16BE(data.chargeCurrentLimit);
-         out.writeUInt16BE(data.dischargeCurrentLimit);
+         out.writeInt16BE(ampsToPylonAmps(data.chargeCurrentLimit));
+         out.writeInt16BE(ampsToPylonAmps(-data.dischargeCurrentLimit));
          out.writeUInt8(
             bit(7, data.chargingEnabled) |
             bit(6, data.dischargingEnabled)
@@ -38,4 +38,8 @@ function bit(pos: number, value: boolean): number {
 
 function voltsToPylonVolts(v: number): number {
    return Math.round(v * 1000);
+}
+
+function ampsToPylonAmps(a: number): number {
+   return Math.round(a * 10);
 }
