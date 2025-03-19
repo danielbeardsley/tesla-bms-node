@@ -49,7 +49,7 @@ function outputBatteryInfo(out: SmartBuffer, battery: BatteryInfo) {
    for (const temp of battery.temperaturesC) {
       out.writeUInt16BE(tempCToPylonTemp(temp));
    }
-   out.writeUInt16BE(currentToPylonCurrent(battery.currentA));
+   out.writeInt16BE(currentToPylonCurrent(battery.currentA));
    out.writeUInt16BE(voltToPylonVolt(battery.voltage));
    out.writeUInt16BE(0xFFFF); // Ignored because remaining capacity sent in wider field
    out.writeUInt8(0x04); // Indicates remaining capaccity sent in wider field
