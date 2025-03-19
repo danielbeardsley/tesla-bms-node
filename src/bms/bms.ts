@@ -26,7 +26,6 @@ class BMS {
     }
 
     async init() {
-        // TODO: Remove these calls from index.ts
         await this.battery.init();
         await this.battery.readAll();
     }

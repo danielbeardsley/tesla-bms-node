@@ -20,8 +20,6 @@ async function getBattery() {
    const teslaComms = await getTeslaComms();
    batteryLogger.info('Serial port open');
    const battery = new Battery(teslaComms, config);
-   await battery.init();
-   await battery.readAll();
    return battery;
 }
 
