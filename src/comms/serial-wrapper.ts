@@ -25,7 +25,7 @@ export class SerialWrapper {
          });
 
          this.port.on('data', (data: Buffer) => {
-            logger.silly('Received $d bytes', data.length);
+            logger.silly('Received %d bytes', data.length);
             this.buffer.push(...data);
             this.processReadQueue();
          });
