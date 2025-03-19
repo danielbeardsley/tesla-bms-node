@@ -1,5 +1,5 @@
 import AsyncLock from 'async-lock';
-import { TeslaModule, BQAlerts, BQFaults, Registers, BatteryModule } from './tesla-module';
+import { TeslaModule, BQAlerts, BQFaults, Registers, BatteryModuleI } from './tesla-module';
 import { sleep } from '../utils';
 import { TeslaComms, BROADCAST_ADDR } from './tesla-comms';
 import type { Config } from '../config';
