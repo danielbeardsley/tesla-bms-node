@@ -2,7 +2,7 @@ import { logger, inverterLogger, batteryLogger } from '../logger';
 import { Battery } from '../battery/battery';
 import { Config } from '../config';
 import { Pylontech } from '../inverter/pylontech';
-import { Command } from '../inverter/pylontech-command';
+import { Command, commandToMessage } from '../inverter/pylontech-command';
 import type { Packet } from '../inverter/pylontech-packet';
 // =========
 import GetChargeDischargeInfo from '../inverter/commands/get-charge-discharge-info';
@@ -46,7 +46,8 @@ class BMS {
             inverterLogger.silly('Received packet not for us at address: %d', packet.address);
             return;
         }
-        inverterLogger.verbose('Received packet %j', packet);
+        const commandText = commandToMessage(packet.command);
+        inverterLogger.verbose('Received packet (%s): %j', commandText, packet);
         let responsePacket: Buffer|null = null;
         const modules = Object.values(this.battery.modules);
 

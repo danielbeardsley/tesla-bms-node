@@ -46,3 +46,28 @@ export function returnCodeToMessage(returnCode: ReturnCode): string {
          return 'Communication Error';
    }
 }
+
+export function commandToMessage(command: Command): string {
+   switch (command) {
+      case Command.GetBatteryValues:
+         return 'Get Battery Values';
+      case Command.GetAlarmInfo:
+         return 'Get Alarm Info';
+      case Command.GetSystemParameters:
+         return 'Get System Parameters';
+      case Command.GetProtocolVersion:
+         return 'Get Protocol Version';
+      case Command.GetManfuacturerInfo:
+         return 'Get Manufacturer Info';
+      case Command.GetChargeDischargeInfo:
+         return 'Get Charge Discharge Info';
+      case Command.GetSerialNumber:
+         return 'Get Serial Number';
+      case Command.SetChargeParameters:
+         return 'Set Charge Parameters';
+      case Command.TurnOff:
+         return 'Turn Off';
+      case Command.GetFirmwareInfo:
+         return 'Get Firmware Info';
+   }
+}
