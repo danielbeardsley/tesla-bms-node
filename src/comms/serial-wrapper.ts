@@ -142,6 +142,7 @@ export class SerialWrapper {
             resolve(buffer);
             return true;
          });
+         this.processReadQueue();
       });
    }
 
