@@ -156,7 +156,11 @@ export class Battery implements BatteryI {
             cellsAbove += await this.modules[index].balanceCellsAbove(balanceAboveV, forSeconds);
          });
       }
-      logger.info("Balancing initiated on %d cells", cellsAbove);
+      if (cellsAbove > 0) {
+         logger.info("Balancing initiated on %d cells", cellsAbove);
+      } else {
+         logger.debug("Balancing skipped, no cells to balance");
+      }
       return cellsAbove;
    }
 
