@@ -43,4 +43,7 @@ async function main() {
    bms.start();
 }
 
-main().then(()=> logger.info('exiting!'));
+main().catch((e)=> {
+   logger.error('Failed to start', e);
+   process.exit(1);
+})
