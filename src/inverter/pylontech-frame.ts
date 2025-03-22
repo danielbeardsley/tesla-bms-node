@@ -41,11 +41,9 @@ function hexChecksum(frame: Buffer): string {
       sum += byte;
    }
 
-   sum = (~sum + 1) & 0xFFFF; // Ensure it's a positive 16-bit value
+   sum = (~(sum & 0xFFFF) + 1) & 0xFFFF; // Ensure it's a positive 16-bit value
 
-   const buffer = Buffer.alloc(2);
-   buffer.writeUInt16BE(sum, 0);
-   return buffer.toString('hex').toUpperCase();
+   return sum.toString(16).toUpperCase().padStart(4, '0');
 }
 
 // concatenates strings and buffers into a single buffer
