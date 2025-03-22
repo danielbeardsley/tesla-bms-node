@@ -13,9 +13,10 @@ export function decodeFrame(buffer: Buffer) {
 
    const data = buffer.subarray(1, -5);
    const checksum = buffer.subarray(-5, -1).toString('ascii');
+   const calculatedChecksum = hexChecksum(data);
 
-   if (hexChecksum(data) !== checksum) {
-      throw new Error('Invalid checksum, expected ' + hexChecksum(data) + ' but got ' + checksum);
+   if (calculatedChecksum !== checksum) {
+      throw new Error('Invalid checksum, calculated:' + calculatedChecksum + ' from packet:' + checksum);
    }
    return data;
 }

@@ -94,7 +94,7 @@ class BMS {
     }
 
     public start() {
-        batteryLogger.info(`Starting Battery monitoring every $ds`, this.config.bms.intervalS);
+        batteryLogger.info(`Starting Battery monitoring every %ds`, this.config.bms.intervalS);
         if (this.timeout) {
             throw new Error("BMS already running");
         }
