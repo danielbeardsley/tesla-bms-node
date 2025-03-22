@@ -18,7 +18,10 @@ const CID1 = 0x46;
 export function parsePacket(buffer: Buffer): Packet {
    logger.silly('Parsing packet: %j', buffer);
    if (!isHexString(buffer.toString())) {
-      throw new Error('Buffer is not a hex string');
+      throw new Error('Buffer is not a string of hex chars');
+   }
+   if (buffer.length % 2 !== 0) {
+      throw new Error('Buffer length is not an even number: ' + buffer.length);
    }
 
    const binary = Buffer.from(buffer.toString(), 'hex');
