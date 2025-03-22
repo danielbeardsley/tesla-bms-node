@@ -149,7 +149,7 @@ export class Battery implements BatteryI {
       const {min} = this.getCellVoltageRange();
       const maxDiff = this.config.battery.balance.cellVDiffMax;
       const balanceAboveV = min + maxDiff;
-      logger.verbose("Balancing all cells %sV above %sV for %d sec", maxDiff.toFixed(3), balanceAboveV.toFixed(3), forSeconds);
+      logger.verbose("Balancing all cells above %sV (min:%sV + %sV) for %d sec", balanceAboveV.toFixed(3), min.toFixed(3), maxDiff.toFixed(3), forSeconds);
       let cellsAbove = 0;
       for (const index in this.modules) {
          await this.lock.acquire('key', async () => {
