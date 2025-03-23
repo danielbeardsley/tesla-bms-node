@@ -52,7 +52,7 @@ function outputBatteryInfo(out: SmartBuffer, battery: BatteryInfo) {
    const defaultCapactiyAh = 60; // TODO: igure out why inverter can't handle the expanded protocol
    const remainScaled = battery.stateOfCharge * defaultCapactiyAh;
    const totalScaled = defaultCapactiyAh;
-   logger.silly("Capacity %d/%d = %dpct", remainScaled.toFixed(1), totalScaled.toFixed(1), (soc * 100).toFixed(1));
+   logger.silly("Capacity %d/%d = %dpct", remainScaled.toFixed(1), totalScaled.toFixed(1), (battery.stateOfCharge * 100).toFixed(1));
    out.writeUInt16BE(remainScaled * 1000);
    out.writeUInt8(0x02);
    out.writeUInt16BE(totalScaled * 1000);
