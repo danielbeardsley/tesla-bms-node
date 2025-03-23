@@ -50,7 +50,6 @@ export function parsePacket(buffer: Buffer): Packet {
       datalength,
       data,
    };
-   logger.debug('Parsed packet: %j', parsedPacket);
    return parsedPacket;
 }
 
