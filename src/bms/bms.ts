@@ -4,6 +4,7 @@ import { Config } from '../config';
 import { Pylontech } from '../inverter/pylontech';
 import { Command, commandToMessage } from '../inverter/pylontech-command';
 import type { Packet } from '../inverter/pylontech-packet';
+import { clamp } from '../utils';
 // =========
 import GetChargeDischargeInfo from '../inverter/commands/get-charge-discharge-info';
 import GetBatteryValues from '../inverter/commands/get-battery-values';
@@ -76,12 +77,21 @@ class BMS {
                 batteryVolts: AlarmState.Normal,
                 dischargeCurrent: AlarmState.Normal,
             });
+
         } else if (packet.command === Command.GetChargeDischargeInfo) {
             const cellVoltageRange = this.battery.getCellVoltageRange();
+            inverterLogger.debug("Voltage range: %d - %d", cellVoltageRange.min, cellVoltageRange.max);
+            // Scale down the charging current as the highest volt cell
+            // gets within "buffer" volts of the maxCellVolt setting
+            const maxCellVolt = this.config.battery.charging.maxCellVolt;
+            const buffer = 0.2;
+            const bufferStart = maxCellVolt - buffer;
+            const chargeScale = 1 - clamp((cellVoltageRange.max - bufferStart) / buffer, 0, 1);
+
             responsePacket = GetChargeDischargeInfo.Response.generate(packet.address, {
                 chargeVoltLimit: this.config.battery.charging.maxVolts,
                 dischargeVoltLimit: this.config.battery.discharging.minVolts,
-                chargeCurrentLimit: this.config.battery.charging.maxAmps,
+                chargeCurrentLimit: this.config.battery.charging.maxAmps * chargeScale,
                 dischargeCurrentLimit: this.config.battery.discharging.maxAmps,
                 chargingEnabled: cellVoltageRange.max < this.config.battery.charging.maxCellVolt,
                 dischargingEnabled: cellVoltageRange.min > this.config.battery.discharging.minCellVolt,
