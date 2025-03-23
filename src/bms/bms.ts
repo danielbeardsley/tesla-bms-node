@@ -43,11 +43,11 @@ class BMS {
     }
 
     private async handlePacket(packet: Packet) {
+        const commandText = commandToMessage(packet.command);
         if (packet.address !== BATTERY_ADDRESS) {
-            inverterLogger.silly('Received packet not for us at address: %d', packet.address);
+            inverterLogger.silly('Packet not for us (%s): %j', commandText, packet);
             return;
         }
-        const commandText = commandToMessage(packet.command);
         inverterLogger.verbose('Received packet (%s): %j', commandText, packet);
         let responsePacket: Buffer|null = null;
         const modules = Object.values(this.battery.modules);
