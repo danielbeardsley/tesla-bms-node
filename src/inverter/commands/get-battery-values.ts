@@ -43,7 +43,10 @@ function outputBatteryInfo(out: SmartBuffer, battery: BatteryInfo) {
    // So repeat the last one
    if (battery.temperaturesC.length < 5) {
       const temps = battery.temperaturesC;
-      temps.fill(temps[temps.length - 1], temps.length, 4);
+      for (let i = temps.length; i < 5; i++) {
+         temps.push(temps[temps.length - 1]);
+      }
+      logger.silly("Repeating last temp to fill 5: %j", temps);
    }
    out.writeUInt8(battery.temperaturesC.length);
    for (const temp of battery.temperaturesC) {
