@@ -10,7 +10,7 @@ type BatteryInfo = {
    voltage: number;
    cycleCount: number;
    totalCapacityAh: number;
-   remainingCapacityAh: number;
+   stateOfCharge: number;
 }
 
 export type GetBatteryValuesResponse = {
@@ -51,12 +51,22 @@ function outputBatteryInfo(out: SmartBuffer, battery: BatteryInfo) {
    }
    out.writeInt16BE(currentToPylonCurrent(battery.currentA));
    out.writeUInt16BE(voltToPylonVolt(battery.voltage));
+   const defaultCapactiyAh = 60; // TODO: igure out why inverter can't handle the expanded protocol
+   const remainScaled = battery.stateOfCharge * defaultCapactiyAh;
+   const totalScaled = defaultCapactiyAh;
+   logger.silly("Capacity %d/%d = %dpct", remainScaled.toFixed(1), totalScaled.toFixed(1), (soc * 100).toFixed(1));
+   out.writeUInt16BE(remainScaled * 1000);
+   out.writeUInt8(0x02);
+   out.writeUInt16BE(totalScaled * 1000);
+   out.writeUInt16BE(battery.cycleCount);
+   /*
    out.writeUInt16BE(0xFFFF); // Ignored because remaining capacity sent in wider field
    out.writeUInt8(0x04); // Indicates remaining capaccity sent in wider field
    out.writeUInt16BE(0xFFFF); // Ignored because total capacity sent in wider field
    out.writeUInt16BE(battery.cycleCount);
    out.writeBuffer(capacityAhToPylonCapacity(battery.remainingCapacityAh));
    out.writeBuffer(capacityAhToPylonCapacity(battery.totalCapacityAh));
+   */
 }
 
 function tempCToPylonTemp(temp: number) {

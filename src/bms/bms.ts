@@ -62,8 +62,8 @@ class BMS {
                     currentA: 0,
                     voltage: this.battery.getVoltage(),
                     cycleCount: 0,
+                    stateOfCharge: this.battery.getStateOfCharge(),
                     totalCapacityAh: this.battery.getCapacityAh(),
-                    remainingCapacityAh: this.battery.getRemainingAh(),
                 }
             });
 

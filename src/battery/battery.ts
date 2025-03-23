@@ -1,6 +1,6 @@
 import AsyncLock from 'async-lock';
 import { TeslaModule, BQAlerts, BQFaults, Registers, BatteryModuleI } from './tesla-module';
-import { sleep } from '../utils';
+import { clamp, sleep } from '../utils';
 import { TeslaComms, BROADCAST_ADDR } from './tesla-comms';
 import type { Config } from '../config';
 import { logger } from '../logger';
@@ -114,10 +114,12 @@ export class Battery implements BatteryI {
       return this.config.battery.capacityPerModuleAh * this.config.battery.moduleCount / 2
    }
 
-   getRemainingAh() {
+   getStateOfCharge() {
       const bat = this.config.battery;
-      const voltPercent = (this.getVoltage() - bat.voltsEmpty) / (bat.voltsFull - bat.voltsEmpty);
-      return this.getCapacityAh() * voltPercent;
+      const voltageBasedChargeLevel =
+       (this.getVoltage() - bat.voltsEmpty) /
+       (bat.voltsFull - bat.voltsEmpty);
+       return clamp(voltageBasedChargeLevel, 0, 1);
    }
 
    getCellVoltageRange() {
