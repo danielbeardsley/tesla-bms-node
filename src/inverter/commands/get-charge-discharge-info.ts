@@ -20,8 +20,8 @@ export default {
          out.writeUInt8(address); // "Command value"
          out.writeUInt16BE(voltsToPylonVolts(data.chargeVoltLimit));
          out.writeUInt16BE(voltsToPylonVolts(data.dischargeVoltLimit));
-         out.writeInt16BE(ampsToPylonAmps(data.chargeCurrentLimit));
-         out.writeInt16BE(ampsToPylonAmps(-data.dischargeCurrentLimit));
+         out.writeInt16BE(ampsToPylonAmps(data.chargingEnabled ? data.chargeCurrentLimit : 0));
+         out.writeInt16BE(ampsToPylonAmps(data.dischargingEnabled ? -data.dischargeCurrentLimit : 0));
          out.writeUInt8(
             bit(7, data.chargingEnabled) |
             bit(6, data.dischargingEnabled)
