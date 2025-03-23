@@ -105,7 +105,7 @@ export class Battery implements BatteryI {
     * Calculates the whole battery voltage from the voltage of each module
     */
    getVoltage() {
-      const moduleVolts = Object.values(this.modules).map(module => module.moduleVolts)
+      const moduleVolts = Object.values(this.modules).map(module => module.getCellVoltageSum());
       const sum = moduleVolts.reduce((acc, v) => acc + v, 0);
       return sum / (moduleVolts.length / 2);
    }
