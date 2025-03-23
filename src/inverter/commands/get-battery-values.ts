@@ -41,13 +41,8 @@ function outputBatteryInfo(out: SmartBuffer, battery: BatteryInfo) {
    }
    // Protocol requires minimum of 5 temps
    // So repeat the last one
-   if (battery.temperaturesC.length < 5) {
-      const temps = battery.temperaturesC;
-      for (let i = temps.length; i < 5; i++) {
-         temps.push(temps[temps.length - 1]);
-      }
-      logger.silly("Repeating last temp to fill 5: %j", temps);
-   }
+   extendArrayTo(battery.temperaturesC, 5);
+
    out.writeUInt8(battery.temperaturesC.length);
    for (const temp of battery.temperaturesC) {
       out.writeUInt16BE(tempCToPylonTemp(temp));
@@ -82,6 +77,13 @@ function voltToPylonVolt(volt: number) {
 
 function currentToPylonCurrent(current: number) {
    return Math.round(current * 10);
+}
+
+function extendArrayTo<T>(arr: T[], length: number): T[] {
+   const last = arr[arr.length - 1];
+   for (let i = arr.length; i < length; i++) {
+      arr.push(last);
+   }
 }
 
 /**
