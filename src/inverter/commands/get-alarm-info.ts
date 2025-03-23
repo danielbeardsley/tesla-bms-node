@@ -4,6 +4,7 @@ import { SmartBuffer } from 'smart-buffer';
 import { inverterLogger as logger } from '../../logger';
 
 type AlarmInfo = {
+   infoFlag: number;
    cellVolts: AlarmState[];
    temperatures: AlarmState[];
    chargeCurrent: AlarmState;
@@ -23,7 +24,9 @@ export default {
       generate: (address: number, data: AlarmInfo): Buffer => {
          logger.verbose("Generting alarm values packet %j", data);
          const out = new SmartBuffer();
-         out.writeUInt8(address); // "Command value"
+         out.writeUInt8(data.infoFlag);
+         out.writeUInt8(1); // "battery count" ... number of times the below section is repeated
+         // Per Battery Start
          out.writeUInt8(data.cellVolts.length);
          data.cellVolts.forEach(cellAlarm => out.writeUInt8(cellAlarm));
          out.writeUInt8(data.temperatures.length);
@@ -37,6 +40,7 @@ export default {
          out.writeUInt8(0); // Status bits 3
          out.writeUInt8(0); // Status bits 4
          out.writeUInt8(0); // Status bits 5
+         // Per Battery End
          return generatePacket(address, ReturnCode.Normal, out.toBuffer());
       }
    }

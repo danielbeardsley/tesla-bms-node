@@ -54,7 +54,7 @@ class BMS {
 
         if (packet.command === Command.GetBatteryValues) {
             responsePacket = GetBatteryValues.Response.generate(packet.address, {
-                infoFlag: 0,
+                infoFlag: 0x11, // 0x11 = things have changed since last time
                 batteryNumber: packet.address,
                 battery: {
                     cellVolts: modules.flatMap(module => module.cellVoltages),
@@ -71,6 +71,7 @@ class BMS {
             const cellVolts = modules.flatMap(module => module.cellVoltages);
             const temps = modules.flatMap(module => module.temperatures);
             responsePacket = GetAlarmInfo.Response.generate(packet.address, {
+                infoFlag: 0x11, // 0x11 = things have changed since last time
                 cellVolts: cellVolts.map(() => AlarmState.Normal),
                 temperatures: temps.map(() => AlarmState.Normal),
                 chargeCurrent: AlarmState.Normal,
