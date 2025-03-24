@@ -10,7 +10,6 @@ when to charge and discharge the battery.
       * Allow switching charge contrller implementations
       * Try to compute real voltage using discharge current from the inverter
         and the current voltage
-      * See if moduleVolts or the sum-of-cells is closer to the truth
    * Charge
       * Charge at a higer voltage and stop when the current reaches some
         smaller amount (or the cells are at some voltage)
@@ -18,9 +17,7 @@ when to charge and discharge the battery.
       * Add alarms for over voltage, under voltage, over current, etc
       * Figure out if the alarms are really warnings, or if they cause
         the inverter to shut down the output
-   * Capacity
-      * Model true cell volts by taking into account the measured volts
-        and the discharge / charge current
+   * Visualize the charge routine in some way for tweaking and debugging
 
 * Tests to add or improve
    * BMS
@@ -32,5 +29,8 @@ when to charge and discharge the battery.
 * Reporting
    * Current Values
       * Expose lots of the current state via a json API
+   * History
+      * Decide how and where to store the history of the battery state
+      * Decide how and where to store the history of the inverter state
    * Logging
       * Ensure errors easily identified in the logs, all using logger.error()
