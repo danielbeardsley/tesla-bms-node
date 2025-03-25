@@ -30,6 +30,10 @@ const ConfigSchema = z.object({
    bms: z.object({
       // How often to read the stats of the battery
       intervalS: z.number().int().min(1),
+      // How old can the oldest battery data be before it's considered stale,
+      // shutting down charging and discharging. Effectively, if you unplug
+      // the battery comms cable, how long before we stop charging/discharging.
+      batteryRecencyLimit: z.number().int().min(1),
    }),
    inverter: z.object({
       serialPort: z.object({

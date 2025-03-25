@@ -44,6 +44,7 @@ class TeslaModule implements BatteryModuleI {
    public faults!: BQFaults;
    public covFaults!: number;
    public cuvFaults!: number;
+   public lastUpdate: number = 0;
 
    constructor(teslaComms: TeslaComms, id: number) {
       this.teslaComms = teslaComms;
@@ -132,6 +133,7 @@ class TeslaModule implements BatteryModuleI {
 
       this.temperatures[0] = this.convertUint16ToTemp(uint16s[7]);
       this.temperatures[1] = this.convertUint16ToTemp(uint16s[8]);
+      this.lastUpdate = Date.now();
       logger.verbose('Module %d: cell volts: %s temps: %s', this.id, this.cellVoltagesString(), this.temperaturesString());
    }
 

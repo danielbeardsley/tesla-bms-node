@@ -57,6 +57,7 @@ class BMS {
         inverterLogger.verbose('Received packet (%s): %j', commandText, packet);
         let responsePacket: Buffer|null = null;
         const modules = Object.values(this.battery.modules);
+        const batteryInfoRecent = Date.now() - this.battery.getLastUpdateDate() < this.config.bms.batteryRecencyLimit;
 
         if (packet.command === Command.GetBatteryValues) {
             responsePacket = GetBatteryValues.Response.generate(packet.address, {
@@ -100,8 +101,8 @@ class BMS {
                 dischargeVoltLimit: this.config.battery.discharging.minVolts,
                 chargeCurrentLimit: this.config.battery.charging.maxAmps * chargeScale,
                 dischargeCurrentLimit: this.config.battery.discharging.maxAmps,
-                chargingEnabled: cellVoltageRange.max < this.config.battery.charging.maxCellVolt,
-                dischargingEnabled: cellVoltageRange.min > this.config.battery.discharging.minCellVolt,
+                chargingEnabled: batteryInfoRecent && cellVoltageRange.max < this.config.battery.charging.maxCellVolt,
+                dischargingEnabled: batteryInfoRecent && cellVoltageRange.min > this.config.battery.discharging.minCellVolt,
             });
         }
 

@@ -145,6 +145,14 @@ export class Battery implements BatteryI {
    }
 
    /**
+    * Returns the unix timestamp of the oldest last update of all the modules.
+    * Effectively the date of the oldest data we have.
+    */
+   getLastUpdateDate() {
+      return Math.min(...Object.values(this.modules).map((m) => m.lastUpdate));
+   }
+
+   /**
     * Note: Caller should stop balancing and read all values first
     */
    async balance(forSeconds: number): Promise<number> {
