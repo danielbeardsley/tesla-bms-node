@@ -88,6 +88,7 @@ class BMS {
 
         } else if (packet.command === Command.GetChargeDischargeInfo) {
             const cellVoltageRange = this.battery.getCellVoltageRange();
+            const tempRange = this.battery.getTemperatureRange();
             inverterLogger.debug("Voltage range: %d - %d", cellVoltageRange.min, cellVoltageRange.max);
             // Scale down the charging current as the highest volt cell
             // gets within "buffer" volts of the maxCellVolt setting
@@ -95,14 +96,20 @@ class BMS {
             const buffer = 0.2;
             const bufferStart = maxCellVolt - buffer;
             const chargeScale = 1 - clamp((cellVoltageRange.max - bufferStart) / buffer, 0, 1);
+            const safeTemp = this.battery.isTemperatureSafe();
+
+            inverterLogger.silly("Battery temp range: %d - %d", tempRange.min, tempRange.max);
+            if (!safeTemp) {
+                inverterLogger.warn("Battery temperature out of range (%d - %d), battery disabled", this.config.battery.lowTempCutoffC, this.config.battery.highTempCutoffC);
+            }
 
             responsePacket = GetChargeDischargeInfo.Response.generate(packet.address, {
                 chargeVoltLimit: this.config.battery.charging.maxVolts,
                 dischargeVoltLimit: this.config.battery.discharging.minVolts,
                 chargeCurrentLimit: this.config.battery.charging.maxAmps * chargeScale,
                 dischargeCurrentLimit: this.config.battery.discharging.maxAmps,
-                chargingEnabled: batteryInfoRecent && cellVoltageRange.max < this.config.battery.charging.maxCellVolt,
-                dischargingEnabled: batteryInfoRecent && cellVoltageRange.min > this.config.battery.discharging.minCellVolt,
+                chargingEnabled: safeTemp && batteryInfoRecent && cellVoltageRange.max < this.config.battery.charging.maxCellVolt,
+                dischargingEnabled: safeTemp && batteryInfoRecent && cellVoltageRange.min > this.config.battery.discharging.minCellVolt,
             });
         }
 

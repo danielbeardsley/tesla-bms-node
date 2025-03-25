@@ -26,6 +26,8 @@ const ConfigSchema = z.object({
       // These are used to anchonr the 0% and 100% SoC voltages
       voltsEmpty: z.number(),
       voltsFull: z.number(),
+      highTempCutoffC: z.number(),
+      lowTempCutoffC: z.number(),
    }),
    bms: z.object({
       // How often to read the stats of the battery
