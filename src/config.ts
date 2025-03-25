@@ -35,7 +35,7 @@ const ConfigSchema = z.object({
       // How old can the oldest battery data be before it's considered stale,
       // shutting down charging and discharging. Effectively, if you unplug
       // the battery comms cable, how long before we stop charging/discharging.
-      batteryRecencyLimit: z.number().int().min(1),
+      batteryRecencyLimitS: z.number().int().min(1),
    }),
    inverter: z.object({
       serialPort: z.object({

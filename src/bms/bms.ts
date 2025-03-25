@@ -57,7 +57,7 @@ class BMS {
         inverterLogger.verbose('Received packet (%s): %j', commandText, packet);
         let responsePacket: Buffer|null = null;
         const modules = Object.values(this.battery.modules);
-        const batteryInfoRecent = Date.now() - this.battery.getLastUpdateDate() < this.config.bms.batteryRecencyLimit;
+        const batteryInfoRecent = Date.now() - this.battery.getLastUpdateDate() < this.config.bms.batteryRecencyLimitS * 1000;
 
         if (packet.command === Command.GetBatteryValues) {
             responsePacket = GetBatteryValues.Response.generate(packet.address, {
