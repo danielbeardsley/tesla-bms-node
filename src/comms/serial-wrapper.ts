@@ -49,7 +49,6 @@ export class SerialWrapper {
 
    async write(buffer: number[] | Buffer): Promise<void> {
       return new Promise((resolve, reject) => {
-         logger.silly(`Writing %d bytes to serial port`, buffer.length);
          this.port.write(buffer, (err?: Error | null) => {
             if (err) reject(err);
             else {
@@ -83,7 +82,6 @@ export class SerialWrapper {
    }
 
    async readTillDelimiter(delimiter: number, timeout: number = 100): Promise<number[]> {
-      logger.silly('Reading till delimiter %d with timeout %d ms', delimiter, timeout);
       return new Promise((resolve, reject) => {
          const timeoutid: NodeJS.Timeout | null =
             timeout > 0
@@ -107,7 +105,6 @@ export class SerialWrapper {
             }
             const buffer = this.buffer.slice(0, delimiterIndex + 1);
             this.buffer = this.buffer.slice(delimiterIndex + 1);
-            logger.silly('Found %d bytes before delimiter', buffer.length);
             resolve(buffer);
             return true;
          });
@@ -119,7 +116,6 @@ export class SerialWrapper {
     * have been read. If the timeout is reached, the promise will reject.
     */
    async readBytes(numBytes: number, timeout: number = 100): Promise<number[]> {
-      logger.silly('Trying to read %d bytes with timeout %s ms', numBytes, timeout);
       return new Promise((resolve, reject) => {
          const timeoutid: NodeJS.Timeout | null =
             timeout > 0
@@ -138,7 +134,6 @@ export class SerialWrapper {
             }
             const buffer = this.buffer.slice(0, numBytes);
             this.buffer = this.buffer.slice(numBytes);
-            logger.silly('Able to read %d bytes', buffer.length);
             resolve(buffer);
             return true;
          });

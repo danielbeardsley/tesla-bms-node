@@ -15,7 +15,6 @@ export class Pylontech {
    readPacket(timeout?: number): Promise<Packet> {
       return this.serial.readTillDelimiter(PLYONTECH_DELIMITER, timeout || 0)
       .then(frame => {
-         logger.silly('Received frame: %s', frame);
          const data = decodeFrame(Buffer.from(frame));
          logger.silly('Decoded data: %s', data.toString());
          const packet = parsePacket(data);
@@ -25,7 +24,6 @@ export class Pylontech {
    }
 
    async writePacket(packet: Buffer): Promise<void> {
-      logger.debug('Writing packet of length %d', packet.length);
       logger.silly('Writing packet %s', packet.toString());
       const frame = encodeFrame(packet);
       await this.serial.write(frame);
