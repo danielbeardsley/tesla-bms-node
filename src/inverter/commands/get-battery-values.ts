@@ -22,7 +22,7 @@ export type GetBatteryValuesResponse = {
 export default {
    Response: {
       generate: (address: number, data: GetBatteryValuesResponse): Buffer => {
-         logger.verbose("Generting battery values packet %j", data);
+         logger.verbose("Composing battery values packet %j", data);
          const out = new SmartBuffer();
          out.writeUInt8(data.infoFlag);
          out.writeUInt8(data.batteryNumber);

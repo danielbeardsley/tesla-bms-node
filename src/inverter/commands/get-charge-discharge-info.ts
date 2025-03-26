@@ -15,7 +15,7 @@ type ChargeInfo = {
 export default {
    Response: {
       generate: (address: number, data: ChargeInfo): Buffer => {
-         logger.verbose("Generting charge info %j", data);
+         logger.verbose("Composing charge info packet %j", data);
          const out = new SmartBuffer();
          out.writeUInt8(address); // "Command value"
          out.writeUInt16BE(voltsToPylonVolts(data.chargeVoltLimit));
