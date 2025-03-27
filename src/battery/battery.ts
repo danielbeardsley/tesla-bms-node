@@ -7,7 +7,11 @@ import { logger } from '../logger';
 
 export interface BatteryI {
    modules: { [key: number]: BatteryModuleI };
-   init: (renumber: boolean) => Promise<void>;
+   init(renumber: boolean): Promise<void>;
+   getVoltage() : number;
+   getCapacityAh(): number;
+   getStateOfCharge(): number;
+   getCellVoltageRange(): { min: number, max: number, spread: number };
 }
 
 export class Battery implements BatteryI {

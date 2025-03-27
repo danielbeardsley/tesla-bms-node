@@ -20,6 +20,8 @@ when to charge and discharge the battery.
    * Visualize the charge routine in some way for tweaking and debugging
 
 * Tests to add or improve
+   * Battery
+      * Finish describing interface in BatteryI
    * BMS
       * Mock the BatteryI interface and test and assert the actions
         taken or responses to pylon packets
