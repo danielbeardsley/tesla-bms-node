@@ -4,11 +4,12 @@ import { Config } from '../config';
 import { Pylontech } from '../inverter/pylontech';
 import { Command, commandToMessage } from '../inverter/pylontech-command';
 import type { Packet } from '../inverter/pylontech-packet';
-import { clamp } from '../utils';
 // =========
 import GetChargeDischargeInfo from '../inverter/commands/get-charge-discharge-info';
 import GetBatteryValues from '../inverter/commands/get-battery-values';
 import GetAlarmInfo, { AlarmState } from '../inverter/commands/get-alarm-info';
+import { ChargingModule } from './charging/charging-module';
+import { VoltageA } from './charging/voltage-a';
 
 const BATTERY_ADDRESS = 2;
 
@@ -17,6 +18,9 @@ class BMS {
     private timeout: NodeJS.Timeout;
     private config: Config;
     private inverter: Pylontech;
+    private chargingModules: {
+        voltageA: ChargingModule;
+    }
 
     constructor(battery: Battery, inverter: Pylontech, config: Config) {
         this.battery = battery;
@@ -24,6 +28,9 @@ class BMS {
         this.inverter = inverter;
         inverterLogger.info("Using config %j", config.inverter);
         batteryLogger.info("Using config %j", config.battery);
+        this.chargingModules = {
+            "voltageA": new VoltageA(config, battery),
+        };
     }
 
     async init() {
@@ -87,15 +94,7 @@ class BMS {
             });
 
         } else if (packet.command === Command.GetChargeDischargeInfo) {
-            const cellVoltageRange = this.battery.getCellVoltageRange();
             const tempRange = this.battery.getTemperatureRange();
-            inverterLogger.debug("Voltage range: %d - %d", cellVoltageRange.min, cellVoltageRange.max);
-            // Scale down the charging current as the highest volt cell
-            // gets within "buffer" volts of the maxCellVolt setting
-            const maxCellVolt = this.config.battery.charging.maxCellVolt;
-            const buffer = 0.2;
-            const bufferStart = maxCellVolt - buffer;
-            const chargeScale = 1 - clamp((cellVoltageRange.max - bufferStart) / buffer, 0, 1);
             const safeTemp = this.battery.isTemperatureSafe();
 
             inverterLogger.silly("Battery temp range: %d - %d", tempRange.min, tempRange.max);
@@ -103,13 +102,17 @@ class BMS {
                 inverterLogger.warn("Battery temperature out of range (%d - %d), battery disabled", this.config.battery.lowTempCutoffC, this.config.battery.highTempCutoffC);
             }
 
+            const chargeStrategyName = this.config.chargeStrategy.name;
+            const strategy = this.chargingModules[chargeStrategyName];
+            const chargeInfo = strategy.getChargeDischargeInfo();
+
             responsePacket = GetChargeDischargeInfo.Response.generate(packet.address, {
-                chargeVoltLimit: this.config.battery.charging.maxVolts,
-                dischargeVoltLimit: this.config.battery.discharging.minVolts,
-                chargeCurrentLimit: this.config.battery.charging.maxAmps * chargeScale,
-                dischargeCurrentLimit: this.config.battery.discharging.maxAmps,
-                chargingEnabled: safeTemp && batteryInfoRecent && cellVoltageRange.max < this.config.battery.charging.maxCellVolt,
-                dischargingEnabled: safeTemp && batteryInfoRecent && cellVoltageRange.min > this.config.battery.discharging.minCellVolt,
+                chargeVoltLimit: chargeInfo.chargeVoltLimit,
+                dischargeVoltLimit: chargeInfo.dischargeVoltLimit,
+                chargeCurrentLimit: chargeInfo.chargeCurrentLimit,
+                dischargeCurrentLimit: chargeInfo.dischargeCurrentLimit,
+                chargingEnabled: safeTemp && batteryInfoRecent && chargeInfo.chargingEnabled,
+                dischargingEnabled: safeTemp && batteryInfoRecent && chargeInfo.dischargingEnabled,
             });
         }
 
