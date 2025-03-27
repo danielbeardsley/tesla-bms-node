@@ -70,4 +70,5 @@ export function commandToMessage(command: Command): string {
       case Command.GetFirmwareInfo:
          return 'Get Firmware Info';
    }
+   return "Unknown command: " + command;
 }
