@@ -127,7 +127,7 @@ class BMS {
         void this.listenForInverterPacket();
     }
 
-    public stopMonitoringBattery() {
+    public stop() {
         clearInterval(this.timeout);
     }
 

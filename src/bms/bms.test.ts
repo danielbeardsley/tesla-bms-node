@@ -3,32 +3,55 @@ import { Packet } from '../inverter/pylontech-packet';
 import { BMS } from './bms';
 import { FakeBattery } from './fake-battery';
 import { Config } from '../config';
-import { Inverter } from '../inverter/inverter';
-import { orThrow } from '../utils';
+import { orThrow, sleep } from '../utils';
 
 describe('BMS', () => {
     it('Should read from the battery immediately', async () => {
         const battery = new FakeBattery();
         const initSpy = vi.spyOn(battery, 'init');
         const readAllSpy = vi.spyOn(battery, 'readAll');
-        const bms = new BMS(battery, getInverter(), getConfig());
+        const inverter = getInverter();
+        inverter.packets.push(new Promise(() => null) as Promise<Packet>);
+        const bms = new BMS(battery, inverter, getConfig());
         await bms.init();
         expect(initSpy).toHaveBeenCalled();
         expect(readAllSpy).toHaveBeenCalled();
     });
+
+    it('Should read from the battery in a loop', async () => {
+        const battery = new FakeBattery();
+        const readAll = vi.spyOn(battery, 'readAll');
+        const balance = vi.spyOn(battery, 'balance');
+        const stopBalancing = vi.spyOn(battery, 'stopBalancing');
+        const config = getConfig();
+        const inverter = getInverter();
+        inverter.packets.push(new Promise(() => null) as Promise<Packet>);
+        config.bms.intervalS = 0;
+
+        const bms = new BMS(battery, inverter, config);
+        await bms.init();
+        readAll.mockClear();
+        bms.start();
+        await sleep(0);
+        await sleep(0);
+        expect(readAll).toHaveBeenCalledTimes(2);
+        expect(stopBalancing).toHaveBeenCalledTimes(2);
+        expect(balance).toHaveBeenCalledTimes(2);
+        bms.stop();
+    });
 });
 
-function getInverter(): Inverter {
-    const packets = [] as Packet[];
+function getInverter() {
+    const packets = [] as Array<Packet | Promise<Packet>>;
     return {
         packets,
         readPacket: async (_timeout?: number): Promise<Packet> => {
             return orThrow(packets.pop());
         },
-        writePacket: async (packet) => {
+        writePacket: async (packet: Buffer) => {
             console.log('Writing packet:', packet);
         },
-    } as Inverter;
+    };
 }
 
 function getConfig(): Config {
