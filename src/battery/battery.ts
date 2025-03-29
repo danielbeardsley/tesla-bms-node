@@ -7,7 +7,7 @@ import { logger } from '../logger';
 
 export interface BatteryI {
    modules: { [key: number]: BatteryModuleI };
-   init(renumber: boolean): Promise<void>;
+   init(renumber?: boolean): Promise<void>;
    readAll(): Promise<void>;
    balance(forSeconds: number): Promise<number>;
    stopBalancing(): Promise<void>;
@@ -16,6 +16,8 @@ export interface BatteryI {
    getStateOfCharge(): number;
    getCellVoltageRange(): { min: number, max: number, spread: number };
    getTemperatureRange(): { min: number, max: number, spread: number };
+   getLastUpdateDate(): number;
+   isTemperatureSafe(): boolean;
 }
 
 export class Battery implements BatteryI {

@@ -1,7 +1,7 @@
 import { logger, inverterLogger, batteryLogger } from '../logger';
-import { Battery } from '../battery/battery';
+import { BatteryI } from '../battery/battery';
 import { Config } from '../config';
-import { Pylontech } from '../inverter/pylontech';
+import { Inverter } from '../inverter/inverter';
 import { Command, commandToMessage } from '../inverter/pylontech-command';
 import type { Packet } from '../inverter/pylontech-packet';
 import { clamp } from '../utils';
@@ -13,12 +13,12 @@ import GetAlarmInfo, { AlarmState } from '../inverter/commands/get-alarm-info';
 const BATTERY_ADDRESS = 2;
 
 class BMS {
-    private battery: Battery;
+    private battery: BatteryI;
     private timeout: NodeJS.Timeout;
     private config: Config;
-    private inverter: Pylontech;
+    private inverter: Inverter;
 
-    constructor(battery: Battery, inverter: Pylontech, config: Config) {
+    constructor(battery: BatteryI, inverter: Inverter, config: Config) {
         this.battery = battery;
         this.config = config;
         this.inverter = inverter;
