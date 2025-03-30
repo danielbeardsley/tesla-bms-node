@@ -80,17 +80,20 @@ function currentToPylonCurrent(current: number) {
 }
 
 function extendArrayTo<T>(arr: T[], length: number): T[] {
+   const extended = arr.slice();
    const last = arr[arr.length - 1];
    for (let i = arr.length; i < length; i++) {
-      arr.push(last);
+      extended.push(last);
    }
+   return extended;
 }
 
 /**
  * Take in Amp hours and write a 3-byte buffer with the unsigned value in mAh
- */
+ *
 function capacityAhToPylonCapacity(capacityAh: number): Buffer {
    const out = Buffer.alloc(4);
    out.writeUInt32BE(capacityAh * 1000, 0);
    return out.subarray(1);
 }
+*/

@@ -3,7 +3,7 @@ import { ReturnCode } from '../pylontech-command';
 import { SmartBuffer } from 'smart-buffer';
 import { inverterLogger as logger } from '../../logger';
 
-type ChargeInfo = {
+export type ChargeInfo = {
    chargeVoltLimit: number;
    dischargeVoltLimit: number;
    chargeCurrentLimit: number;

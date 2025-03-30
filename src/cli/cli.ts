@@ -2,15 +2,9 @@ import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 import { TeslaComms } from '../battery/tesla-comms';
 import { SerialWrapper } from '../comms/serial-wrapper';
-import { TeslaModule } from '../battery/tesla-module';
 import { Battery } from '../battery/battery';
-import { sleep } from '../utils';
 import { getConfig } from '../config';
 import { Pylontech } from '../inverter/pylontech';
-
-interface ModuleArgs {
-   module: number;
-}
 
 const result = yargs(hideBin(process.argv))
    .command(
@@ -48,36 +42,6 @@ const result = yargs(hideBin(process.argv))
             } catch (e) {
                console.error("Error Reading packet", e);
             }
-         }
-      }
-   )
-   .command<ModuleArgs>(
-      'balance <module>',
-      'Tell a module to balance itself and stream the voltages as they change',
-      yargs => {
-         return yargs.positional('module', {
-            describe: 'module number',
-            type: 'number',
-            demandOption: true,
-         });
-      },
-      async argv => {
-         const teslaComms = await getTeslaComms();
-         try {
-            const module = new TeslaModule(teslaComms, argv.module);
-            while (true) {
-               const result = await module.balanceIfNeeded(0.1, 60);
-               const spread = module.getMaxVoltage() - module.getMinVoltage();
-               const cells = module.cellVoltages.map(v => v.toFixed(3)).join(', ');
-               const totalVolts = module.cellVoltages.reduce((a, b) => a + b, 0);
-               const balanceMessage = result.map(b => (b ? 'X' : ' ')).join('|');
-               console.log(
-                  `Spread: ${(spread * 1000).toFixed(0)}mV, balance: ${balanceMessage}, cells: ${cells}, total: ${totalVolts.toFixed(3)}V, moduleVolts: ${module.moduleVolts?.toFixed(3)}V`
-               );
-               await sleep(60000);
-            }
-         } finally {
-            await teslaComms.close();
          }
       }
    )
