@@ -40,24 +40,9 @@ describe('BMS', () => {
     });
 
     it('Should respond to inverter GetBatteryValues requests', async () => {
-        const battery = new FakeBattery();
-        const config = getConfig();
-        const inverter = getInverter();
-        const writePacket = vi.spyOn(inverter, 'writePacket');
-        config.bms.intervalS = 0;
-        const bms = new BMS(battery, inverter, config);
-        await bms.init();
-        bms.start();
-        // Let the BMs read the battery
-        await sleep(0);
-        const requestPacket = getRequestPacket(Command.GetBatteryValues, 2);
-        inverter.mockPacketFromInverter(requestPacket);
-        // let the BMS process the packet and respond
-        await sleep(0);
-        console.log("Response: ", writePacket.mock.calls[0][0].toString());
+        const inverterRequest = getRequestPacket(Command.GetBatteryValues, 2);
         const expectedResponse = Buffer.from("20024600208611020C0E740E740E740E740E740E740E740E740E740E740E740E740E0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D00000000000002EA600000");
-        expect(writePacket).toHaveBeenCalledWith(expectedResponse);
-        bms.stop();
+        await testAssertRequestResponse(inverterRequest, expectedResponse);
     });
 });
 
@@ -132,4 +117,23 @@ function getRequestPacket(command: Command, address: number) {
         datalength: 0,
         lengthChecksum: 0,
     }
+}
+
+async function testAssertRequestResponse(inverterRequest: Packet, expectedResponse: Buffer) {
+    const battery = new FakeBattery();
+    const config = getConfig();
+    const inverter = getInverter();
+    const writePacket = vi.spyOn(inverter, 'writePacket');
+    config.bms.intervalS = 0;
+    const bms = new BMS(battery, inverter, config);
+    await bms.init();
+    bms.start();
+    // Let the BMs read the battery
+    await sleep(0);
+    inverter.mockPacketFromInverter(inverterRequest);
+    // let the BMS process the packet and respond
+    await sleep(0);
+    console.log("Response: ", writePacket.mock.calls[0][0].toString());
+    expect(writePacket).toHaveBeenCalledWith(expectedResponse);
+    bms.stop();
 }
