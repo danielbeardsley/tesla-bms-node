@@ -44,6 +44,12 @@ describe('BMS', () => {
         const expectedResponse = Buffer.from("20024600208611020C0E740E740E740E740E740E740E740E740E740E740E740E740E0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D00000000000002EA600000");
         await testAssertRequestResponse(inverterRequest, expectedResponse);
     });
+
+    it('Should not respond to requests to a different battery', async () => {
+        const inverterRequest = getRequestPacket(Command.GetBatteryValues, 3);
+        const expectedResponse = null;
+        await testAssertRequestResponse(inverterRequest, expectedResponse);
+    });
 });
 
 function getInverter() {
@@ -62,8 +68,7 @@ function getInverter() {
         readPacket: async (_timeout?: number): Promise<Packet> => {
             return orThrow(packets.pop());
         },
-        writePacket: async (packet: Buffer) => {
-            console.log('Writing packet:', packet);
+        writePacket: async (_packet: Buffer) => {
         },
     };
 }
@@ -119,7 +124,7 @@ function getRequestPacket(command: Command, address: number) {
     }
 }
 
-async function testAssertRequestResponse(inverterRequest: Packet, expectedResponse: Buffer) {
+async function testAssertRequestResponse(inverterRequest: Packet, expectedResponse: Buffer|null) {
     const battery = new FakeBattery();
     const config = getConfig();
     const inverter = getInverter();
@@ -133,7 +138,11 @@ async function testAssertRequestResponse(inverterRequest: Packet, expectedRespon
     inverter.mockPacketFromInverter(inverterRequest);
     // let the BMS process the packet and respond
     await sleep(0);
-    console.log("Response: ", writePacket.mock.calls[0][0].toString());
-    expect(writePacket).toHaveBeenCalledWith(expectedResponse);
+    if (expectedResponse) {
+        expect(writePacket).toHaveBeenCalledWith(expectedResponse);
+        console.log("Response: ", writePacket.mock.calls[0][0].toString());
+    } else {
+        expect(writePacket).not.toHaveBeenCalled();
+    }
     bms.stop();
 }
