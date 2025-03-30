@@ -41,14 +41,26 @@ describe('BMS', () => {
 
     it('Should respond to inverter GetBatteryValues requests', async () => {
         const inverterRequest = getRequestPacket(Command.GetBatteryValues, 2);
-        const expectedResponse = Buffer.from("20024600208611020C0E740E740E740E740E740E740E740E740E740E740E740E740E0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D00000000000002EA600000");
-        await testAssertRequestResponse(inverterRequest, expectedResponse);
+        const responses = await getBmsResponse(inverterRequest);
+        expect(responses[0][0].toString()).toMatchInlineSnapshot(`"20024600208611020C0E740E740E740E740E740E740E740E740E740E740E740E740E0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D00000000000002EA600000"`);
+    });
+    
+    it('Should respond to inverter GetAlarmInfo requests', async () => {
+        const inverterRequest = getRequestPacket(Command.GetAlarmInfo, 2);
+        const responses = await getBmsResponse(inverterRequest);
+        expect(responses[0][0].toString()).toMatchInlineSnapshot(`"20024600004C11010C0000000000000000000000000E00000000000000000000000000000000000000000000"`);
+    });
+
+    it('Should respond to inverter GetChargeDischargeInfo requests', async () => {
+        const inverterRequest = getRequestPacket(Command.GetChargeDischargeInfo, 2);
+        const responses = await getBmsResponse(inverterRequest);
+        expect(responses[0][0].toString()).toMatchInlineSnapshot(`"20024600B01402D5489C400000000000"`);
     });
 
     it('Should not respond to requests to a different battery', async () => {
         const inverterRequest = getRequestPacket(Command.GetBatteryValues, 3);
-        const expectedResponse = null;
-        await testAssertRequestResponse(inverterRequest, expectedResponse);
+        const responses = await getBmsResponse(inverterRequest);
+        expect(responses).toEqual([]);
     });
 });
 
@@ -124,7 +136,7 @@ function getRequestPacket(command: Command, address: number) {
     }
 }
 
-async function testAssertRequestResponse(inverterRequest: Packet, expectedResponse: Buffer|null) {
+async function getBmsResponse(inverterRequest: Packet) {
     const battery = new FakeBattery();
     const config = getConfig();
     const inverter = getInverter();
@@ -138,11 +150,6 @@ async function testAssertRequestResponse(inverterRequest: Packet, expectedRespon
     inverter.mockPacketFromInverter(inverterRequest);
     // let the BMS process the packet and respond
     await sleep(0);
-    if (expectedResponse) {
-        expect(writePacket).toHaveBeenCalledWith(expectedResponse);
-        console.log("Response: ", writePacket.mock.calls[0][0].toString());
-    } else {
-        expect(writePacket).not.toHaveBeenCalled();
-    }
     bms.stop();
+    return writePacket.mock.calls;
 }
