@@ -15,7 +15,7 @@ export class VoltageA implements ChargingModule {
    }
 
    myConfig() {
-      return this.config.chargeStrategy.voltageA; // || throw new Error("VoltageA config not found");
+      return this.config.bms.chargingStrategy.voltageA; // || throw new Error("VoltageA config not found");
    }
 
    getChargeDischargeInfo(): ChargeInfo {

@@ -102,8 +102,8 @@ class BMS {
                 inverterLogger.warn("Battery temperature out of range (%d - %d), battery disabled", this.config.battery.lowTempCutoffC, this.config.battery.highTempCutoffC);
             }
 
-            const chargeStrategyName = this.config.chargeStrategy.name;
-            const strategy = this.chargingModules[chargeStrategyName];
+            const chargingStrategyName = this.config.bms.chargingStrategy.name;
+            const strategy = this.chargingModules[chargingStrategyName];
             const chargeInfo = strategy.getChargeDischargeInfo();
 
             responsePacket = GetChargeDischargeInfo.Response.generate(packet.address, {

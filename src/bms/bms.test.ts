@@ -115,6 +115,12 @@ function getConfig(): Config {
         bms: {
             intervalS: 5,
             batteryRecencyLimitS: 5,
+            chargingStrategy: {
+                name: 'voltageA',
+                voltageA: {
+                    maxCellVoltBuffer: 0.1,
+                }
+            },
         },
         inverter: {
             serialPort: {

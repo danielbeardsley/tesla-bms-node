@@ -36,12 +36,12 @@ const ConfigSchema = z.object({
       // shutting down charging and discharging. Effectively, if you unplug
       // the battery comms cable, how long before we stop charging/discharging.
       batteryRecencyLimitS: z.number().int().min(1),
-   }),
-   chargeStrategy: z.object({
-      name: z.literal("voltageA"),
-      voltageA: z.optional(z.object({
-         maxCellVoltBuffer: z.number().min(0.001).max(0.5),
-      })),
+      chargingStrategy: z.object({
+         name: z.literal("voltageA"),
+         voltageA: z.optional(z.object({
+            maxCellVoltBuffer: z.number().min(0.001).max(0.5),
+         })),
+      }),
    }),
    inverter: z.object({
       serialPort: z.object({
