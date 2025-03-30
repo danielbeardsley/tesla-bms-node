@@ -4,6 +4,7 @@ import { Config } from '../config';
 import { Inverter } from '../inverter/inverter';
 import { Command, commandToMessage } from '../inverter/pylontech-command';
 import type { Packet } from '../inverter/pylontech-packet';
+import { History } from './history';
 // =========
 import GetChargeDischargeInfo from '../inverter/commands/get-charge-discharge-info';
 import GetBatteryValues from '../inverter/commands/get-battery-values';
@@ -18,6 +19,7 @@ class BMS {
     private timeout: NodeJS.Timeout;
     private config: Config;
     private inverter: Inverter;
+    private history: History;
     private chargingModules: {
         voltageA: ChargingModule;
     }
@@ -28,6 +30,7 @@ class BMS {
         this.inverter = inverter;
         inverterLogger.info("Using config %j", config.inverter);
         batteryLogger.info("Using config %j", config.battery);
+        this.history = new History(config.history.samplesToKeep);
         this.chargingModules = {
             "voltageA": new VoltageA(config, battery),
         };
@@ -152,6 +155,19 @@ class BMS {
         const range = this.battery.getCellVoltageRange();
         await this.battery.balance(this.config.bms.intervalS);
         batteryLogger.debug(`Cell voltage spread:${(range.spread*1000).toFixed(0)}mV range: ${range.min.toFixed(3)}V - ${range.max.toFixed(3)}V`);
+        this.recordHistory();
+    }
+
+    private recordHistory() {
+        const cellVoltageRange = this.battery.getCellVoltageRange();
+        const tempRange = this.battery.getTemperatureRange();
+        this.history.add(Date.now(), {
+            batteryVolts: this.battery.getVoltage(),
+            batteryCellVoltsMin: cellVoltageRange.min,
+            batteryCellVoltsMax: cellVoltageRange.max,
+            batteryTempMin: tempRange.min,
+            batteryTempMax: tempRange.max,
+        });
     }
 }
 

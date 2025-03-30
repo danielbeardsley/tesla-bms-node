@@ -122,6 +122,10 @@ function getConfig(): Config {
                 }
             },
         },
+        history: {
+            samplesToKeep: 100,
+            httpPort: 8080,
+        },
         inverter: {
             serialPort: {
                 deviceName: '/dev/ttyUSB1',
