@@ -39,8 +39,8 @@ async function main() {
    const battery = await getBattery();
    const inverter = await getInverter();
    const bms = new BMS(battery, inverter, getConfig());
-   bms.init();
-   bms.start();
+   await bms.init();
+   await bms.start();
 }
 
 main().catch((e)=> {
