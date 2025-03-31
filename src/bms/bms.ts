@@ -4,7 +4,7 @@ import { Config } from '../config';
 import { Inverter } from '../inverter/inverter';
 import { Command, commandToMessage } from '../inverter/pylontech-command';
 import type { Packet } from '../inverter/pylontech-packet';
-import { History } from './history';
+import { History } from '../history/history';
 // =========
 import GetChargeDischargeInfo from '../inverter/commands/get-charge-discharge-info';
 import GetBatteryValues from '../inverter/commands/get-battery-values';
