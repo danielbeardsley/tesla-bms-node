@@ -11,6 +11,7 @@ import GetBatteryValues from '../inverter/commands/get-battery-values';
 import GetAlarmInfo, { AlarmState } from '../inverter/commands/get-alarm-info';
 import { ChargingModule } from './charging/charging-module';
 import { VoltageA } from './charging/voltage-a';
+import { HistoryServer } from 'src/history/history-server';
 
 const BATTERY_ADDRESS = 2;
 
@@ -20,6 +21,7 @@ class BMS {
     private config: Config;
     private inverter: Inverter;
     private history: History;
+    private historyServer: HistoryServer;
     private chargingModules: {
         voltageA: ChargingModule;
     }
@@ -31,6 +33,7 @@ class BMS {
         inverterLogger.info("Using config %j", config.inverter);
         batteryLogger.info("Using config %j", config.battery);
         this.history = new History(config.history.samplesToKeep);
+        this.historyServer = new HistoryServer(this.history, config.history);
         this.chargingModules = {
             "voltageA": new VoltageA(config, battery),
         };
@@ -131,6 +134,9 @@ class BMS {
         }
         void this.monitorBattery();
         void this.listenForInverterPacket();
+        if (this.config.history.httpPort) {
+            void this.historyServer.start();
+        }
     }
 
     public stop() {

@@ -64,6 +64,34 @@ describe('BMS', () => {
     });
 });
 
+describe('BMS History', () => {
+    it('Should serve history recordings', async () => {
+        const config = getConfig();
+        const port = config.history.httpPort = 8089;
+        const inverter = getInverter();
+        const battery = new FakeBattery();
+        battery.temperatureRange = {min: 18, max: 21, spread: 3};
+        battery.voltageRange = {min: 3.6, max: 3.7, spread: 0.1};
+        battery.voltage = 48;
+        const bms = new BMS(battery, inverter, config);
+        await bms.init();
+        bms.start();
+        // Let the BMs read the battery and store the history
+        await sleep(100);
+        const result = await fetch(`http://127.0.0.1:${port}/history`);
+        const json = await result.json();
+        delete json.timestamps;
+        expect(json).toEqual({
+            batteryVolts: [48],
+            batteryCellVoltsMin: [3.6],
+            batteryCellVoltsMax: [3.7],
+            batteryTempMin: [18],
+            batteryTempMax: [21],
+        });
+        bms.stop();
+    });
+});
+
 function getInverter() {
     const packets = [] as Array<Packet | Promise<Packet>>;
     const packetSenders = [] as Array<(packet: Packet) => void>;
@@ -123,8 +151,7 @@ function getConfig(): Config {
             },
         },
         history: {
-            samplesToKeep: 100,
-            httpPort: 8080,
+            samplesToKeep: 10,
         },
         inverter: {
             serialPort: {

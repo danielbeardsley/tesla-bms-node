@@ -45,7 +45,7 @@ const ConfigSchema = z.object({
    }),
    history: z.object({
       samplesToKeep: z.number().int().min(1),
-      httpPort: z.number().int().min(1).max(65535),
+      httpPort: z.number().int().min(0).max(65535).optional(),
    }),
    inverter: z.object({
       serialPort: z.object({
