@@ -1,8 +1,8 @@
-import { BatteryI } from "src/battery/battery";
-import { Config } from "src/config";
-import { ChargeInfo } from "src/inverter/commands/get-charge-discharge-info";
-import { inverterLogger } from "src/logger";
-import { clamp } from "src/utils";
+import { BatteryI } from "../../battery/battery";
+import { Config } from "../../config";
+import { ChargeInfo } from "../../inverter/commands/get-charge-discharge-info";
+import { inverterLogger } from "../../logger";
+import { clamp } from "../..//utils";
 import { ChargingModule } from "./charging-module";
 
 export class VoltageA implements ChargingModule {

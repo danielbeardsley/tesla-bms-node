@@ -11,7 +11,7 @@ import GetBatteryValues from '../inverter/commands/get-battery-values';
 import GetAlarmInfo, { AlarmState } from '../inverter/commands/get-alarm-info';
 import { ChargingModule } from './charging/charging-module';
 import { VoltageA } from './charging/voltage-a';
-import { HistoryServer } from 'src/history/history-server';
+import { HistoryServer } from '../history/history-server';
 
 const BATTERY_ADDRESS = 2;
 
