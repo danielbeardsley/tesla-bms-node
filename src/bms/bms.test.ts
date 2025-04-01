@@ -77,7 +77,7 @@ describe('BMS History', () => {
         await bms.init();
         bms.start();
         // Let the BMs read the battery and store the history
-        await sleep(100);
+        await sleep(0);
         const result = await fetch(`http://127.0.0.1:${port}/history`);
         const json = await result.json();
         delete json.timestamps;
@@ -87,6 +87,33 @@ describe('BMS History', () => {
             batteryCellVoltsMax: [3.7],
             batteryTempMin: [18],
             batteryTempMax: [21],
+        });
+        // Let the BMs read the battery and store the history
+        const resultCurrent = await fetch(`http://127.0.0.1:${port}/current`);
+        const current = await resultCurrent.json();
+        expect(current).toEqual({
+            cellVoltageRange: {
+                min: 3.6,
+                max: 3.7,
+                spread: 0.1,
+            },
+            tempRange: {
+                min: 18,
+                max: 21,
+                spread: 3,
+            },
+            voltage: 48,
+            modules: [
+                {
+                    cellVoltages: [3.7, 3.7, 3.7, 3.7, 3.7, 3.7],
+                    temperatures: [21, 21, 21, 21, 21, 21, 21],
+                },
+                {
+                    cellVoltages: [3.7, 3.7, 3.7, 3.7, 3.7, 3.7],
+                    temperatures: [21, 21, 21, 21, 21, 21, 21],
+                }
+            ],
+            stateOfCharge: 0,
         });
         bms.stop();
     });
