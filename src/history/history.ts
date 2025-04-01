@@ -41,23 +41,25 @@ export class History {
       this.index = (this.index + 1) % this.samplesToKeep;
    }
 
-   public getValues() {
+   public getValues(count?: number) {
       const values = {
-         timestamps: this.linearize(this.timestamps),
-         batteryVolts: this.linearize(this.values.batteryVolts),
-         batteryCellVoltsMin: this.linearize(this.values.batteryCellVoltsMin),
-         batteryCellVoltsMax: this.linearize(this.values.batteryCellVoltsMax),
-         batteryTempMin: this.linearize(this.values.batteryTempMin),
-         batteryTempMax: this.linearize(this.values.batteryTempMax),
+         timestamps: this.linearize(this.timestamps, count),
+         batteryVolts: this.linearize(this.values.batteryVolts, count),
+         batteryCellVoltsMin: this.linearize(this.values.batteryCellVoltsMin, count),
+         batteryCellVoltsMax: this.linearize(this.values.batteryCellVoltsMax, count),
+         batteryTempMin: this.linearize(this.values.batteryTempMin, count),
+         batteryTempMax: this.linearize(this.values.batteryTempMax, count),
       };
       return values;
    }
 
-   private linearize(arr: number[]) {
-      const leftHalf = arr.slice(0, this.index);
+   private linearize(arr: number[], count?: number) {
+      const beforeIndexStart = count ? Math.max(0, this.index - count) : 0;
+      const leftHalf = arr.slice(beforeIndexStart, this.index);
       if (this.samplesCollected < this.samplesToKeep) {
          return leftHalf;
       }
-      return arr.slice(this.index).concat(leftHalf);
+      const afterIndexStart = count ? this.index + this.samplesToKeep - count : this.index;
+      return arr.slice(Math.max(0, afterIndexStart)).concat(leftHalf);
    }
 }

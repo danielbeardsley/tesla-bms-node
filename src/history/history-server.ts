@@ -16,9 +16,9 @@ export class HistoryServer {
    }
 
    private init() {
-      this.app.get('/history', (_req: Request, res: Response) => {
-         console.log("History request: ", this.history);
-         const values = this.history.getValues();
+      this.app.get('/history', (req: Request, res: Response) => {
+         const limit = parseInt(String(req.query.limit));
+         const values = this.history.getValues(limit || undefined);
          res.json(values);
       });
    }
