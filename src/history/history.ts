@@ -30,13 +30,14 @@ export class History {
    }
 
    public add(timestamp: number, values: HistoryRecord) {
+      const round = (x: number) => Number(x.toFixed(3));
       this.samplesCollected++;
       this.timestamps[this.index] = timestamp;
-      this.values.batteryVolts[this.index] = values.batteryVolts;
-      this.values.batteryCellVoltsMin[this.index] = values.batteryCellVoltsMin;
-      this.values.batteryCellVoltsMax[this.index] = values.batteryCellVoltsMax;
-      this.values.batteryTempMin[this.index] = values.batteryTempMin;
-      this.values.batteryTempMax[this.index] = values.batteryTempMax;
+      this.values.batteryVolts[this.index] = round(values.batteryVolts);
+      this.values.batteryCellVoltsMin[this.index] = round(values.batteryCellVoltsMin);
+      this.values.batteryCellVoltsMax[this.index] = round(values.batteryCellVoltsMax);
+      this.values.batteryTempMin[this.index] = round(values.batteryTempMin);
+      this.values.batteryTempMax[this.index] = round(values.batteryTempMax);
       this.index = (this.index + 1) % this.samplesToKeep;
    }
 
