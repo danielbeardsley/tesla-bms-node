@@ -5,6 +5,7 @@ export default defineConfig({
     environment: 'node',
     globals: true,
     exclude: [
+      '**/node_modules/*',
        '**/notyet/*',
        'dist/*',
     ],
