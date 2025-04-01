@@ -128,7 +128,7 @@ class TeslaModule implements BatteryModuleI {
       this.moduleVolts = uint16s[0] * (6.25 / (0.1875 * 2 ** 14)); // 0.002034609;
       for (let i = 0; i < 6; i++) {
          const cellVoltage = uint16s[i + 1] * (6250 / (16383 * 1000));
-         this.cellVoltages[i] = cellVoltage;
+         this.cellVoltages[i] = Number(cellVoltage.toFixed(3));
       }
 
       this.temperatures[0] = this.convertUint16ToTemp(uint16s[7]);
@@ -143,7 +143,8 @@ class TeslaModule implements BatteryModuleI {
       const tempCalc =
          1.0 /
          (0.0007610373573 + 0.0002728524832 * logTempTemp + 0.0000001022822735 * logTempTemp ** 3);
-      return tempCalc - 273.15;
+      const temp = tempCalc - 273.15;
+      return Math.round(10 * temp) / 10;
    }
 
    getMinVoltage() {
