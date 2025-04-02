@@ -19,6 +19,12 @@ export class HistoryServer {
    }
 
    private init() {
+      // Allow accessing the data from any other origin
+      // Origins are still limited by who can access the local server
+      this.app.use((_req, res, next) => {
+         res.header('Access-Control-Allow-Origin', '*');
+         next();
+      });
       this.app.get('/history', (req: Request, res: Response) => {
          const limit = parseInt(String(req.query.limit));
          const values = this.history.getValues(limit || undefined);
