@@ -1,5 +1,5 @@
 import AsyncLock from 'async-lock';
-import { TeslaModule, BatteryModuleI } from './tesla-module';
+import { BatteryModuleI } from './tesla-module';
 import { clamp } from '../utils';
 import type { Config } from '../config';
 import { logger } from '../logger';
