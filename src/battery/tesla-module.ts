@@ -41,7 +41,6 @@ export interface BatteryModuleI {
    getMinVoltage(): number;
    getMaxVoltage(): number;
    lastUpdate: number;
-   readIOControl(): Promise<BQIOControl>;
 }
 
 class TeslaModule implements BatteryModuleI {
