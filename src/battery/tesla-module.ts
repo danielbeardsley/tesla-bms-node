@@ -159,14 +159,6 @@ class TeslaModule implements BatteryModuleI {
       return this.cellVoltages.reduce((a, b) => a + b, 0);
    }
 
-   getMaxTemperature() {
-      return Math.max(...this.temperatures);
-   }
-
-   getMinTemperature() {
-      return Math.min(...this.temperatures);
-   }
-
    cellVoltagesString() {
       return this.cellVoltages.map(v => v.toFixed(3)).join(', ');
    }

@@ -69,8 +69,9 @@ export class Battery implements BatteryI {
 
    getTemperatureRange() {
       const modules = Object.values(this.modules);
-      const min = Math.min(...modules.map((m) => m.getMinTemperature()));
-      const max = Math.max(...modules.map((m) => m.getMaxTemperature()));
+      const temps = modules.flatMap((m) => m.temperatures);
+      const min = Math.min(...temps);
+      const max = Math.max(...temps);
       return {
          min,
          max,
