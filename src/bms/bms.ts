@@ -41,7 +41,6 @@ class BMS {
     }
 
     async init() {
-        await this.battery.init();
         await this.battery.readAll();
     }
 
