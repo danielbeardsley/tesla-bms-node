@@ -82,13 +82,11 @@ class TeslaModule implements BatteryModuleI {
       logger.verbose('Sleeping module %d', this.id);
       // write 1 to IO_CONTROL[SLEEP]
       // turns off TS1, TS2, enter sleep mode
-      return (
-         this.writeIOControl(false, false, false, true, false, false)
+      await this.writeIOControl(false, false, false, true, false, false)
             // write 1 to ALERT[SLEEP]
             .then(() => this.writeAlertStatus(BQAlerts.sleep)) // false, false, false, false, false, true, false, false ) )
             // write 0 to ALERT[SLEEP]
             .then(() => this.writeAlertStatus(BQAlerts.none))
-      ); // false, false, false, false, false, true, false, false ) )
    }
 
    async wake() {
