@@ -5,6 +5,7 @@ import { getConfig } from './src/config';
 import { BMS } from './src/bms/bms';
 import { Pylontech } from './src/inverter/pylontech';
 import { batteryLogger, inverterLogger, logger } from './src/logger';
+import { discoverModules } from './src/battery/tesla-module-factory';
 
 async function getTeslaComms() {
    const config = getConfig();
@@ -19,7 +20,9 @@ async function getBattery() {
    batteryLogger.info('Starting battery communications');
    const teslaComms = await getTeslaComms();
    batteryLogger.info('Serial port open');
-   const battery = new Battery(teslaComms, config);
+   batteryLogger.info('Discovering battery modules');
+   const modules = await discoverModules(teslaComms, config, true);
+   const battery = new Battery(modules, config);
    return battery;
 }
 

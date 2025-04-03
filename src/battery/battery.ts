@@ -1,13 +1,11 @@
 import AsyncLock from 'async-lock';
 import { TeslaModule, BatteryModuleI } from './tesla-module';
 import { clamp } from '../utils';
-import { TeslaComms } from './tesla-comms';
 import type { Config } from '../config';
 import { logger } from '../logger';
 
 export interface BatteryI {
    modules: { [key: number]: BatteryModuleI };
-   init(renumber?: boolean): Promise<void>;
    readAll(): Promise<void>;
    balance(forSeconds: number): Promise<number>;
    stopBalancing(): Promise<void>;
@@ -24,17 +22,11 @@ export class Battery implements BatteryI {
    public modules: { [key: number]: TeslaModule };
    private config: Config;
    private lock: AsyncLock;
-   private teslaComms: TeslaComms;
 
-   constructor(teslaComms: TeslaComms, config: Config) {
-      this.modules = {};
+   constructor(modules: TeslaModule[], config: Config) {
+      this.modules = modules;
       this.lock = new AsyncLock();
       this.config = config;
-      this.teslaComms = teslaComms;
-   }
-
-   close() {
-      this.teslaComms.close();
    }
 
    async sleep() {
