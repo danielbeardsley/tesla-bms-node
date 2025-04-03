@@ -19,11 +19,11 @@ export interface BatteryI {
 }
 
 export class Battery implements BatteryI {
-   public modules: { [key: number]: TeslaModule };
+   public modules: { [key: number]: BatteryModuleI };
    private config: Config;
    private lock: AsyncLock;
 
-   constructor(modules: TeslaModule[], config: Config) {
+   constructor(modules: BatteryModuleI[], config: Config) {
       this.modules = modules;
       this.lock = new AsyncLock();
       this.config = config;

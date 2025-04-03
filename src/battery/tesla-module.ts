@@ -32,6 +32,16 @@ export enum Registers {
 export interface BatteryModuleI {
    cellVoltages: number[];
    temperatures: number[];
+   sleep(): Promise<void>;
+   readStatus(): Promise<void>;
+   readValues(): Promise<void>;
+   balance(cells: boolean[]): Promise<void>;
+   balanceCellsAbove(balanceAboveV: number, balanceTimeSec: number): Promise<number>;
+   getCellVoltageSum(): number;
+   getMinVoltage(): number;
+   getMaxVoltage(): number;
+   lastUpdate: number;
+   readIOControl(): Promise<BQIOControl>;
 }
 
 class TeslaModule implements BatteryModuleI {
@@ -252,7 +262,7 @@ class TeslaModule implements BatteryModuleI {
       for (let i = 0; i < 6; i++) if (cells[i]) regValue = regValue | (1 << i);
 
       // console.log( "Module " + this.id + ": Writing " + regValue.toString(16) + " to REG_BAL_CTRL");
-      return this.writeByteToRegister(Registers.REG_BAL_CTRL, regValue);
+      await this.writeByteToRegister(Registers.REG_BAL_CTRL, regValue);
    }
 
    async setBalanceTimer(seconds: number) {
