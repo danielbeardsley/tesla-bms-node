@@ -9,12 +9,10 @@ import { Command } from 'src/inverter/pylontech-command';
 describe('BMS', () => {
     it('Should read from the battery immediately', async () => {
         const battery = new FakeBattery();
-        const initSpy = vi.spyOn(battery, 'init');
         const readAllSpy = vi.spyOn(battery, 'readAll');
         const inverter = getInverter();
         const bms = new BMS(battery, inverter, getConfig());
         await bms.init();
-        expect(initSpy).toHaveBeenCalled();
         expect(readAllSpy).toHaveBeenCalled();
     });
 

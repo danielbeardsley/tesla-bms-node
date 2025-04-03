@@ -5,9 +5,21 @@ class FakeModule implements BatteryModuleI {
    public cellVoltages: number[];
    public temperatures: number[];
    public moduleVolts: number;
+   public lastUpdate: number;
 
    public voltage: number = 0;
    public capacity: number = 0;
+
+   async sleep() {}
+   async readStatus() {}
+   async readValues() {}
+   async balance(_cells: boolean[]) {}
+   async balanceCellsAbove(_balanceAboveV: number, _balanceTimeSec: number): Promise<number> {
+      return 0;
+   }
+   getCellVoltageSum() { return 0 }
+   getMinVoltage() { return 0 }
+   getMaxVoltage() { return 0 }
 
    constructor(volts: number[], temps: number[], moduleV: number) {
       this.cellVoltages = volts;
@@ -28,9 +40,7 @@ export class FakeBattery implements BatteryI {
    public temperatureIsSafe: boolean = true;
    public lastUpdateDate: number = 0;
 
-   constructor() { }
-
-   async init(_renumberOnFailure: boolean = true) {
+   constructor() {
       // const c = cellVolt * (Math.random()
       this.modules = {
          1: new FakeModule(
