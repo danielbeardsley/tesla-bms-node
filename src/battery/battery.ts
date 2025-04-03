@@ -132,11 +132,4 @@ export class Battery implements BatteryI {
          ); // this reads temperatures and voltages
       }
    }
-
-   async readAllIOControl() {
-      for (const index in this.modules) {
-         const ioc = await this.lock.acquire('key', () => this.modules[index].readIOControl());
-         console.log(`Module ${index}: ${ioc}`);
-      }
-   }
 }
