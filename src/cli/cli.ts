@@ -5,6 +5,7 @@ import { SerialWrapper } from '../comms/serial-wrapper';
 import { Battery } from '../battery/battery';
 import { getConfig } from '../config';
 import { Pylontech } from '../inverter/pylontech';
+import { discoverModules } from '../battery/tesla-module-factory';
 
 const result = yargs(hideBin(process.argv))
    .command(
@@ -26,7 +27,6 @@ const result = yargs(hideBin(process.argv))
          const battery = await getBattery();
          const range = battery.getCellVoltageRange();
          console.log(`Cell voltage spread:${(range.spread*1000).toFixed(0)}mV range: ${range.min.toFixed(3)}V - ${range.max.toFixed(3)}V`);
-         battery.close();
       }
    )
    .command(
@@ -54,19 +54,23 @@ result.finally(() => {
    clearInterval(timeoutid);
 });
 
+let teslaComms: TeslaComms | undefined;
 async function getTeslaComms() {
+   if (teslaComms) {
+      return teslaComms;
+   }
    const config = getConfig();
    const serialConfig = config.battery.serialPort;
    const serial = new SerialWrapper(serialConfig.deviceName, TeslaComms.BAUD);
    await serial.open();
-   return new TeslaComms(serial);
+   return teslaComms = new TeslaComms(serial);
 }
 
 async function getBattery() {
    const config = getConfig();
    const teslaComms = await getTeslaComms();
-   const battery = new Battery(teslaComms, config);
-   await battery.init();
+   const modules = await discoverModules(teslaComms, config, true);
+   const battery = new Battery(modules, config);
    await battery.readAll();
    return battery;
 }
