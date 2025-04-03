@@ -3,6 +3,7 @@ import { Packet } from '../inverter/pylontech-packet';
 import { BMS } from './bms';
 import { FakeBattery } from './fake-battery';
 import { Config } from '../config';
+import { getTestConfig } from '../test-config';
 import { orThrow, sleep } from '../utils';
 import { Command } from 'src/inverter/pylontech-command';
 
@@ -11,7 +12,7 @@ describe('BMS', () => {
         const battery = new FakeBattery();
         const readAllSpy = vi.spyOn(battery, 'readAll');
         const inverter = getInverter();
-        const bms = new BMS(battery, inverter, getConfig());
+        const bms = new BMS(battery, inverter, getTestConfig());
         await bms.init();
         expect(readAllSpy).toHaveBeenCalled();
     });
@@ -21,7 +22,7 @@ describe('BMS', () => {
         const readAll = vi.spyOn(battery, 'readAll');
         const balance = vi.spyOn(battery, 'balance');
         const stopBalancing = vi.spyOn(battery, 'stopBalancing');
-        const config = getConfig();
+        const config = getTestConfig();
         const inverter = getInverter();
         config.bms.intervalS = 0;
 
@@ -64,7 +65,7 @@ describe('BMS', () => {
 
 describe('BMS History', () => {
     it('Should serve history recordings', async () => {
-        const config = getConfig();
+        const config = getTestConfig();
         const port = config.history.httpPort = 8089;
         const inverter = getInverter();
         const battery = new FakeBattery();
@@ -138,55 +139,6 @@ function getInverter() {
     };
 }
 
-function getConfig(): Config {
-    return {
-        battery: {
-            moduleCount: 2,
-            serialPort: {
-                deviceName: '/dev/ttyUSB0',
-            },
-            balance: {
-                cellVDiffMax: 0.1,
-                onlyAbove: 3.5,
-            },
-            charging: {
-                maxAmps: 100,
-                maxVolts: 54.6,
-                maxCellVolt: 4.2,
-            },
-            discharging: {
-                maxAmps: 100,
-                minVolts: 40,
-                minCellVolt: 3.0,
-            },
-            voltsEmpty: 40,
-            voltsFull: 50,
-            capacityPerModuleAh: 100,
-            highTempCutoffC: 60,
-            lowTempCutoffC: 0,
-        },
-        bms: {
-            intervalS: 5,
-            batteryRecencyLimitS: 5,
-            chargingStrategy: {
-                name: 'voltageA',
-                voltageA: {
-                    maxCellVoltBuffer: 0.1,
-                }
-            },
-        },
-        history: {
-            samplesToKeep: 10,
-        },
-        inverter: {
-            serialPort: {
-                deviceName: '/dev/ttyUSB1',
-                baudRate: 115200,
-            },
-        },
-    };
-}
-
 function getRequestPacket(command: Command, address: number) {
     return {
         version: 0x20,
@@ -200,7 +152,7 @@ function getRequestPacket(command: Command, address: number) {
 
 async function getBmsResponse(inverterRequest: Packet) {
     const battery = new FakeBattery();
-    const config = getConfig();
+    const config = getTestConfig();
     const inverter = getInverter();
     const writePacket = vi.spyOn(inverter, 'writePacket');
     config.bms.intervalS = 0;
