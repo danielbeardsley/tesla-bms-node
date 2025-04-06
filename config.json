@@ -16,10 +16,10 @@
       "discharging": {
          "maxAmps": 150,
          "minVolts": 39,
-         "minCellVolt": 3.3
+         "minCellVolt": 3.1
       },
       "capacityPerModuleAh": 150,
-      "voltsEmpty": 41,
+      "voltsEmpty": 39,
       "voltsFull": 49,
       "highTempCutoffC": 55,
       "lowTempCutoffC": -3
