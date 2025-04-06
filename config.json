@@ -1,0 +1,47 @@
+{
+   "battery": {
+      "moduleCount": 2,
+      "serialPort": {
+         "deviceName": "/dev/serial0"
+      },
+      "balance": {
+         "cellVDiffMax": 0.01,
+         "onlyAbove": 3.7
+      },
+      "charging": {
+         "maxAmps": 90,
+         "maxVolts": 50,
+         "maxCellVolt": 4.10
+      },
+      "discharging": {
+         "maxAmps": 150,
+         "minVolts": 39,
+         "minCellVolt": 3.3
+      },
+      "capacityPerModuleAh": 150,
+      "voltsEmpty": 41,
+      "voltsFull": 49,
+      "highTempCutoffC": 55,
+      "lowTempCutoffC": -3
+   },
+   "bms": {
+      "intervalS": 10,
+      "batteryRecencyLimitS": 40,
+      "chargingStrategy": {
+         "name": "voltageA",
+         "voltageA": {
+            "maxCellVoltBuffer": 0.1
+         }
+      }
+   },
+   "history": {
+      "samplesToKeep": 1000,
+      "httpPort": 8080
+   },
+   "inverter": {
+      "serialPort": {
+         "deviceName": "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_BG0106Q6-if00-port0",
+         "baudRate": 115200
+      }
+   }
+}
