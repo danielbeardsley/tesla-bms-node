@@ -11,6 +11,7 @@ export class VoltageA implements ChargingModule {
    private chargeCurrentSmoothed: number|null = null;
    private cellVoltMaxSmoothed: number|null = null;
    private cellVoltMinSmoothed: number|null = null;
+   private fullTime: number|null = null;
 
    constructor(config: Config, battery: BatteryI) {
       this.battery = battery;
@@ -42,12 +43,26 @@ export class VoltageA implements ChargingModule {
 
       this.chargeCurrentSmoothed = this.smooth(this.chargeCurrentSmoothed, this.config.battery.charging.maxAmps * chargeScale);
 
+      const fullyCharged = this.battery.getStateOfCharge() > 0.99;
+
+      if (!this.fullTime && fullyCharged) {
+         this.fullTime = Date.now();
+      }
+
+      const recentlyFull = this.fullTime &&
+         ((Date.now() - this.fullTime) < 20 * 60 * 1000
+          || fullyCharged);
+
+      if (this.fullTime && !recentlyFull) {
+         this.fullTime = null;
+      }
+
       return {
          chargeVoltLimit: this.config.battery.charging.maxVolts,
          dischargeVoltLimit: this.config.battery.discharging.minVolts,
          chargeCurrentLimit: this.chargeCurrentSmoothed,
          dischargeCurrentLimit: this.config.battery.discharging.maxAmps * dischargeScale,
-         chargingEnabled: this.cellVoltMaxSmoothed < this.config.battery.charging.maxCellVolt,
+         chargingEnabled: this.cellVoltMaxSmoothed < this.config.battery.charging.maxCellVolt && !fullyCharged && !recentlyFull,
          dischargingEnabled: this.cellVoltMinSmoothed > this.config.battery.discharging.minCellVolt,
       };
    }
