@@ -19,7 +19,11 @@ export class VoltageA implements ChargingModule {
    }
 
    myConfig() {
-      return this.config.bms.chargingStrategy.voltageA; // || throw new Error("VoltageA config not found");
+      const conf = this.config.bms.chargingStrategy.voltageA;
+      if (!conf) {
+         throw new Error("VoltageA config not found");
+      }
+      return conf;
    }
 
    getChargeDischargeInfo(): ChargeInfo {
@@ -31,7 +35,7 @@ export class VoltageA implements ChargingModule {
       // Scale down the charging current as the highest volt cell
       // gets within "buffer" volts of the maxCellVolt setting
       const maxCellVolt = this.config.battery.charging.maxCellVolt;
-      const buffer = 0.2;
+      const buffer = this.myConfig().maxCellVoltBuffer;
       const bufferStart = maxCellVolt - buffer;
       const chargeScale = 1 - clamp((cellVoltageRange.max - bufferStart) / buffer, 0, 1);
 
