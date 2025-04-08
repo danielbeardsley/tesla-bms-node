@@ -2,10 +2,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { Packet } from '../inverter/pylontech-packet';
 import { BMS } from './bms';
 import { FakeBattery } from './fake-battery';
-import { Config } from '../config';
 import { getTestConfig } from '../test-config';
 import { orThrow, sleep } from '../utils';
 import { Command } from 'src/inverter/pylontech-command';
+import { HistoryColumns } from '../history/history';
 
 describe('BMS', () => {
     it('Should read from the battery immediately', async () => {
@@ -78,7 +78,7 @@ describe('BMS History', () => {
         // Let the BMs read the battery and store the history
         await sleep(0);
         const result = await fetch(`http://127.0.0.1:${port}/history`);
-        const json = await result.json();
+        const json = await result.json() as HistoryColumns & { timestamps?: number[] };
         delete json.timestamps;
         expect(json).toEqual({
             batteryVolts: [48],

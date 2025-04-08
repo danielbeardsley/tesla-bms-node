@@ -1,4 +1,4 @@
-type HistoryColumns = {
+export type HistoryColumns = {
    batteryVolts: number[];
    batteryCellVoltsMin: number[];
    batteryCellVoltsMax: number[];
