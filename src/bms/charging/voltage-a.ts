@@ -2,7 +2,7 @@ import { BatteryI } from "../../battery/battery";
 import { Config } from "../../config";
 import { ChargeInfo } from "../../inverter/commands/get-charge-discharge-info";
 import { inverterLogger } from "../../logger";
-import { clamp } from "../..//utils";
+import { clamp, ramp } from "../../utils";
 import { ChargingModule } from "./charging-module";
 
 export class VoltageA implements ChargingModule {
@@ -36,14 +36,12 @@ export class VoltageA implements ChargingModule {
       // gets within "buffer" volts of the maxCellVolt setting
       const maxCellVolt = this.config.battery.charging.maxCellVolt;
       const buffer = this.myConfig().maxCellVoltBuffer;
-      const bufferStart = maxCellVolt - buffer;
-      const chargeScale = 1 - clamp((cellVoltageRange.max - bufferStart) / buffer, 0, 1);
+      const chargeScale = ramp(cellVoltageRange.max, maxCellVolt - buffer, maxCellVolt);
 
-      // Scale down the charging current as the highest volt cell
+      // Scale down the discharge current as the highest volt cell
       // gets within "buffer" volts of the maxCellVolt setting
       const minCellVolt = this.config.battery.discharging.minCellVolt;
-      const bufferMinStart = minCellVolt + buffer;
-      const dischargeScale = 1 - clamp((bufferMinStart - cellVoltageRange.min) / buffer, 0, 1);
+      const dischargeScale = ramp(cellVoltageRange.min, minCellVolt, minCellVolt + buffer);
 
       this.chargeCurrentSmoothed = this.smooth(this.chargeCurrentSmoothed, this.config.battery.charging.maxAmps * chargeScale);
 

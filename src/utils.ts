@@ -30,6 +30,10 @@ export function clamp(value: number, min: number, max: number) {
    return Math.min(Math.max(value, min), max);
 }
 
+export function ramp(value: number, zeroVal: number, oneVal: number): number {
+   return clamp((value - zeroVal) / (oneVal - zeroVal), 0, 1);
+}
+
 export function orThrow<T>(arg: T|undefined): T {
    if (typeof arg === 'undefined') {
       throw new Error('Argument is undefined');
