@@ -2,13 +2,13 @@ import { BatteryI } from "../../battery/battery";
 import { Config } from "../../config";
 import { ChargeInfo } from "../../inverter/commands/get-charge-discharge-info";
 import { inverterLogger } from "../../logger";
-import { clamp, ramp } from "../../utils";
+import { ramp } from "../../utils";
 import { ChargingModule } from "./charging-module";
 
 export class VoltageA implements ChargingModule {
    private battery: BatteryI;
    private config: Config;
-   private chargeCurrentSmoothed: number|null = null;
+   private chargeCurrentSmoothed: number|null = 0;
    private cellVoltMaxSmoothed: number|null = null;
    private cellVoltMinSmoothed: number|null = null;
    private fullTime: number|null = null;
@@ -43,7 +43,6 @@ export class VoltageA implements ChargingModule {
       const minCellVolt = this.config.battery.discharging.minCellVolt;
       const dischargeScale = ramp(cellVoltageRange.min, minCellVolt, minCellVolt + buffer);
 
-      this.chargeCurrentSmoothed = this.smooth(this.chargeCurrentSmoothed, this.config.battery.charging.maxAmps * chargeScale);
 
       const fullyCharged = this.battery.getStateOfCharge() > 0.99;
 
@@ -59,12 +58,17 @@ export class VoltageA implements ChargingModule {
          this.fullTime = null;
       }
 
+      const chargeEnabled = this.cellVoltMaxSmoothed < this.config.battery.charging.maxCellVolt && !fullyCharged && !recentlyFull;
+      this.chargeCurrentSmoothed = chargeEnabled
+         ? this.smooth(this.chargeCurrentSmoothed, this.config.battery.charging.maxAmps * chargeScale)
+         : 0;
+
       return {
          chargeVoltLimit: this.config.battery.charging.maxVolts,
          dischargeVoltLimit: this.config.battery.discharging.minVolts,
          chargeCurrentLimit: this.chargeCurrentSmoothed,
          dischargeCurrentLimit: this.config.battery.discharging.maxAmps * dischargeScale,
-         chargingEnabled: this.cellVoltMaxSmoothed < this.config.battery.charging.maxCellVolt && !fullyCharged && !recentlyFull,
+         chargingEnabled: chargeEnabled,
          dischargingEnabled: this.cellVoltMinSmoothed > this.config.battery.discharging.minCellVolt,
       };
    }
