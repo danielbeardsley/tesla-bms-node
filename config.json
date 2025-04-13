@@ -9,12 +9,12 @@
          "onlyAbove": 3.7
       },
       "charging": {
-         "maxAmps": 80,
+         "maxAmps": 200,
          "maxVolts": 49,
          "maxCellVolt": 4.10
       },
       "discharging": {
-         "maxAmps": 150,
+         "maxAmps": 200,
          "minVolts": 39,
          "minCellVolt": 3.1
       },
