@@ -36,7 +36,7 @@ export class VoltageA implements ChargingModule {
       // gets within "buffer" volts of the maxCellVolt setting
       const maxCellVolt = this.config.battery.charging.maxCellVolt;
       const buffer = this.myConfig().maxCellVoltBuffer;
-      const chargeScale = ramp(cellVoltageRange.max, maxCellVolt - buffer, maxCellVolt);
+      const chargeScale = ramp(cellVoltageRange.max, maxCellVolt, maxCellVolt - buffer);
 
       // Scale down the discharge current as the highest volt cell
       // gets within "buffer" volts of the maxCellVolt setting
