@@ -54,16 +54,12 @@ result.finally(() => {
    clearInterval(timeoutid);
 });
 
-let teslaComms: TeslaComms | undefined;
 async function getTeslaComms() {
-   if (teslaComms) {
-      return teslaComms;
-   }
    const config = getConfig();
    const serialConfig = config.battery.serialPort;
    const serial = new SerialWrapper(serialConfig.deviceName, TeslaComms.BAUD);
    await serial.open();
-   return teslaComms = new TeslaComms(serial);
+   return new TeslaComms(serial);
 }
 
 async function getBattery() {
