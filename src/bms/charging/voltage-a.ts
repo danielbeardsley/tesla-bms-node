@@ -44,7 +44,7 @@ export class VoltageA implements ChargingModule {
       const dischargeScale = ramp(cellVoltageRange.min, minCellVolt, minCellVolt + buffer);
 
 
-      const fullyCharged = this.battery.getStateOfCharge() > 0.99;
+      const fullyCharged = this.battery.getStateOfCharge() >= 1;
 
       if (!this.fullTime && fullyCharged) {
          this.fullTime = Date.now();
