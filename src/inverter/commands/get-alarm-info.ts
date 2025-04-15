@@ -27,8 +27,10 @@ export default {
          out.writeUInt8(data.infoFlag);
          out.writeUInt8(1); // "battery count" ... number of times the below section is repeated
          // Per Battery Start
+         data.cellVolts = data.cellVolts.slice(0, 15);
          out.writeUInt8(data.cellVolts.length);
          data.cellVolts.forEach(cellAlarm => out.writeUInt8(cellAlarm));
+         data.temperatures = data.temperatures.slice(0, 5);
          out.writeUInt8(data.temperatures.length);
          data.temperatures.forEach(tempAlarm => out.writeUInt8(tempAlarm));
          out.writeUInt8(data.chargeCurrent);

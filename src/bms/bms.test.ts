@@ -41,13 +41,13 @@ describe('BMS', () => {
     it('Should respond to inverter GetBatteryValues requests', async () => {
         const inverterRequest = getRequestPacket(Command.GetBatteryValues, 2);
         const responses = await getBmsResponse(inverterRequest);
-        expect(responses[0][0].toString()).toMatchInlineSnapshot(`"20024600208611020C0E740E740E740E740E740E740E740E740E740E740E740E740E0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D0B7D00000000000002EA600000"`);
+        expect(responses[0][0].toString()).toMatchInlineSnapshot(`"20024600806211020C0E740E740E740E740E740E740E740E740E740E740E740E74050B7D0B7D0B7D0B7D0B7D00000000000002EA600000"`);
     });
     
     it('Should respond to inverter GetAlarmInfo requests', async () => {
         const inverterRequest = getRequestPacket(Command.GetAlarmInfo, 2);
         const responses = await getBmsResponse(inverterRequest);
-        expect(responses[0][0].toString()).toMatchInlineSnapshot(`"20024600004C11010C0000000000000000000000000E00000000000000000000000000000000000000000000"`);
+        expect(responses[0][0].toString()).toMatchInlineSnapshot(`"20024600303A11010C0000000000000000000000000500000000000000000000000000"`);
     });
 
     it('Should respond to inverter GetChargeDischargeInfo requests', async () => {

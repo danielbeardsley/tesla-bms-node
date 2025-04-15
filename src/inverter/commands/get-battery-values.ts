@@ -35,13 +35,14 @@ export default {
 }
 
 function outputBatteryInfo(out: SmartBuffer, battery: BatteryInfo) {
+   battery.cellVolts = battery.cellVolts.slice(0, 15)
    out.writeUInt8(battery.cellVolts.length);
    for (const cellVolt of battery.cellVolts) {
       out.writeUInt16BE(voltToPylonVolt(cellVolt));
    }
    // Protocol requires minimum of 5 temps
    // So repeat the last one
-   extendArrayTo(battery.temperaturesC, 5);
+   battery.temperaturesC = extendArrayTo(battery.temperaturesC, 5);
 
    out.writeUInt8(battery.temperaturesC.length);
    for (const temp of battery.temperaturesC) {
@@ -85,7 +86,7 @@ function extendArrayTo<T>(arr: T[], length: number): T[] {
    for (let i = arr.length; i < length; i++) {
       extended.push(last);
    }
-   return extended;
+   return extended.slice(0, length);
 }
 
 /**
