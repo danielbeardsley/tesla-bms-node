@@ -10,18 +10,18 @@
          "onlyAbove": 3.7
       },
       "charging": {
-         "maxAmps": 200,
-         "maxVolts": 49,
+         "maxAmps": 150,
+         "maxVolts": 49.5,
          "maxCellVolt": 4.10
       },
       "discharging": {
-         "maxAmps": 200,
+         "maxAmps": 150,
          "minVolts": 39,
          "minCellVolt": 3.1
       },
       "capacityPerModuleAh": 150,
       "voltsEmpty": 39,
-      "voltsFull": 48.5,
+      "voltsFull": 49,
       "highTempCutoffC": 55,
       "lowTempCutoffC": -3
    },
@@ -31,7 +31,7 @@
       "chargingStrategy": {
          "name": "voltageA",
          "voltageA": {
-            "maxCellVoltBuffer": 0.2
+            "maxCellVoltBuffer": 0.05
          }
       }
    },
