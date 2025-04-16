@@ -34,7 +34,7 @@ class BMS {
         batteryLogger.info("Using config %j", config.battery);
         logger.info("Using history config %j", config.history);
         this.history = new History(config.history.samplesToKeep);
-        this.historyServer = new HistoryServer(this.history, battery, config.history);
+        this.historyServer = new HistoryServer(this.history, battery, config);
         this.chargingModules = {
             "voltageA": new VoltageA(config, battery),
         };

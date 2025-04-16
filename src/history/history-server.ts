@@ -6,11 +6,11 @@ import { BatteryI } from "../battery/battery";
 export class HistoryServer {
    private history: History;
    private battery: BatteryI;
-   private config: Config['history'];
+   private config: Config;
    private app: Application;
    private server: ReturnType<Application['listen']>|null = null;
 
-   constructor(history: History, battery: BatteryI, config: Config['history']) {
+   constructor(history: History, battery: BatteryI, config: Config) {
       this.history = history;
       this.battery = battery;
       this.config = config;
@@ -40,13 +40,14 @@ export class HistoryServer {
                cellVoltages: module.cellVoltages,
                temperatures: module.temperatures,
             })),
+            modulesInSeries: this.config.battery.modulesInSeries,
          };
          res.json(response);
       });
    }
 
    start() {
-      this.server = this.app.listen(this.config.httpPort);
+      this.server = this.app.listen(this.config.history.httpPort);
    }
 
    stop() {

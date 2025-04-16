@@ -4,6 +4,7 @@ export function getTestConfig(): Config {
     return {
         battery: {
             moduleCount: 2,
+            modulesInSeries: [[0, 1]],
             serialPort: {
                 deviceName: '/dev/ttyUSB0',
             },

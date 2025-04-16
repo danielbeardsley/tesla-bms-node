@@ -5,6 +5,9 @@ const ConfigSchema = z.object({
    battery: z.object({
       // Number of modules in the pack
       moduleCount: z.number().int().min(1).max(64),
+      // Array of groups of module identifiers that are connected in series,
+      // 0-indexed from the BMS connection point
+      modulesInSeries: z.array(z.array(z.number())),
       serialPort: z.object({
          deviceName: z.string().min(1), // like "/dev/ttyUSB0"
       }),

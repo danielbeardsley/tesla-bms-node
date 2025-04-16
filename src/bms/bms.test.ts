@@ -113,6 +113,7 @@ describe('BMS History', () => {
                 }
             ],
             stateOfCharge: 0,
+            modulesInSeries: [[0,1]],
         });
         bms.stop();
     });
