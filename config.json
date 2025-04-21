@@ -6,13 +6,13 @@
          "deviceName": "/dev/serial0"
       },
       "balance": {
-         "cellVDiffMax": 0.01,
+         "cellVDiffMax": 0.03,
          "onlyAbove": 3.7
       },
       "charging": {
          "maxAmps": 150,
-         "maxVolts": 49.5,
-         "maxCellVolt": 4.10
+         "maxVolts": 50,
+         "maxCellVolt": 4.15
       },
       "discharging": {
          "maxAmps": 150,
@@ -20,8 +20,8 @@
          "minCellVolt": 3.1
       },
       "capacityPerModuleAh": 150,
-      "voltsEmpty": 39,
-      "voltsFull": 49,
+      "voltsEmpty": 37,
+      "voltsFull": 49.8,
       "highTempCutoffC": 55,
       "lowTempCutoffC": -3
    },
