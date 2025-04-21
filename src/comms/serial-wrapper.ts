@@ -1,6 +1,7 @@
 import { SerialPort } from 'serialport';
 import { Buffer } from 'buffer';
 import { logger } from '../logger';
+import { sleep } from '../utils';
 
 export class SerialWrapper {
    private port!: SerialPort;
@@ -8,6 +9,7 @@ export class SerialWrapper {
    private readQueue: ((cancelled?: boolean) => boolean)[];
    private device: string;
    private speed: number;
+   private closing: boolean = false;
 
    constructor(device: string, speed: number) {
       this.device = device;
@@ -37,13 +39,26 @@ export class SerialWrapper {
             if (err) reject(err);
          });
          this.port.on('close', () => {
+            if (!this.closing) {
+               logger.error('Serial port closed unexpectedly');
+               this.reconnect();
+            }
             this.cancelReadQueue();
          });
       });
    }
 
+   private async reconnect(): Promise<void> {
+      while (!this.port.isOpen) {
+         this.port.open();
+         await sleep(1000);
+      }
+      this.closing = false;
+   }
+
    close(): void {
       logger.debug(`Closing serial port ${this.device}`);
+      this.closing = true;
       this.port.close();
    }
 
