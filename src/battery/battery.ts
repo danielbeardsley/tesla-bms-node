@@ -96,15 +96,18 @@ export class Battery implements BatteryI {
     * Note: Caller should stop balancing and read all values first
     */
    async balance(forSeconds: number): Promise<number> {
-      const {min} = this.getCellVoltageRange();
-      const maxDiff = this.config.battery.balance.cellVDiffMax;
-      const balanceAboveV = Math.max(min + maxDiff, this.config.battery.balance.onlyAbove);
-      logger.verbose("Balancing all cells above %sV (min:%sV + %sV) for %d sec", balanceAboveV.toFixed(3), min.toFixed(3), maxDiff.toFixed(3), forSeconds);
       let cellsAbove = 0;
-      for (const index in this.modules) {
-         await this.lock.acquire('key', async () => {
-            cellsAbove += await this.modules[index].balanceCellsAbove(balanceAboveV, forSeconds);
-         });
+      for (const series of this.config.battery.modulesInSeries) {
+         const modulesInSeries = series.map((index) => this.modules[index]);
+         const min = Math.min(...modulesInSeries.map((m) => m.getMinVoltage()));
+         const maxDiff = this.config.battery.balance.cellVDiffMax;
+         const balanceAboveV = Math.max(min + maxDiff, this.config.battery.balance.onlyAbove);
+         logger.verbose("Balancing all cells above %sV (min:%sV + %sV) for %d sec", balanceAboveV.toFixed(3), min.toFixed(3), maxDiff.toFixed(3), forSeconds);
+         for (const module of modulesInSeries) {
+            await this.lock.acquire('key', async () => {
+               cellsAbove += await module.balanceCellsAbove(balanceAboveV, forSeconds);
+            });
+         }
       }
       if (cellsAbove > 0) {
          logger.info("Balancing initiated on %d cells", cellsAbove);
