@@ -70,7 +70,6 @@ class TeslaModule implements BatteryModuleI {
    async writeByteToRegister(register: number, byte: number) {
       return this.teslaComms
          .writeByteToDeviceRegister(this.id, register, byte)
-         .then(() => this.readFaults());
    }
 
    async writeAlertStatus(alertStatus: BQAlerts) {
