@@ -38,12 +38,6 @@ export class VoltageA implements ChargingModule {
       const buffer = this.myConfig().maxCellVoltBuffer;
       const chargeScale = ramp(cellVoltageRange.max, maxCellVolt, maxCellVolt - buffer);
 
-      // Scale down the discharge current as the highest volt cell
-      // gets within "buffer" volts of the maxCellVolt setting
-      const minCellVolt = this.config.battery.discharging.minCellVolt;
-      const dischargeScale = ramp(cellVoltageRange.min, minCellVolt, minCellVolt + buffer);
-
-
       const fullyCharged = this.battery.getStateOfCharge() >= 1;
 
       if (!this.fullTime && fullyCharged) {
@@ -67,7 +61,7 @@ export class VoltageA implements ChargingModule {
          chargeVoltLimit: this.config.battery.charging.maxVolts,
          dischargeVoltLimit: this.config.battery.discharging.minVolts,
          chargeCurrentLimit: this.chargeCurrentSmoothed,
-         dischargeCurrentLimit: this.config.battery.discharging.maxAmps * dischargeScale,
+         dischargeCurrentLimit: this.config.battery.discharging.maxAmps,
          chargingEnabled: chargeEnabled,
          dischargingEnabled: this.cellVoltMinSmoothed > this.config.battery.discharging.minCellVolt,
       };
