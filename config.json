@@ -5,6 +5,9 @@
       "serialPort": {
          "deviceName": "/dev/serial0"
       },
+      "shunt": {
+         "deviceName": "/dev/serial/by-id/usb-Prolific_Technology_Inc._USB-Serial_Controller_D-if00-port0"
+      },
       "balance": {
          "cellVDiffMax": 0.01,
          "onlyAbove": 3.7

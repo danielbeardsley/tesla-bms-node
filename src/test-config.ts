@@ -8,6 +8,9 @@ export function getTestConfig(): Config {
             serialPort: {
                 deviceName: '/dev/ttyUSB0',
             },
+            shunt: {
+                deviceName: '/dev/ttyUSB2',
+            },
             balance: {
                 cellVDiffMax: 0.1,
                 onlyAbove: 3.5,

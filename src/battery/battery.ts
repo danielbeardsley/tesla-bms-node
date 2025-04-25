@@ -3,6 +3,7 @@ import { BatteryModuleI } from './tesla-module';
 import { clamp } from '../utils';
 import type { Config } from '../config';
 import { logger } from '../logger';
+import { Shunt } from './shunt';
 
 export interface BatteryI {
    modules: { [key: number]: BatteryModuleI };
@@ -20,11 +21,13 @@ export interface BatteryI {
 
 export class Battery implements BatteryI {
    public modules: { [key: number]: BatteryModuleI };
+   private shunt: Shunt;
    private config: Config;
    private lock: AsyncLock;
 
-   constructor(modules: BatteryModuleI[], config: Config) {
+   constructor(modules: BatteryModuleI[], shunt: Shunt, config: Config) {
       this.modules = modules;
+      this.shunt = shunt;
       this.lock = new AsyncLock();
       this.config = config;
    }
@@ -53,7 +56,11 @@ export class Battery implements BatteryI {
       const voltageBasedChargeLevel =
        (this.getVoltage() - bat.voltsEmpty) /
        (bat.voltsFull - bat.voltsEmpty);
-       return clamp(voltageBasedChargeLevel, 0, 1);
+      const shuntSOC = this.shunt.getSOC();
+      const soc = clamp(voltageBasedChargeLevel, 0, 1);
+      logger.info("SOC - Voltage: %s%", (100 * soc).toFixed(2));
+      logger.info("SOC - Shunt:   %s%", (100 * (shuntSOC || 0)).toFixed(2));
+      return soc;
    }
 
    getCellVoltageRange() {

@@ -4,6 +4,8 @@ import { SerialWrapper } from './src/comms/serial-wrapper';
 import { getConfig } from './src/config';
 import { BMS } from './src/bms/bms';
 import { Pylontech } from './src/inverter/pylontech';
+import { SerialPort } from 'serialport';
+import { VictronSmartShunt } from './src/battery/shunt';
 import { batteryLogger, inverterLogger, logger } from './src/logger';
 import { discoverModules } from './src/battery/tesla-module-factory';
 
@@ -22,8 +24,20 @@ async function getBattery() {
    batteryLogger.info('Serial port open');
    batteryLogger.info('Discovering battery modules');
    const modules = await discoverModules(teslaComms, config, true);
-   const battery = new Battery(modules, config);
+   const battery = new Battery(modules, getShunt(), config);
    return battery;
+}
+
+function getShunt() {
+   const config = getConfig();
+   const path = config.battery.shunt.deviceName;
+   const port = new SerialPort({
+      path,
+      baudRate: 19200,
+      dataBits: 8,
+      parity: 'none',
+   });
+   return new VictronSmartShunt(port);
 }
 
 async function getInverter() {
