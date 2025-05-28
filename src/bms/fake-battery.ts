@@ -1,7 +1,7 @@
 import { BatteryI } from "../battery/battery";
 import { BatteryModuleI } from "../battery/tesla-module";
 
-class FakeModule implements BatteryModuleI {
+export class FakeModule implements BatteryModuleI {
    public cellVoltages: number[];
    public temperatures: number[];
    public moduleVolts: number;
@@ -17,7 +17,7 @@ class FakeModule implements BatteryModuleI {
    async balanceCellsAbove(_balanceAboveV: number, _balanceTimeSec: number): Promise<number> {
       return 0;
    }
-   getCellVoltageSum() { return 0 }
+   getCellVoltageSum() { return this.cellVoltages.reduce((acc, v) => acc + v, 0) }
    getMinVoltage() { return 0 }
    getMaxVoltage() { return 0 }
 
