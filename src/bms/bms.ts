@@ -113,8 +113,8 @@ class BMS {
             const chargeInfo = strategy.getChargeDischargeInfo();
 
             responsePacket = GetChargeDischargeInfo.Response.generate(packet.address, {
-                chargeVoltLimit: chargeInfo.chargeVoltLimit,
-                dischargeVoltLimit: chargeInfo.dischargeVoltLimit,
+                chargeVoltLimit: this.config.battery.charging.maxVolts,
+                dischargeVoltLimit: this.config.battery.discharging.minVolts,
                 chargeCurrentLimit: chargeInfo.chargeCurrentLimit,
                 dischargeCurrentLimit: chargeInfo.dischargeCurrentLimit,
                 chargingEnabled: safeTemp && batteryInfoRecent && chargeInfo.chargingEnabled,

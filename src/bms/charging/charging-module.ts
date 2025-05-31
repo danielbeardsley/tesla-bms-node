@@ -1,5 +1,10 @@
-import { ChargeInfo } from "src/inverter/commands/get-charge-discharge-info";
+export type ChargeParameters = {
+   chargeCurrentLimit: number;
+   dischargeCurrentLimit: number;
+   chargingEnabled: boolean;
+   dischargingEnabled: boolean;
+};
 
 export interface ChargingModule {
-   getChargeDischargeInfo(): ChargeInfo;
+   getChargeDischargeInfo(): ChargeParameters;
 }

@@ -1,9 +1,8 @@
 import { BatteryI } from "../../battery/battery";
 import { Config } from "../../config";
-import { ChargeInfo } from "../../inverter/commands/get-charge-discharge-info";
 import { inverterLogger } from "../../logger";
 import { ramp } from "../../utils";
-import { ChargingModule } from "./charging-module";
+import { ChargingModule, ChargeParameters } from "./charging-module";
 
 export class VoltageA implements ChargingModule {
    private battery: BatteryI;
@@ -26,7 +25,7 @@ export class VoltageA implements ChargingModule {
       return conf;
    }
 
-   getChargeDischargeInfo(): ChargeInfo {
+   getChargeDischargeInfo(): ChargeParameters {
       const cellVoltageRange = this.battery.getCellVoltageRange();
       this.cellVoltMinSmoothed = this.smooth(this.cellVoltMinSmoothed, cellVoltageRange.min);
       this.cellVoltMaxSmoothed = this.smooth(this.cellVoltMaxSmoothed, cellVoltageRange.max);
@@ -58,8 +57,6 @@ export class VoltageA implements ChargingModule {
          : 0;
 
       return {
-         chargeVoltLimit: this.config.battery.charging.maxVolts,
-         dischargeVoltLimit: this.config.battery.discharging.minVolts,
          chargeCurrentLimit: this.chargeCurrentSmoothed,
          dischargeCurrentLimit: this.config.battery.discharging.maxAmps,
          chargingEnabled: chargeEnabled,
