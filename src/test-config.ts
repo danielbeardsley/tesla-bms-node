@@ -18,18 +18,21 @@ export function getTestConfig(): Config {
             charging: {
                 maxAmps: 100,
                 maxVolts: 54.6,
-                maxCellVolt: 4.2,
             },
             discharging: {
                 maxAmps: 100,
                 minVolts: 40,
+            },
+            safety: {
                 minCellVolt: 3.0,
+                maxCellVolt: 4.2,
+                highTempCutoffC: 60,
+                lowTempCutoffC: 0,
+                maxCellVoltBuffer: 0.1, // Buffer for the max cell voltage to prevent overcharging
             },
             voltsEmpty: 40,
             voltsFull: 50,
             capacityPerModuleAh: 100,
-            highTempCutoffC: 60,
-            lowTempCutoffC: 0,
         },
         bms: {
             intervalS: 5,

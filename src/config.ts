@@ -21,19 +21,22 @@ const ConfigSchema = z.object({
       charging: z.object({
          maxAmps: z.number(),
          maxVolts: z.number(),
-         maxCellVolt: z.number(),
       }),
       discharging: z.object({
          maxAmps: z.number(),
          minVolts: z.number(),
+      }),
+      safety: z.object({
          minCellVolt: z.number(),
+         maxCellVolt: z.number(),
+         highTempCutoffC: z.number(),
+         lowTempCutoffC: z.number(),
+         maxCellVoltBuffer: z.number().min(0.001).max(0.5),
       }),
       capacityPerModuleAh: z.number().min(0),
       // These are used to anchonr the 0% and 100% SoC voltages
       voltsEmpty: z.number(),
       voltsFull: z.number(),
-      highTempCutoffC: z.number(),
-      lowTempCutoffC: z.number(),
    }),
    bms: z.object({
       // How often to read the stats of the battery
@@ -45,7 +48,6 @@ const ConfigSchema = z.object({
       chargingStrategy: z.object({
          name: z.literal("voltageA"),
          voltageA: z.optional(z.object({
-            maxCellVoltBuffer: z.number().min(0.001).max(0.5),
          })),
       }),
    }),

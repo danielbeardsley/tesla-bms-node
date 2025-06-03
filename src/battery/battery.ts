@@ -88,7 +88,8 @@ export class Battery implements BatteryI {
 
    isTemperatureSafe() {
       const tempRange = this.getTemperatureRange();
-      return tempRange.min >= this.config.battery.lowTempCutoffC && tempRange.max <= this.config.battery.highTempCutoffC;
+      return tempRange.min >= this.config.battery.safety.lowTempCutoffC &&
+             tempRange.max <= this.config.battery.safety.highTempCutoffC;
    }
 
    /**

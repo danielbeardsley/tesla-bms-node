@@ -14,19 +14,21 @@
       },
       "charging": {
          "maxAmps": 150,
-         "maxVolts": 49,
-         "maxCellVolt": 4.05
+         "maxVolts": 49
       },
       "discharging": {
          "maxAmps": 150,
-         "minVolts": 39,
-         "minCellVolt": 3.3
+         "minVolts": 39
+      },
+      "safety": {
+         "maxCellVolt": 4.05,
+         "minCellVolt": 3.3,
+         "highTempCutoffC": 45,
+         "lowTempCutoffC": -3
       },
       "capacityPerModuleAh": 150,
       "voltsEmpty": 41.4,
       "voltsFull": 47.6,
-      "highTempCutoffC": 45,
-      "lowTempCutoffC": -3
    },
    "bms": {
       "intervalS": 10,
