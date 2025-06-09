@@ -10,18 +10,18 @@
          "onlyAbove": 3.7
       },
       "charging": {
-         "maxAmps": 150,
-         "maxVolts": 49,
+         "maxAmps": 280,
+         "maxVolts": 48,
          "maxCellVolt": 4.05
       },
       "discharging": {
-         "maxAmps": 150,
+         "maxAmps": 280,
          "minVolts": 39,
          "minCellVolt": 3.3
       },
       "capacityPerModuleAh": 150,
       "voltsEmpty": 41.4,
-      "voltsFull": 47.6,
+      "voltsFull": 48.5,
       "highTempCutoffC": 45,
       "lowTempCutoffC": -3
    },
