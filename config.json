@@ -23,6 +23,7 @@
       "safety": {
          "maxCellVolt": 4.05,
          "minCellVolt": 3.3,
+         "maxCellVoltBuffer": 0.05,
          "highTempCutoffC": 45,
          "lowTempCutoffC": -3
       },
