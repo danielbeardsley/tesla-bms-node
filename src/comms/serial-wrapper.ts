@@ -8,9 +8,11 @@ export class SerialWrapper {
    private buffer: number[];
    private readQueue: ((cancelled?: boolean) => boolean)[];
    private device: string;
+   private humanName: string;
    private speed: number;
 
-   constructor(device: string, speed: number) {
+   constructor(device: string, speed: number, humanName: string) {
+      this.humanName = humanName;
       this.device = device;
       this.speed = speed;
       this.buffer = [];
@@ -26,7 +28,7 @@ export class SerialWrapper {
          });
 
          autoReconnect(this.port, {
-            humanName: this.device,
+            humanName: this.humanName,
             delayMs: 1000,
          });
 

@@ -12,7 +12,7 @@ import { discoverModules } from './src/battery/tesla-module-factory';
 async function getTeslaComms() {
    const config = getConfig();
    const serialConfig = config.battery.serialPort;
-   const serial = new SerialWrapper(serialConfig.deviceName, TeslaComms.BAUD);
+   const serial = new SerialWrapper(serialConfig.deviceName, TeslaComms.BAUD, "tesla bms ttl");
    await serial.open();
    return new TeslaComms(serial);
 }
@@ -46,7 +46,9 @@ async function getInverter() {
    const inverterConfig = config.inverter.serialPort;
    const serial = new SerialWrapper(
       inverterConfig.deviceName,
-      inverterConfig.baudRate);
+      inverterConfig.baudRate,
+      'pylontech RS485 inverter',
+   );
    await serial.open();
    inverterLogger.info('Serial port open');
    return new Pylontech(serial);
