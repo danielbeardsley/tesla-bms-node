@@ -2,6 +2,7 @@ import { SerialPort } from 'serialport';
 import { DelimiterParser } from '@serialport/parser-delimiter'
 import VEDirectParser from '@bencevans/ve.direct/parser';
 import { batteryLogger as logger } from '../logger';
+import { autoReconnect } from '../comms/serial-auto-reconnect';
 
 export interface Shunt {
    getLastUpdate(): number;
@@ -16,9 +17,7 @@ export class VictronSmartShunt implements Shunt {
 
    constructor(serialPort: SerialPort) {
       this.serialPort = serialPort;
-      serialPort.on("error", (err) => {
-         logger.error("Shunt serial port error:", err);
-      });
+      autoReconnect(serialPort, { delayMs: 1000, humanName: 'Victron SmartShunt' });
       const delimiter = new DelimiterParser({
         delimiter: Buffer.from("0d0a", 'hex'),
         includeDelimiter: false
