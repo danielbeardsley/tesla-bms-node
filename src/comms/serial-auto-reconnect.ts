@@ -2,6 +2,8 @@ import { SerialPort } from 'serialport';
 import { logger } from '../logger';
 import { sleep } from '../utils';
 
+const maxDelayms = 60 * 1000;
+
 type ReconnectionOptions = {
    delayMs: number;
    humanName: string;
@@ -30,9 +32,12 @@ export function autoReconnect(port: SerialPort, opts: ReconnectionOptions) {
    });
 
    async function reconnect(): Promise<void> {
+      let delay = opts.delayMs;
       while (!port.isOpen) {
          port.open();
-         await sleep(opts.delayMs);
+         await sleep(delay);
+         // slowly try less and less often
+         delay = Math.min(delay * 1.1, maxDelayms);
       }
       closing = false;
    }
