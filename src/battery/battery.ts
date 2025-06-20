@@ -134,6 +134,7 @@ export class Battery implements BatteryI {
    }
 
    async readAll() {
+      logger.info("Reading all battery modules");
       for (const key in this.modules) {
          const module = this.modules[key];
          await this.lock.acquire('key', () =>

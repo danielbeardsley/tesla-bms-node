@@ -78,8 +78,8 @@ class TeslaModule implements BatteryModuleI {
 
    async readStatus() {
       const bytes = await this.readBytesFromRegister(Registers.REG_ALERT_STATUS, 4);
-      logger.verbose('Read status for module %d', this.id);
-      logger.debug('Status: %s', bytes.join(', '));
+      logger.debug('Read status for module %d', this.id);
+      logger.silly('Status: %s', bytes.join(', '));
       this.alerts = new BQAlerts(bytes[0]);
       this.faults = new BQFaults(bytes[1]);
       this.covFaults = bytes[2];
@@ -87,7 +87,7 @@ class TeslaModule implements BatteryModuleI {
    }
 
    async sleep() {
-      logger.verbose('Sleeping module %d', this.id);
+      logger.debug('Sleeping module %d', this.id);
       // write 1 to IO_CONTROL[SLEEP]
       // turns off TS1, TS2, enter sleep mode
       await this.writeIOControl(false, false, false, true, false, false)
@@ -98,7 +98,7 @@ class TeslaModule implements BatteryModuleI {
    }
 
    async wake() {
-      logger.verbose('Waking module %d', this.id);
+      logger.debug('Waking module %d', this.id);
       // write 0 to IO_CONTROL[SLEEP]
       return this.writeIOControl(false, false, false, false, true, true).then(() =>
          this.readIOControl()
@@ -107,7 +107,7 @@ class TeslaModule implements BatteryModuleI {
    }
 
    async readValues() {
-      logger.verbose('Reading values for module %d', this.id);
+      logger.debug('Reading values for module %d', this.id);
       //ADC Auto mode, read every ADC input we can (Both Temps, Pack, 6 cells)
       //enable temperature measurement VSS pins
       //start all ADC conversions
@@ -196,12 +196,12 @@ class TeslaModule implements BatteryModuleI {
          (ts2connected ? 1 << 1 : 0) |
          (ts1connected ? 1 : 0);
 
-      logger.verbose('Writing IO control for module %d: aux: %s gpioOut: %s gpioIn: %s sleep: %s ts1: %s ts2: %s', this.id, auxConnected, gpioOutOpenDrain, gpioInHigh, sleep, ts1connected, ts2connected);
+      logger.debug('Writing IO control for module %d: aux: %s gpioOut: %s gpioIn: %s sleep: %s ts1: %s ts2: %s', this.id, auxConnected, gpioOutOpenDrain, gpioInHigh, sleep, ts1connected, ts2connected);
       return this.writeByteToRegister(Registers.REG_IO_CONTROL, value);
    }
 
    async readIOControl() {
-      logger.verbose('Reading IO control for module %d', this.id);
+      logger.debug('Reading IO control for module %d', this.id);
       return this.readBytesFromRegister(Registers.REG_IO_CONTROL, 1).then(bytes => {
          return new BQIOControl(bytes[0]);
       });
@@ -222,12 +222,12 @@ class TeslaModule implements BatteryModuleI {
 
       if (cellCount > 1 && cellCount <= 6) value |= cellCount - 1;
 
-      logger.verbose('Writing ADC control for module %d: adcOn: %s temp1: %s temp2: %s gpai: %s cellCount: %s', this.id, adcOn, tempSensor1On, tempSensor2On, gpaiOn, cellCount);
+      logger.debug('Writing ADC control for module %d: adcOn: %s temp1: %s temp2: %s gpai: %s cellCount: %s', this.id, adcOn, tempSensor1On, tempSensor2On, gpaiOn, cellCount);
       return this.writeByteToRegister(Registers.REG_ADC_CONTROL, value);
    }
 
    async writeADCConvert(initiateConversion: boolean) {
-      logger.verbose('Writing ADC conversion for module %d: %s', this.id, initiateConversion ? 'on' : 'off');
+      logger.debug('Writing ADC conversion for module %d: %s', this.id, initiateConversion ? 'on' : 'off');
       return this.writeByteToRegister(Registers.REG_ADC_CONVERT, initiateConversion ? 1 : 0);
    }
 
@@ -240,7 +240,7 @@ class TeslaModule implements BatteryModuleI {
 
    async balanceCellsAbove(balanceAboveV: number, balanceTimeSec: number): Promise<number> {
       const shouldBalance = this.cellVoltages.map(v => v > balanceAboveV);
-      logger.verbose('Balancing module %d, cells need balancing? %s', this.id, shouldBalance.join(', '));
+      logger.debug('Balancing module %d, cells need balancing? %s', this.id, shouldBalance.join(', '));
       if (shouldBalance.some(b => b)) {
          await this.setBalanceTimer(balanceTimeSec);
          await this.balance(shouldBalance);
@@ -254,7 +254,6 @@ class TeslaModule implements BatteryModuleI {
 
    // cells is array of 6 booleans, true to balance
    async balance(cells: boolean[]) {
-      logger.verbose('Balancing module %d cells: %s', this.id, cells.join(', '));
       let regValue = 0;
 
       for (let i = 0; i < 6; i++) if (cells[i]) regValue = regValue | (1 << i);
