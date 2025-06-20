@@ -145,7 +145,7 @@ class BMS {
     }
 
     public stop() {
-        clearInterval(this.timeout);
+        clearTimeout(this.timeout);
     }
 
     private async monitorBattery() {
