@@ -7,6 +7,7 @@ import { autoReconnect } from '../comms/serial-auto-reconnect';
 export interface Shunt {
    getLastUpdate(): number;
    getSOC(): number | undefined;
+   getCurrent(): number | undefined;
    close(): void;
 }
 
@@ -32,6 +33,7 @@ export class VictronSmartShunt implements Shunt {
    private ingestData(data: Record<string, number>) {
       if (data && data.SOC !== undefined) {
          this.data.SOC = data.SOC / 1000;
+         this.data.I = data.I / 1000;
          this.lastUpdate = Date.now();
       }
    }
@@ -42,6 +44,10 @@ export class VictronSmartShunt implements Shunt {
 
    getSOC(): number | undefined {
       return this.data.SOC;
+   }
+
+   getCurrent(): number | undefined {
+      return this.data.I;
    }
 
    close() {
