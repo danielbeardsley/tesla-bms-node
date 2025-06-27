@@ -11,6 +11,7 @@ export interface BatteryI {
    balance(forSeconds: number): Promise<number>;
    stopBalancing(): Promise<void>;
    getVoltage() : number;
+   getCurrent() : number | undefined;
    getCapacityAh(): number;
    getStateOfCharge(): number;
    getCellVoltageRange(): { min: number, max: number, spread: number };
@@ -45,6 +46,10 @@ export class Battery implements BatteryI {
       const moduleVolts = Object.values(this.modules).map(module => module.getCellVoltageSum());
       const sum = moduleVolts.reduce((acc, v) => acc + v, 0);
       return sum / (moduleVolts.length / 2);
+   }
+
+   getCurrent() {
+      return this.shunt.getCurrent();
    }
 
    getCapacityAh() {
