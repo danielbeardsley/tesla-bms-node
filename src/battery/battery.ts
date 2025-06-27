@@ -14,6 +14,7 @@ export interface BatteryI {
    getCurrent() : number | undefined;
    getCapacityAh(): number;
    getStateOfCharge(): number;
+   getStateOfHealth(): number;
    getCellVoltageRange(): { min: number, max: number, spread: number };
    getTemperatureRange(): { min: number, max: number, spread: number };
    getLastUpdateDate(): number;
@@ -66,6 +67,10 @@ export class Battery implements BatteryI {
       logger.info("SOC - Voltage: %s%", (100 * soc).toFixed(2));
       logger.info("SOC - Shunt:   %s%", (100 * (shuntSOC || 0)).toFixed(2));
       return soc;
+   }
+
+   getStateOfHealth() {
+      return 1;
    }
 
    getCellVoltageRange() {
