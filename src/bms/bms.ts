@@ -5,8 +5,9 @@ import { Inverter } from '../inverter/inverter';
 import { Command, commandToMessage } from '../inverter/pylontech-command';
 import type { Packet } from '../inverter/pylontech-packet';
 import { History } from '../history/history';
+import { CanbusSerialPort } from '../inverter/canbus';
 // =========
-import GetChargeDischargeInfo from '../inverter/commands/get-charge-discharge-info';
+import GetChargeDischargeInfo, { ChargeInfo } from '../inverter/commands/get-charge-discharge-info';
 import GetBatteryValues from '../inverter/commands/get-battery-values';
 import GetAlarmInfo, { AlarmState } from '../inverter/commands/get-alarm-info';
 import { ChargingModule } from './charging/charging-module';
@@ -21,6 +22,7 @@ class BMS {
     private timeout: NodeJS.Timeout;
     private config: Config;
     private inverter: Inverter;
+    private canbusInverter: CanbusSerialPort;
     private history: History;
     private historyServer: HistoryServer;
     private batterySafety: BatterySafety;
@@ -28,10 +30,11 @@ class BMS {
         voltageA: ChargingModule;
     }
 
-    constructor(battery: BatteryI, inverter: Inverter, config: Config) {
+    constructor(battery: BatteryI, inverter: Inverter, canbusInverter: CanbusSerialPort, config: Config) {
         this.battery = battery;
         this.config = config;
         this.inverter = inverter;
+        this.canbusInverter = canbusInverter;
         inverterLogger.info("Using config %j", config.inverter);
         batteryLogger.info("Using config %j", config.battery);
         logger.info("Using history config %j", config.history);
@@ -142,11 +145,45 @@ class BMS {
         if (this.config.history.httpPort) {
             void this.historyServer.start();
         }
+        void this.canbusInverter.open().then(() => this.startCanbusTransmission());
+    }
+
+    private startCanbusTransmission() {
+        if (!this.config.inverter.canbusSerialPort) {
+            inverterLogger.warn("Canbus serial port not configured, skipping canbus transmission");
+            return;
+        }
+        const intervalMs = this.config.inverter.canbusSerialPort.transmitIntervalMs;
+        logger.info("Starting canbus transmission");
+        setInterval(() => {
+            const chargeData = this.getChargeDischargeInfo();
+            this.canbusInverter.sendBatteryInfoToInverter(chargeData);
+        }, intervalMs);
     }
 
     public stop() {
         clearTimeout(this.timeout);
     }
+
+    private getChargeDischargeInfo(): ChargeInfo {
+        const batteryInfoRecent = Date.now() - this.battery.getLastUpdateDate() < this.config.bms.batteryRecencyLimitS * 1000;
+        const safeTemp = this.battery.isTemperatureSafe();
+
+        const safeChargeInfo = this.batterySafety.getChargeDischargeInfo();
+
+        const chargingStrategyName = this.config.bms.chargingStrategy.name;
+        const strategy = this.chargingModules[chargingStrategyName];
+        const chargeInfo = strategy.getChargeDischargeInfo();
+        return {
+            chargeVoltLimit: this.config.battery.charging.maxVolts,
+            dischargeVoltLimit: this.config.battery.discharging.minVolts,
+            chargeCurrentLimit: Math.min(safeChargeInfo.chargeCurrentLimit, chargeInfo.chargeCurrentLimit),
+            dischargeCurrentLimit: Math.min(safeChargeInfo.dischargeCurrentLimit, chargeInfo.dischargeCurrentLimit),
+            chargingEnabled:    safeTemp && batteryInfoRecent && safeChargeInfo.chargingEnabled    && chargeInfo.chargingEnabled,
+            dischargingEnabled: safeTemp && batteryInfoRecent && safeChargeInfo.dischargingEnabled && chargeInfo.dischargingEnabled,
+        };
+    }
+
 
     private async monitorBattery() {
         const now = Date.now();

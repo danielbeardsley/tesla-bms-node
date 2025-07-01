@@ -49,6 +49,11 @@
       "serialPort": {
          "deviceName": "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_BG0106Q6-if00-port0",
          "baudRate": 115200
+      },
+      "canbusSerialPort": {
+         "deviceName": "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_BG0106Q6-if01-port0",
+         "baudRate": 115200,
+         "transmitIntervalMs": 1000
       }
    }
 }

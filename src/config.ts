@@ -60,6 +60,11 @@ const ConfigSchema = z.object({
          deviceName: z.string().min(1),
          baudRate: z.number().int().min(1),
       }),
+      canbusSerialPort: z.object({
+         deviceName: z.string().min(1),
+         baudRate: z.number().int().min(1),
+         transmitIntervalMs: z.number().int().min(100).max(10000),
+      }),
    }),
 });
 

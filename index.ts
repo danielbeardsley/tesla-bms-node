@@ -4,6 +4,7 @@ import { SerialWrapper } from './src/comms/serial-wrapper';
 import { getConfig } from './src/config';
 import { BMS } from './src/bms/bms';
 import { Pylontech } from './src/inverter/pylontech';
+import { CanbusSerialPort } from './src/inverter/canbus';
 import { SerialPort } from 'serialport';
 import { VictronSmartShunt } from './src/battery/shunt';
 import { batteryLogger, inverterLogger, logger } from './src/logger';
@@ -54,10 +55,24 @@ async function getInverter() {
    return new Pylontech(serial);
 }
 
+async function getCanbusInverter(battery: Battery) {
+   const config = getConfig();
+   const canbusConfig = config.inverter.canbusSerialPort;
+   const serial = new CanbusSerialPort(
+      canbusConfig.deviceName,
+      canbusConfig.baudRate,
+      "canbus",
+      battery,
+   );
+   void serial.open();
+   return serial;
+}
+
 async function main() {
    const battery = await getBattery();
    const inverter = await getInverter();
-   const bms = new BMS(battery, inverter, getConfig());
+   const canbusInverter = await getCanbusInverter(battery);
+   const bms = new BMS(battery, inverter, canbusInverter, getConfig());
    await bms.init();
    await bms.start();
 }
