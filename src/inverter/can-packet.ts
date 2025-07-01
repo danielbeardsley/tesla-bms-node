@@ -1,11 +1,12 @@
 import { SmartBuffer } from 'smart-buffer';
 import { inverterLogger as logger } from "../logger";
-import { createRawChannel } from 'socketcan';
+import { SerialPort } from 'serialport';
 import type { BatteryI } from '../battery/battery';
+import type { ChargeInfo } from './commands/get-charge-discharge-info';
 
-type RawChannel = ReturnType<typeof createRawChannel>;
+const CAN_MSG_SIZE = 8; // CAN messages are 8 bytes long
 
-enum CanMsgType {
+export enum CanMsgType {
    Alarms = 0x359,
    ChargeParams = 0x351,
    SOC = 0x355,
@@ -14,6 +15,9 @@ enum CanMsgType {
    InverterReply = 0x305,
 };
 
+// https://github.com/tixiv/lib-slcan/blob/master/slcan.c
+
+/*
 type AlarmsParams = {
    // Protection
    dischargeOverCurrent: boolean,
@@ -33,12 +37,30 @@ type AlarmsParams = {
    systemError: boolean,
    internalCommunicationFail: boolean,
 }
+*/
 
-export function sendAllPackets(channel: RawChannel, chargeData: ChargeInfo, battery: BatteryI) {
-   channel.send(message(chargeParamsPacket(chargeDatt)));
-   channel.send(message(stateOfChargePacket(battery)));
-   channel.send(message(packVoltagePacket(battery)));
-   channel.send(message(alarmsPacket(battery)));
+export function sendAllPackets(port: SerialPort, chargeData: ChargeInfo, battery: BatteryI) {
+   port.write(frame(chargeParamsPacket(chargeData)));
+   port.write(frame(stateOfChargePacket(battery)));
+   port.write(frame(packVoltagePacket(battery)));
+   port.write(frame(alarmsPacket(battery)));
+}
+
+function frame(packet: { id: CanMsgType, data: Buffer }) {
+   const frame = new SmartBuffer();
+   // t = transmit frame with 3-byte ID
+   frame.writeString('t');
+   // can ID
+   frame.writeString(toHex(packet.id, 3));
+   frame.writeString(canDataLength(packet.data));
+   frame.writeString(bufferToHex(packet.data));
+   logger.verbose("Sending can frame id:%s numbers:%s",
+      toHex(packet.id, 3),
+      canDataDebug(packet.data),
+   );
+   const bytes = frame.toBuffer();
+   logger.silly("Writing to canbus usb: " + bytes.toString());
+   return bytes;
 }
 
 function chargeParamsPacket(data: ChargeInfo) {
@@ -69,7 +91,7 @@ function stateOfChargePacket(battery: BatteryI) {
 function packVoltagePacket(battery: BatteryI) {
    const out = buf();
    out.writeUInt16LE(Math.round(battery.getVoltage() * 100));
-   out.writeUInt16LE(amps(battery.getCurrent()));
+   out.writeUInt16LE(amps(battery.getCurrent() || 0));
    const tempRange = battery.getCellVoltageRange();
    out.writeUInt16LE(temp(tempRange.max));
    out.writeUInt16LE(temp(tempRange.min));
@@ -79,9 +101,12 @@ function packVoltagePacket(battery: BatteryI) {
    };
 }
 
-function alarmsPacket(_battery: BBatteyI) {
+function alarmsPacket(_battery: BatteryI) {
    const out = buf();
-   return [CanMsgType.Alarms, out];
+   return {
+      id: CanMsgType.Alarms,
+      data: out.toBuffer()
+   };
 }
 
 function volts(v: number) {
@@ -105,5 +130,34 @@ function temp(t: number) {
 }
 
 function buf() {
-   return SmartBuffer.fromSize(8);
+   return SmartBuffer.fromSize(CAN_MSG_SIZE);
+}
+
+export function toHex(num: number, length: number): string {
+   if (num >= Math.pow(16, length)) {
+      throw new Error(`Number (${num}) too large to be represented by ${length} hex chars`);
+   }
+   return num.toString(16).toUpperCase().padStart(length, '0');
+}
+
+export function bufferToHex(buffer: Buffer): string {
+   return buffer.toString('hex').toUpperCase();
+}
+
+function canDataLength(buffer: Buffer): string {
+   if (buffer.length > 8) {
+      const bufAsHex = bufferToHex(buffer);
+      throw new Error(`Can data must be 8 bytes or less, "${bufAsHex}" is ${buffer.length} bytes`);
+   }
+   return String(buffer.length);
+}
+
+function canDataDebug(buffer: Buffer) {
+   const numbers = [
+      buffer.readUInt16LE(0),
+      buffer.readUInt16LE(2),
+      buffer.readUInt16LE(4),
+      buffer.readUInt16LE(6),
+   ];
+   return numbers.join(", ");
 }
