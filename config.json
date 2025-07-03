@@ -51,7 +51,7 @@
          "baudRate": 115200
       },
       "canbusSerialPort": {
-         "deviceName": "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_BG0106Q6-if01-port0",
+         "deviceName": "/dev/serial/by-id/usb-Openlight_Labs_CANable2_b158aa7_github.com_normaldotcom_canable2.git_209030923541-if00",
          "baudRate": 115200,
          "transmitIntervalMs": 1000
       }
