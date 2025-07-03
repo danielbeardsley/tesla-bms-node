@@ -63,6 +63,11 @@ describe('BMS', () => {
         const responses = await getBmsResponse(inverterRequest);
         expect(responses).toEqual([]);
     });
+
+    it('Should call canbus.open()', async () => {
+        const {open} = await getBmsWithCanbus();
+        expect(open).toHaveBeenCalled();
+    });
 });
 
 describe('BMS History', () => {
@@ -160,6 +165,19 @@ function getRequestPacket(command: Command, address: number) {
         datalength: 0,
         lengthChecksum: 0,
     }
+}
+
+async function getBmsWithCanbus() {
+    const battery = new FakeBattery();
+    const config = getTestConfig();
+    const inverter = getInverter();
+    const canbusInverter = getCanbusInverter(battery);
+    const open = vi.spyOn(canbusInverter, 'open');
+    const sendBatteryInfoToInverter = vi.spyOn(canbusInverter, 'sendBatteryInfoToInverter');
+    const bms = new BMS(battery, inverter, canbusInverter, config);
+    await bms.init();
+    bms.start();
+    return { bms, battery, inverter, canbusInverter, open, sendBatteryInfoToInverter };
 }
 
 async function getBmsResponse(inverterRequest: Packet) {
