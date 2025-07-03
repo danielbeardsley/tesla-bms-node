@@ -5,7 +5,7 @@ import { Inverter } from '../inverter/inverter';
 import { Command, commandToMessage } from '../inverter/pylontech-command';
 import type { Packet } from '../inverter/pylontech-packet';
 import { History } from '../history/history';
-import { CanbusSerialPort } from '../inverter/canbus';
+import type { CanbusSerialPortI } from '../inverter/canbus';
 // =========
 import GetChargeDischargeInfo, { ChargeInfo } from '../inverter/commands/get-charge-discharge-info';
 import GetBatteryValues from '../inverter/commands/get-battery-values';
@@ -22,7 +22,7 @@ class BMS {
     private timeout: NodeJS.Timeout;
     private config: Config;
     private inverter: Inverter;
-    private canbusInverter: CanbusSerialPort;
+    private canbusInverter: CanbusSerialPortI;
     private history: History;
     private historyServer: HistoryServer;
     private batterySafety: BatterySafety;
@@ -30,7 +30,7 @@ class BMS {
         voltageA: ChargingModule;
     }
 
-    constructor(battery: BatteryI, inverter: Inverter, canbusInverter: CanbusSerialPort, config: Config) {
+    constructor(battery: BatteryI, inverter: Inverter, canbusInverter: CanbusSerialPortI, config: Config) {
         this.battery = battery;
         this.config = config;
         this.inverter = inverter;

@@ -5,7 +5,13 @@ import { sendAllPackets } from './can-packet';
 import { BatteryI } from '../battery/battery';
 import { autoReconnect } from '../comms/serial-auto-reconnect';
 
-export class CanbusSerialPort {
+export interface CanbusSerialPortI {
+   open(): Promise<void>;
+   close(): void;
+   sendBatteryInfoToInverter(chargeData: ChargeInfo): void;
+}
+
+export class CanbusSerialPort implements CanbusSerialPortI {
    private port!: SerialPort;
    private device: string;
    private humanName: string;
