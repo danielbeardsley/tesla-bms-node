@@ -6,6 +6,7 @@ import { FakeBattery } from './fake-battery';
 import { getTestConfig } from '../test-config';
 import { orThrow, sleep } from '../utils';
 import { Command } from 'src/inverter/pylontech-command';
+import type { ChargeInfo } from '../inverter/commands/get-charge-discharge-info';
 import { HistoryColumns } from '../history/history';
 
 describe('BMS', () => {
@@ -73,7 +74,7 @@ describe('BMS History', () => {
         battery.temperatureRange = {min: 18, max: 21, spread: 3};
         battery.voltageRange = {min: 3.6, max: 3.7, spread: 0.1};
         battery.voltage = 48;
-        const bms = new BMS(battery, inverter, config);
+        const bms = new BMS(battery, inverter, getCanbusInverter(battery), config);
         await bms.init();
         bms.start();
         // Let the BMs read the battery and store the history
@@ -142,11 +143,11 @@ function getInverter() {
 }
 
 // ===============
-function getCanbusInverter(battery: BatteryI) {
+function getCanbusInverter(_battery: BatteryI) {
    return {
      async open(): Promise<void> { },
      close(): void { },
-     sendBatteryInfoToInverter(chargeData: ChargeInfo) { }
+     sendBatteryInfoToInverter(_chargeData: ChargeInfo) { }
    }
 }
 
@@ -167,7 +168,7 @@ async function getBmsResponse(inverterRequest: Packet) {
     const inverter = getInverter();
     const writePacket = vi.spyOn(inverter, 'writePacket');
     config.bms.intervalS = 0;
-    const bms = new BMS(battery, inverter, config);
+    const bms = new BMS(battery, inverter, getCanbusInverter(battery), config);
     await bms.init();
     bms.start();
     // Let the BMs read the battery

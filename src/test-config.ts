@@ -52,6 +52,11 @@ export function getTestConfig(): Config {
                 deviceName: '/dev/ttyUSB1',
                 baudRate: 115200,
             },
+            canbusSerialPort: {
+                deviceName: '/dev/ttyACM0',
+                baudRate: 115200,
+                transmitIntervalMs: 1000,
+            }
         },
     };
 }
