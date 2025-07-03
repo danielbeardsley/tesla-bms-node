@@ -1,13 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { FakeModule } from '../bms/fake-battery';
+import { FakeModule, getFakeShunt } from '../bms/fake-battery';
 import { getTestConfig } from '../test-config'
 import { Battery } from './battery';
-
-const fakeShunt = {
-   getSOC: () => 0.5,
-   getLastUpdate: () => 0,
-   close: () => {},
-};
 
 describe('Battery', () => {
    describe('.getVoltage', () => {
@@ -17,7 +11,7 @@ describe('Battery', () => {
             new FakeModule([2, 3], [21], 10)
          ];
          const config = getTestConfig();
-         const battery = new Battery(modules, fakeShunt, config);
+         const battery = new Battery(modules, getFakeShunt(), config);
          // Should be average of sums of modules, not moduleVolts
          expect(battery.getVoltage()).toBe(8);
       });

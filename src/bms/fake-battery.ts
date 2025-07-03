@@ -32,6 +32,7 @@ export class FakeBattery implements BatteryI {
    public modules: { [key: number]: FakeModule } = {};
    public voltage: number = 0;
    public capacity: number = 0;
+   public current: number = 0;
    public remainingCapacity: number = 0;
    public voltageRange: { min: number, max: number, spread: number } = { min: 0, max: 0, spread: 0 };
    public temperatureRange: { min: number, max: number, spread: number } = { min: 0, max: 0, spread: 0 };
@@ -68,6 +69,10 @@ export class FakeBattery implements BatteryI {
       return this.remainingCapacity;
    }
 
+   getCurrent() {
+      return this.current;
+   }
+
    getCellVoltageRange() {
       return this.voltageRange;
    }
@@ -78,6 +83,10 @@ export class FakeBattery implements BatteryI {
 
    getStateOfCharge(): number {
       return this.stateOfCharge;
+   }
+
+   getStateOfHealth(): number {
+      return 1;
    }
 
    getLastUpdateDate(): number {
@@ -99,3 +108,13 @@ export class FakeBattery implements BatteryI {
    async readAll() {
    }
 }
+
+export function getFakeShunt() {
+    return {
+       getSOC: () => 0.5,
+       getLastUpdate: () => 0,
+       close: () => {},
+       getCurrent: () => 10,
+    };
+}
+
