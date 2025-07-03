@@ -65,8 +65,29 @@ describe('BMS', () => {
     });
 
     it('Should call canbus.open()', async () => {
-        const {open} = await getBmsWithCanbus();
+        const {bms, open} = await getBmsWithCanbus();
         expect(open).toHaveBeenCalled();
+        bms.stop();
+    });
+
+    it('Should call canbus.sendBatteryInfoToInverter()', async () => {
+        const {bms, sendBatteryInfoToInverter} = await getBmsWithCanbus();
+        await sleep(0);
+        expect(sendBatteryInfoToInverter.mock.calls).toMatchInlineSnapshot(`
+          [
+            [
+              {
+                "chargeCurrentLimit": 10,
+                "chargeVoltLimit": 54.6,
+                "chargingEnabled": false,
+                "dischargeCurrentLimit": 100,
+                "dischargeVoltLimit": 40,
+                "dischargingEnabled": false,
+              },
+            ],
+          ]
+        `);
+        bms.stop();
     });
 });
 
@@ -174,6 +195,7 @@ async function getBmsWithCanbus() {
     const canbusInverter = getCanbusInverter(battery);
     const open = vi.spyOn(canbusInverter, 'open');
     const sendBatteryInfoToInverter = vi.spyOn(canbusInverter, 'sendBatteryInfoToInverter');
+    config.inverter.canbusSerialPort.transmitIntervalMs = 0;
     const bms = new BMS(battery, inverter, canbusInverter, config);
     await bms.init();
     bms.start();

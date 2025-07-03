@@ -20,6 +20,7 @@ const BATTERY_ADDRESS = 2;
 class BMS {
     private battery: BatteryI;
     private batteryTimer: NodeJS.Timeout;
+    private inverterTimer: NodeJS.Timeout;
     private config: Config;
     private inverter: Inverter;
     private canbusInverter: CanbusSerialPortI;
@@ -155,7 +156,7 @@ class BMS {
         }
         const intervalMs = this.config.inverter.canbusSerialPort.transmitIntervalMs;
         logger.info("Starting canbus transmission");
-        setInterval(() => {
+        this.inverterTimer = setInterval(() => {
             const chargeData = this.getChargeDischargeInfo();
             this.canbusInverter.sendBatteryInfoToInverter(chargeData);
         }, intervalMs);
@@ -163,6 +164,7 @@ class BMS {
 
     public stop() {
         clearTimeout(this.batteryTimer);
+        clearInterval(this.inverterTimer);
     }
 
     private getChargeDischargeInfo(): ChargeInfo {
