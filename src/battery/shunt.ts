@@ -35,6 +35,7 @@ export class VictronSmartShunt implements Shunt {
          this.data.SOC = data.SOC / 1000;
          this.data.I = data.I / 1000;
          this.lastUpdate = Date.now();
+         logger.silly("Shunt data received SOC:%s I:%s", this.data.SOC, this.data.I);
       }
    }
 
