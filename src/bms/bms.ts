@@ -19,7 +19,7 @@ const BATTERY_ADDRESS = 2;
 
 class BMS {
     private battery: BatteryI;
-    private timeout: NodeJS.Timeout;
+    private batteryTimer: NodeJS.Timeout;
     private config: Config;
     private inverter: Inverter;
     private canbusInverter: CanbusSerialPortI;
@@ -137,7 +137,7 @@ class BMS {
 
     public start() {
         batteryLogger.info(`Starting Battery monitoring every %ds`, this.config.bms.intervalS);
-        if (this.timeout) {
+        if (this.batteryTimer) {
             throw new Error("BMS already running");
         }
         void this.monitorBattery();
@@ -162,7 +162,7 @@ class BMS {
     }
 
     public stop() {
-        clearTimeout(this.timeout);
+        clearTimeout(this.batteryTimer);
     }
 
     private getChargeDischargeInfo(): ChargeInfo {
@@ -194,7 +194,7 @@ class BMS {
             logger.error(err)
         }
         batteryLogger.debug("Finished work loop in %d ms", Date.now() - now);
-        this.timeout = setTimeout(this.monitorBattery.bind(this), this.config.bms.intervalS * 1000);
+        this.batteryTimer = setTimeout(this.monitorBattery.bind(this), this.config.bms.intervalS * 1000);
     }
 
     private async work() {
