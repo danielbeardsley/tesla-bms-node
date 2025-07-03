@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Packet } from '../inverter/pylontech-packet';
 import { BMS } from './bms';
+import { BatteryI } from '../battery/battery';
 import { FakeBattery } from './fake-battery';
 import { getTestConfig } from '../test-config';
 import { orThrow, sleep } from '../utils';
@@ -12,7 +13,7 @@ describe('BMS', () => {
         const battery = new FakeBattery();
         const readAllSpy = vi.spyOn(battery, 'readAll');
         const inverter = getInverter();
-        const bms = new BMS(battery, inverter, getTestConfig());
+        const bms = new BMS(battery, inverter, getCanbusInverter(battery), getTestConfig());
         await bms.init();
         expect(readAllSpy).toHaveBeenCalled();
     });
@@ -26,7 +27,7 @@ describe('BMS', () => {
         const inverter = getInverter();
         config.bms.intervalS = 0;
 
-        const bms = new BMS(battery, inverter, config);
+        const bms = new BMS(battery, inverter, getCanbusInverter(battery), config);
         await bms.init();
         readAll.mockClear();
         bms.start();
@@ -138,6 +139,15 @@ function getInverter() {
         writePacket: async (_packet: Buffer) => {
         },
     };
+}
+
+// ===============
+function getCanbusInverter(battery: BatteryI) {
+   return {
+     async open(): Promise<void> { },
+     close(): void { },
+     sendBatteryInfoToInverter(chargeData: ChargeInfo) { }
+   }
 }
 
 function getRequestPacket(command: Command, address: number) {
