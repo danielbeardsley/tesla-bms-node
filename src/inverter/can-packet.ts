@@ -57,6 +57,7 @@ function frame(packet: { id: CanMsgType, data: Buffer }) {
    frame.writeString(toHex(packet.id, 3));
    frame.writeString(canDataLength(packet.data));
    frame.writeString(bufferToHex(packet.data));
+   frame.writeString("\r");
    logger.verbose("Sending can frame id:%s numbers:%s",
       toHex(packet.id, 3),
       canDataDebug(packet.data),
