@@ -64,7 +64,6 @@ async function getCanbusInverter(battery: Battery) {
       "canbus",
       battery,
    );
-   void serial.open();
    return serial;
 }
 
