@@ -47,6 +47,7 @@ export function sendAllPackets(port: SerialPort, chargeData: ChargeInfo, battery
    port.write(frame(packVoltagePacket(battery)));
    port.write(frame(alarmsPacket(battery)));
    port.write(frame(batteryNamePacket()));
+   port.write(frame(requestFlagsPacket(chargeData)));
 }
 
 function frame(packet: { id: CanMsgType, data: Buffer }) {
@@ -71,6 +72,20 @@ function networkAlivePacket() {
    return {
       id: CanMsgType.NetworkAlive,
       data: Buffer.alloc(CAN_MSG_SIZE),
+   };
+}
+
+function requestFlagsPacket(data: ChargeInfo) {
+   const out = buf();
+   const flags =
+      bit(data.dischargingEnabled, 6) |
+      bit(data.chargingEnabled, 7);
+
+   out.writeUInt8(flags);
+   out.writeUInt8(0); // reserved
+   return {
+      id: CanMsgType.RequestFlags,
+      data: out.toBuffer(),
    };
 }
 
@@ -146,6 +161,10 @@ function temp(t: number) {
 
 function buf() {
    return SmartBuffer.fromSize(CAN_MSG_SIZE);
+}
+
+function bit(val: boolean, offset: number) {
+   return val ? (1 << offset) : 0;
 }
 
 export function toHex(num: number, length: number): string {
