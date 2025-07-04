@@ -52,7 +52,7 @@ export class CanbusSerialPort implements CanbusSerialPortI {
 
    private openCanChannel() {
       // O opens the channel, S6 sets the baud rate to 500kbps
-      this.port.write("O\rS6\r");
+      this.port.write("S6\rO\r");
    }
 
    close(): void {
