@@ -114,11 +114,11 @@ function stateOfChargePacket(battery: BatteryI) {
 
 function packVoltagePacket(battery: BatteryI) {
    const out = buf();
-   out.writeUInt16LE(Math.round(battery.getVoltage() * 100));
-   out.writeUInt16LE(amps(battery.getCurrent() || 0));
+   out.writeInt16LE(Math.round(battery.getVoltage() * 100));
+   out.writeInt16LE(amps(battery.getCurrent() || 0));
    const tempRange = battery.getTemperatureRange();
-   out.writeUInt16LE(temp(tempRange.max));
-   out.writeUInt16LE(temp(tempRange.min));
+   out.writeInt16LE(temp(tempRange.max));
+   out.writeInt16LE(temp(tempRange.min));
    return {
       id: CanMsgType.VoltsAndTemps,
       data: out.toBuffer(),
