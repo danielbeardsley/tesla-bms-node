@@ -59,10 +59,6 @@ function frame(packet: { id: CanMsgType, data: Buffer }) {
    frame.writeString(canDataLength(packet.data));
    frame.writeString(bufferToHex(packet.data));
    frame.writeString("\r");
-   logger.verbose("Sending can frame id:%s numbers:%s",
-      toHex(packet.id, 3),
-      canDataDebug(packet.data),
-   );
    const bytes = frame.toBuffer();
    logger.silly("Writing to canbus usb: " + bytes.toString());
    return bytes;
@@ -184,14 +180,4 @@ function canDataLength(buffer: Buffer): string {
       throw new Error(`Can data must be 8 bytes or less, "${bufAsHex}" is ${buffer.length} bytes`);
    }
    return String(buffer.length);
-}
-
-function canDataDebug(buffer: Buffer) {
-   const numbers = [
-      buffer.readUInt16LE(0),
-      buffer.readUInt16LE(2),
-      buffer.readUInt16LE(4),
-      buffer.readUInt16LE(6),
-   ];
-   return numbers.join(", ");
 }
