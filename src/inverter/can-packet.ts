@@ -7,12 +7,13 @@ import type { ChargeInfo } from './commands/get-charge-discharge-info';
 const CAN_MSG_SIZE = 8; // CAN messages are 8 bytes long
 
 export enum CanMsgType {
+   NetworkAlive = 0x305,
    Alarms = 0x359,
    ChargeParams = 0x351,
    SOC = 0x355,
    VoltsAndTemps = 0x356,
    RequestFlags = 0x35C,
-   InverterReply = 0x305,
+   BatteryName = 0x35E,
 };
 
 // https://github.com/tixiv/lib-slcan/blob/master/slcan.c
@@ -40,10 +41,12 @@ type AlarmsParams = {
 */
 
 export function sendAllPackets(port: SerialPort, chargeData: ChargeInfo, battery: BatteryI) {
+   port.write(frame(networkAlivePacket()));
    port.write(frame(chargeParamsPacket(chargeData)));
    port.write(frame(stateOfChargePacket(battery)));
    port.write(frame(packVoltagePacket(battery)));
    port.write(frame(alarmsPacket(battery)));
+   port.write(frame(batteryNamePacket()));
 }
 
 function frame(packet: { id: CanMsgType, data: Buffer }) {
@@ -63,6 +66,13 @@ function frame(packet: { id: CanMsgType, data: Buffer }) {
    return bytes;
 }
 
+function networkAlivePacket() {
+   return {
+      id: CanMsgType.NetworkAlive,
+      data: Buffer.alloc(CAN_MSG_SIZE),
+   };
+}
+
 function chargeParamsPacket(data: ChargeInfo) {
    const out = buf();
    out.writeUInt16LE(volts(data.chargeVoltLimit));
@@ -79,9 +89,7 @@ function stateOfChargePacket(battery: BatteryI) {
    const out = buf();
    out.writeUInt16LE(percent(battery.getStateOfCharge()));
    out.writeUInt16LE(percent(battery.getStateOfHealth()));
-   const vRange = battery.getCellVoltageRange();
-   out.writeUInt16LE(millivolts(vRange.max));
-   out.writeUInt16LE(millivolts(vRange.min));
+   out.writeUInt16LE(percent(battery.getStateOfCharge() * 10));
    return {
       id: CanMsgType.SOC,
       data: out.toBuffer(),
@@ -92,7 +100,7 @@ function packVoltagePacket(battery: BatteryI) {
    const out = buf();
    out.writeUInt16LE(Math.round(battery.getVoltage() * 100));
    out.writeUInt16LE(amps(battery.getCurrent() || 0));
-   const tempRange = battery.getCellVoltageRange();
+   const tempRange = battery.getTemperatureRange();
    out.writeUInt16LE(temp(tempRange.max));
    out.writeUInt16LE(temp(tempRange.min));
    return {
@@ -101,11 +109,21 @@ function packVoltagePacket(battery: BatteryI) {
    };
 }
 
+function batteryNamePacket() {
+   return {
+      id: CanMsgType.BatteryName,
+      data: Buffer.from("TeslaBMS"),
+   };
+}
+
 function alarmsPacket(_battery: BatteryI) {
    const out = buf();
+   out.writeUInt32LE(0); // No alarms for now
+   out.writeUInt8(1); // count of battery modules
+   out.writeString("PN");
    return {
       id: CanMsgType.Alarms,
-      data: out.toBuffer()
+      data: out.toBuffer(),
    };
 }
 
@@ -113,12 +131,8 @@ function volts(v: number) {
    return Math.round(10 * v);
 }
 
-function millivolts(v: number) {
-   return Math.round(1000 * v);
-}
-
-function amps(v: number) {
-   return Math.round(10 * v);
+function amps(a: number) {
+   return Math.round(10 * a);
 }
 
 function percent(portion: number) {
