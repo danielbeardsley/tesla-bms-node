@@ -61,7 +61,7 @@ function frame(packet: { id: CanMsgType, data: Buffer }) {
    frame.writeString(bufferToHex(packet.data));
    frame.writeString("\r");
    const bytes = frame.toBuffer();
-   logger.silly("Writing to canbus usb: " + bytes.toString());
+   logger.verbose("Writing to canbus usb: %s", bytes.toString());
    return bytes;
 }
 
@@ -88,6 +88,7 @@ function requestFlagsPacket(data: ChargeInfo) {
 
 function chargeParamsPacket(data: ChargeInfo) {
    const out = buf();
+   logger.verbose("Composing charge params packet %j", data);
    out.writeUInt16LE(volts(data.chargeVoltLimit));
    out.writeUInt16LE(amps(data.chargingEnabled ? data.chargeCurrentLimit : 0));
    out.writeUInt16LE(amps(data.dischargingEnabled ? data.dischargeCurrentLimit : 0));
