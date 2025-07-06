@@ -123,9 +123,14 @@ function packVoltagePacket(battery: BatteryI) {
 }
 
 function batteryNamePacket() {
+   const out = buf();
+   out.writeInt16LE(1234);
+   out.writeInt16LE(4321);
+   out.writeInt16LE(1122);
+   out.writeInt16LE(2233);
    return {
       id: CanMsgType.BatteryName,
-      data: Buffer.from("TeslaBMS"),
+      data: out.toBuffer()
    };
 }
 
