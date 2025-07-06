@@ -133,7 +133,10 @@ function alarmsPacket(_battery: BatteryI) {
    const out = buf();
    out.writeUInt32LE(0); // No alarms for now
    out.writeUInt8(1); // count of battery modules
-   out.writeString("PN");
+   // extra 0s to fill us up to 8 bytes
+   out.writeUInt8(0);
+   out.writeUInt8(0);
+   out.writeUInt8(0);
    return {
       id: CanMsgType.Alarms,
       data: out.toBuffer(),
