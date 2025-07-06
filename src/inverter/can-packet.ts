@@ -115,7 +115,6 @@ function packVoltagePacket(battery: BatteryI) {
    out.writeInt16LE(amps(battery.getCurrent() || 0));
    const tempRange = battery.getTemperatureRange();
    out.writeInt16LE(temp(tempRange.max));
-   out.writeInt16LE(temp(tempRange.min));
    return {
       id: CanMsgType.VoltsAndTemps,
       data: out.toBuffer(),
