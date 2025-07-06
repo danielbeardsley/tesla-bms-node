@@ -48,6 +48,7 @@ export function sendAllPackets(port: SerialPort, chargeData: ChargeInfo, battery
    port.write(frame(alarmsPacket(battery)));
    port.write(frame(batteryNamePacket()));
    port.write(frame(requestFlagsPacket(chargeData)));
+   port.write("E\r"); // Request error state
 }
 
 function frame(packet: { id: CanMsgType, data: Buffer }) {
