@@ -29,6 +29,8 @@ export class Downtime {
         const currentDowntimeMs = msSinceLastUp > this.timeoutMs ? msSinceLastUp - this.timeoutMs : 0;
         const totalDowntimeMs = this.downtimeMs + currentDowntimeMs;
         return {
+            start: Math.round(this.start / 1000),
+            downtimePercent: ((totalDowntimeMs / (Date.now() - this.start)) * 100).toFixed(2),
             downtimeS: totalDowntimeMs / 1000,
             downtimeEvents: this.downtimeEvents,
             lastUpTimestamp: Math.round(this.lastUpTimestamp / 1000),
