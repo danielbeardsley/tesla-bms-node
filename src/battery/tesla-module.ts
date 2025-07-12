@@ -106,7 +106,7 @@ class TeslaModule implements BatteryModuleI {
       // turn on TS1, TS2
    }
 
-   async readValues() {
+   async readValues(attempt: number = 1): Promise<void> {
       logger.debug('Reading values for module %d', this.id);
       //ADC Auto mode, read every ADC input we can (Both Temps, Pack, 6 cells)
       //enable temperature measurement VSS pins
@@ -114,7 +114,14 @@ class TeslaModule implements BatteryModuleI {
       return this.writeADCControl(false, true, true, true, 6)
          .then(() => this.writeIOControl(false, false, false, false, true, true)) // wait one ms here?
          .then(() => this.writeADCConvert(true))
-         .then(() => this.readMultiRegisters());
+         .then(() => this.readMultiRegisters())
+         .catch((err) => {
+             if (attempt <= 2) {
+                 return this.readValues(attempt + 1);
+             } else {
+                 throw err;
+             }
+         });
    }
 
    /**
