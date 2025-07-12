@@ -8,6 +8,7 @@ import { orThrow, sleep } from '../utils';
 import { Command } from 'src/inverter/pylontech-command';
 import type { ChargeInfo } from '../inverter/commands/get-charge-discharge-info';
 import { HistoryColumns } from '../history/history';
+import { Downtime } from '../history/downtime';
 
 describe('BMS', () => {
     it('Should read from the battery immediately', async () => {
@@ -118,6 +119,8 @@ describe('BMS History', () => {
         // Let the BMs read the battery and store the history
         const resultCurrent = await fetch(`http://127.0.0.1:${port}/current`);
         const current = await resultCurrent.json();
+        (current as ({timeSinceInverterComms: number|null})).timeSinceInverterComms = null; // we don't test this
+        (current as ({downtime: object|null})).downtime = null; // we don't test this
         expect(current).toEqual({
             cellVoltageRange: {
                 min: 3.6,
@@ -143,6 +146,7 @@ describe('BMS History', () => {
             stateOfCharge: 0,
             modulesInSeries: [[0,1]],
             timeSinceInverterComms: null,
+            downtime: null,
         });
         bms.stop();
     });
@@ -176,6 +180,7 @@ function getCanbusInverter(_battery: BatteryI) {
      close(): void { },
      sendBatteryInfoToInverter(_chargeData: ChargeInfo) { },
      getTsOflastInverterMessage() { return 0 },
+     downtime: new Downtime(1000),
    }
 }
 

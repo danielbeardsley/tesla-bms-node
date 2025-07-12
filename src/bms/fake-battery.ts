@@ -1,5 +1,6 @@
 import { BatteryI } from "../battery/battery";
 import { BatteryModuleI } from "../battery/tesla-module";
+import { Downtime } from "../history/downtime";
 
 export class FakeModule implements BatteryModuleI {
    public cellVoltages: number[];
@@ -40,6 +41,7 @@ export class FakeBattery implements BatteryI {
    public stateOfCharge: number = 0;
    public temperatureIsSafe: boolean = true;
    public lastUpdateDate: number = 0;
+   public readonly downtime: Downtime = new Downtime(1000);
 
    constructor() {
       // const c = cellVolt * (Math.random()

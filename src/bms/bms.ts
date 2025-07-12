@@ -14,6 +14,7 @@ import { ChargingModule } from './charging/charging-module';
 import { VoltageA } from './charging/voltage-a';
 import { BatterySafety } from './battery-safety';
 import { HistoryServer } from '../history/history-server';
+import { Downtime } from '../history/downtime';
 
 const BATTERY_ADDRESS = 2;
 
@@ -23,14 +24,14 @@ class BMS {
     private inverterTimer: NodeJS.Timeout;
     private config: Config;
     private inverter: Inverter;
-    private canbusInverter: CanbusSerialPortI;
+    public readonly canbusInverter: CanbusSerialPortI;
     private history: History;
     private historyServer: HistoryServer;
     private batterySafety: BatterySafety;
     private chargingModules: {
         voltageA: ChargingModule;
     }
-    private lastRS485InverterMsgAt = 0;
+    public readonly inverterRs485Downtime: Downtime;
 
     constructor(battery: BatteryI, inverter: Inverter, canbusInverter: CanbusSerialPortI, config: Config) {
         this.battery = battery;
@@ -46,6 +47,8 @@ class BMS {
             "voltageA": new VoltageA(config, battery),
         };
         this.batterySafety = new BatterySafety(config, battery);
+        // RS485 messages typically come every 2 seconds, so we set a downtime of 10 seconds
+        this.inverterRs485Downtime = new Downtime(10_000);
     }
 
     async init() {
@@ -57,7 +60,6 @@ class BMS {
             const packet = await this.inverter.readPacket();
             try {
                 await this.handlePacket(packet);
-                this.lastRS485InverterMsgAt = Date.now();
             } catch (e) {
                 // TODO actually log this 'e', logger.error doesn't
                 logger.error("Failed when creating inverter response packet", e)
@@ -76,6 +78,9 @@ class BMS {
             inverterLogger.silly('Packet not for us (%s): %j', commandText, packet);
             return;
         }
+
+        this.inverterRs485Downtime.up();
+
         inverterLogger.verbose('Received packet (%s): %j', commandText, packet);
         let responsePacket: Buffer|null = null;
         const modules = Object.values(this.battery.modules);
@@ -170,10 +175,9 @@ class BMS {
     }
 
     public getTimeSinceInverterComms() {
-        const canbusTs = this.canbusInverter.getTsOflastInverterMessage();
-        const rs485Ts = this.lastRS485InverterMsgAt;
-        const mostRecentMsg = Math.max(canbusTs, rs485Ts);
-        return mostRecentMsg ? Math.round((Date.now() - mostRecentMsg) / 1000) : null;
+        const rs485 = this.inverterRs485Downtime.getDowntime();
+        const canbus = this.canbusInverter.downtime.getDowntime();
+        return Math.min(rs485.timeSinceLastUpS, canbus.timeSinceLastUpS);
     }
 
     private getChargeDischargeInfo(): ChargeInfo {

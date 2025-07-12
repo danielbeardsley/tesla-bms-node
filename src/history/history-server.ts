@@ -44,7 +44,12 @@ export class HistoryServer {
                temperatures: module.temperatures,
             })),
             modulesInSeries: this.config.battery.modulesInSeries,
-            timeSinceInverterComms: this.bms.getTimeSinceInverterComms(),
+            timeSinceInverterComms: Math.round(this.bms.getTimeSinceInverterComms()),
+            downtime: {
+                rs485: this.bms.inverterRs485Downtime.getDowntime(),
+                canbus: this.bms.canbusInverter.downtime.getDowntime(),
+                battery: this.battery.downtime.getDowntime(),
+            },
          };
          res.json(response);
       });

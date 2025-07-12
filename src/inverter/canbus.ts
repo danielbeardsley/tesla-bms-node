@@ -4,6 +4,7 @@ import { inverterLogger as logger } from "../logger";
 import { sendAllPackets } from './can-packet';
 import { BatteryI } from '../battery/battery';
 import { autoReconnect } from '../comms/serial-auto-reconnect';
+import { Downtime } from '../history/downtime';
 
 // The start of a message sent by the inverter to the bms in reply.
 const INVERTER_COMMS_FRAGMENT = "t305800";
@@ -12,7 +13,7 @@ export interface CanbusSerialPortI {
    open(): Promise<void>;
    close(): void;
    sendBatteryInfoToInverter(chargeData: ChargeInfo): void;
-   getTsOflastInverterMessage(): number;
+   readonly downtime: Downtime;
 }
 
 export class CanbusSerialPort implements CanbusSerialPortI {
@@ -21,13 +22,15 @@ export class CanbusSerialPort implements CanbusSerialPortI {
    private humanName: string;
    private speed: number;
    private battery: BatteryI;
-   private tsOfLastInverterMsg = 0;
+   public readonly downtime: Downtime;
 
    constructor(device: string, speed: number, humanName: string, battery: BatteryI) {
       this.humanName = humanName;
       this.device = device;
       this.speed = speed;
       this.battery = battery;
+      // canbus replies come immediately after a send and we send every second
+      this.downtime = new Downtime(2_000);
    }
 
    async open(): Promise<void> {
@@ -46,7 +49,7 @@ export class CanbusSerialPort implements CanbusSerialPortI {
          this.port.on('data', (data: Buffer) => {
             logger.silly('Received %d canbus bytes: %s', data.length, data.toString());
             if (data.toString().startsWith(INVERTER_COMMS_FRAGMENT)) {
-               this.tsOfLastInverterMsg = Date.now();
+               this.downtime.up();
             }
          });
 
@@ -66,10 +69,6 @@ export class CanbusSerialPort implements CanbusSerialPortI {
    close(): void {
       logger.debug(`Closing serial port ${this.device}`);
       this.port.close();
-   }
-
-   getTsOflastInverterMessage(): number {
-      return this.tsOfLastInverterMsg;
    }
 
    sendBatteryInfoToInverter(chargeData: ChargeInfo) {

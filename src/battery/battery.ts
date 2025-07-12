@@ -4,6 +4,7 @@ import { clamp } from '../utils';
 import type { Config } from '../config';
 import { logger } from '../logger';
 import { Shunt } from './shunt';
+import { Downtime } from '../history/downtime';
 
 export interface BatteryI {
    modules: { [key: number]: BatteryModuleI };
@@ -19,6 +20,7 @@ export interface BatteryI {
    getTemperatureRange(): { min: number, max: number, spread: number };
    getLastUpdateDate(): number;
    isTemperatureSafe(): boolean;
+   readonly downtime: Downtime;
 }
 
 export class Battery implements BatteryI {
@@ -26,12 +28,14 @@ export class Battery implements BatteryI {
    private shunt: Shunt;
    private config: Config;
    private lock: AsyncLock;
+   public readonly downtime: Downtime;
 
    constructor(modules: BatteryModuleI[], shunt: Shunt, config: Config) {
       this.modules = modules;
       this.shunt = shunt;
       this.lock = new AsyncLock();
       this.config = config;
+      this.downtime = new Downtime(this.config.bms.intervalS * 1_000 * 1.3);
    }
 
    async sleep() {
@@ -144,6 +148,7 @@ export class Battery implements BatteryI {
    }
 
    async readAll() {
+      const beforeUpdate = Date.now();
       logger.info("Reading all battery modules");
       for (const key in this.modules) {
          const module = this.modules[key];
@@ -152,6 +157,12 @@ export class Battery implements BatteryI {
                .readStatus() // this reads faults and alerts
                .then(() => module.readValues())
          ); // this reads temperatures and voltages
+      }
+      const lastUpdate = this.getLastUpdateDate();
+      if (lastUpdate > beforeUpdate) {
+         this.downtime.up();
+      } else {
+         logger.warn("Not all modules updated, %ds since last update", Math.round((beforeUpdate - lastUpdate) / 1000));
       }
    }
 }
