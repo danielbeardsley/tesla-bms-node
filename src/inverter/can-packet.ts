@@ -14,6 +14,8 @@ export enum CanMsgType {
    VoltsAndTemps = 0x356,
    RequestFlags = 0x35C,
    BatteryName = 0x35E,
+
+   CellVoltsAndTemps = 0x70,
 };
 
 // https://github.com/tixiv/lib-slcan/blob/master/slcan.c
@@ -48,6 +50,7 @@ export function sendAllPackets(port: SerialPort, chargeData: ChargeInfo, battery
    port.write(frame(alarmsPacket(battery)));
    port.write(frame(batteryNamePacket()));
    port.write(frame(requestFlagsPacket(chargeData)));
+   port.write(frame(cellVoltsAndTemps(battery)));
    port.write("E\r"); // Request error state
 }
 
@@ -118,6 +121,20 @@ function packVoltagePacket(battery: BatteryI) {
    out.writeInt16LE(temp(tempRange.max));
    return {
       id: CanMsgType.VoltsAndTemps,
+      data: out.toBuffer(),
+   };
+}
+
+function cellVoltsAndTemps(battery: BatteryI) {
+   const out = buf();
+   const voltRange = battery.getCellVoltageRange();
+   out.writeInt16LE(Math.round(voltRange.max * 100));
+   out.writeInt16LE(Math.round(voltRange.min * 100));
+   const tempRange = battery.getTemperatureRange();
+   out.writeInt16LE(temp(tempRange.max));
+   out.writeInt16LE(temp(tempRange.min));
+   return {
+      id: CanMsgType.CellVoltsAndTemps,
       data: out.toBuffer(),
    };
 }
