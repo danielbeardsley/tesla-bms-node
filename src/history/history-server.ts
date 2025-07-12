@@ -2,19 +2,22 @@ import { Config } from "src/config";
 import { History } from "./history";
 import express, { Request, Response, Application } from 'express';
 import { BatteryI } from "../battery/battery";
+import { BMS } from "../bms/bms";
 
 export class HistoryServer {
    private history: History;
    private battery: BatteryI;
    private config: Config;
    private app: Application;
+   private bms: BMS;
    private server: ReturnType<Application['listen']>|null = null;
 
-   constructor(history: History, battery: BatteryI, config: Config) {
+    constructor(history: History, battery: BatteryI, config: Config, bms: BMS) {
       this.history = history;
       this.battery = battery;
       this.config = config;
       this.app = express();
+      this.bms = bms;
       this.init();
    }
 
@@ -41,6 +44,7 @@ export class HistoryServer {
                temperatures: module.temperatures,
             })),
             modulesInSeries: this.config.battery.modulesInSeries,
+            timeSinceInverterComms: this.bms.getTimeSinceInverterComms(),
          };
          res.json(response);
       });

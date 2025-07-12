@@ -5,10 +5,14 @@ import { sendAllPackets } from './can-packet';
 import { BatteryI } from '../battery/battery';
 import { autoReconnect } from '../comms/serial-auto-reconnect';
 
+// The start of a message sent by the inverter to the bms in reply.
+const INVERTER_COMMS_FRAGMENT = "t305800";
+
 export interface CanbusSerialPortI {
    open(): Promise<void>;
    close(): void;
    sendBatteryInfoToInverter(chargeData: ChargeInfo): void;
+   getTsOflastInverterMessage(): number;
 }
 
 export class CanbusSerialPort implements CanbusSerialPortI {
@@ -17,6 +21,7 @@ export class CanbusSerialPort implements CanbusSerialPortI {
    private humanName: string;
    private speed: number;
    private battery: BatteryI;
+   private tsOfLastInverterMsg = 0;
 
    constructor(device: string, speed: number, humanName: string, battery: BatteryI) {
       this.humanName = humanName;
@@ -39,7 +44,10 @@ export class CanbusSerialPort implements CanbusSerialPortI {
          });
 
          this.port.on('data', (data: Buffer) => {
-            logger.silly('Received %d canbus bytes: %s', data.length, data.toString('hex'));
+            logger.silly('Received %d canbus bytes: %s', data.length, data.toString());
+            if (data.toString().startsWith(INVERTER_COMMS_FRAGMENT)) {
+               this.tsOfLastInverterMsg = Date.now();
+            }
          });
 
          this.port.on('open', () => {
@@ -58,6 +66,10 @@ export class CanbusSerialPort implements CanbusSerialPortI {
    close(): void {
       logger.debug(`Closing serial port ${this.device}`);
       this.port.close();
+   }
+
+   getTsOflastInverterMessage(): number {
+      return this.tsOfLastInverterMsg;
    }
 
    sendBatteryInfoToInverter(chargeData: ChargeInfo) {

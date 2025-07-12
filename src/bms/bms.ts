@@ -30,6 +30,7 @@ class BMS {
     private chargingModules: {
         voltageA: ChargingModule;
     }
+    private lastRS485InverterMsgAt = 0;
 
     constructor(battery: BatteryI, inverter: Inverter, canbusInverter: CanbusSerialPortI, config: Config) {
         this.battery = battery;
@@ -40,7 +41,7 @@ class BMS {
         batteryLogger.info("Using config %j", config.battery);
         logger.info("Using history config %j", config.history);
         this.history = new History(config.history.samplesToKeep);
-        this.historyServer = new HistoryServer(this.history, battery, config);
+        this.historyServer = new HistoryServer(this.history, battery, config, this);
         this.chargingModules = {
             "voltageA": new VoltageA(config, battery),
         };
@@ -56,6 +57,7 @@ class BMS {
             const packet = await this.inverter.readPacket();
             try {
                 await this.handlePacket(packet);
+                this.lastRS485InverterMsgAt = Date.now();
             } catch (e) {
                 // TODO actually log this 'e', logger.error doesn't
                 logger.error("Failed when creating inverter response packet", e)
@@ -165,6 +167,13 @@ class BMS {
     public stop() {
         clearTimeout(this.batteryTimer);
         clearInterval(this.inverterTimer);
+    }
+
+    public getTimeSinceInverterComms() {
+        const canbusTs = this.canbusInverter.getTsOflastInverterMessage();
+        const rs485Ts = this.lastRS485InverterMsgAt;
+        const mostRecentMsg = Math.max(canbusTs, rs485Ts);
+        return mostRecentMsg ? Math.round((Date.now() - mostRecentMsg) / 1000) : null;
     }
 
     private getChargeDischargeInfo(): ChargeInfo {

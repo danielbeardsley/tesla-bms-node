@@ -142,6 +142,7 @@ describe('BMS History', () => {
             ],
             stateOfCharge: 0,
             modulesInSeries: [[0,1]],
+            timeSinceInverterComms: null,
         });
         bms.stop();
     });
@@ -173,7 +174,8 @@ function getCanbusInverter(_battery: BatteryI) {
    return {
      async open(): Promise<void> { },
      close(): void { },
-     sendBatteryInfoToInverter(_chargeData: ChargeInfo) { }
+     sendBatteryInfoToInverter(_chargeData: ChargeInfo) { },
+     getTsOflastInverterMessage() { return 0 },
    }
 }
 
