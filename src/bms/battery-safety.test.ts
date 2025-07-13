@@ -8,6 +8,7 @@ describe('Battery Saftey Module', () => {
       const battery = getBatteryWithRange(3.8, 3.9);
       const config = getTestConfig();
       const safe = new BatterySafety(config, battery, 0);
+      safe.secondsSinceLastCall = () => 1; // pretend it's been 1 second for smoothing
 
       config.battery.safety.maxCellVoltBuffer = 0.1;
       config.battery.safety.maxCellVolt = 4;
@@ -58,6 +59,7 @@ describe('Battery Saftey Module', () => {
       const config = getTestConfig();
       const smoothing = 0.5;
       const safe = new BatterySafety(config, battery, smoothing);
+      safe.secondsSinceLastCall = () => 1; // pretend it's been 1 second for smoothing
 
       config.battery.safety.maxCellVoltBuffer = 0.1;
       config.battery.safety.maxCellVolt = 4;
@@ -70,6 +72,32 @@ describe('Battery Saftey Module', () => {
       config.battery.safety.maxCellVolt = 3.900001;
       charging = safe.getChargeDischargeInfo();
       expect(charging.chargeCurrentLimit).toBe(maxAmps * 0.25);
+      expect(charging.chargingEnabled).toBe(true);
+   });
+
+   it('should do interpolated smoothing on charge current', async () => {
+      const battery = getBatteryWithRange(3.8, 3.9);
+      const config = getTestConfig();
+      const smoothing = 0.5;
+      const safe = new BatterySafety(config, battery, smoothing);
+      safe.secondsSinceLastCall = () => 2; // pretend it's been 2 seconds for smoothing
+
+      config.battery.safety.maxCellVoltBuffer = 0.1;
+      config.battery.safety.maxCellVolt = 4;
+      const maxAmps = config.battery.charging.maxAmps;
+      let charging = safe.getChargeDischargeInfo();
+      // Interpolate from 0 to max by smoothing ^ 2 since we're pretending it's
+      // been "two seconds"
+      let expectedChargeAmps = maxAmps * (1-Math.pow(smoothing, 2));
+      expect(charging.chargeCurrentLimit).toBe(expectedChargeAmps);
+      // very close to the max, so we should interpolate towards 0
+      config.battery.safety.maxCellVolt = 3.9000001;
+      charging = safe.getChargeDischargeInfo();
+
+      // very close to the max, so we should interpolate towards 0 by
+      // smoothing^2
+      expectedChargeAmps = Math.round(expectedChargeAmps * Math.pow(smoothing, 2));
+      expect(charging.chargeCurrentLimit).toBe(expectedChargeAmps);
       expect(charging.chargingEnabled).toBe(true);
    });
 });

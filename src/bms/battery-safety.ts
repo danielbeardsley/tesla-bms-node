@@ -7,15 +7,19 @@ import { ChargingModule, ChargeParameters } from "./charging/charging-module";
 export class BatterySafety implements ChargingModule {
    private battery: BatteryI;
    private config: Config;
-   private smoothingFactor: number = 0.9; // Smooth out changes in the cell volts and charging amps
+   // Smooth out changes in inputs including this portion
+   // of the previous value every second
+   private smoothingFactor: number = 0.99;
    private chargeCurrentSmoothed: number|null = 0;
    private cellVoltMaxSmoothed: number|null = null;
    private cellVoltMinSmoothed: number|null = null;
+   private lastCall: number;
 
    constructor(config: Config, battery: BatteryI, smoothingFactor: number = 0.9) {
       this.battery = battery;
       this.config = config;
       this.smoothingFactor = smoothingFactor;
+      this.lastCall = Date.now();
    }
 
    getChargeDischargeInfo(): ChargeParameters {
@@ -36,6 +40,8 @@ export class BatterySafety implements ChargingModule {
          ? this.smooth(this.chargeCurrentSmoothed, this.config.battery.charging.maxAmps * chargeScale)
          : 0;
 
+      this.lastCall = Date.now();
+
       return {
          chargeCurrentLimit: Math.round(this.chargeCurrentSmoothed),
          dischargeCurrentLimit: this.config.battery.discharging.maxAmps,
@@ -45,6 +51,13 @@ export class BatterySafety implements ChargingModule {
    }
 
    private smooth(prev: number|null, newVal: number): number {
-      return prev === null ? newVal : prev * this.smoothingFactor + newVal * (1 - this.smoothingFactor);
+      // We don't know the timing of calling this function, so we interpolate
+      // the smoothing factor based on the time since the last call.
+      const interpolatedFactor = Math.pow(this.smoothingFactor, this.secondsSinceLastCall());
+      return prev === null ? newVal : prev * interpolatedFactor + newVal * (1 - interpolatedFactor);
+   }
+
+   secondsSinceLastCall(): number {
+      return (Date.now() - this.lastCall) / 1000;
    }
 }
