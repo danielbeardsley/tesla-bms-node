@@ -5,8 +5,9 @@
  */
 export class Downtime {
     private downtimeMs = 0;
-    private downtimeEvents = 0;
+    private eventCount = 0;
     private lastUpTimestamp = 0;
+    private events: { timestamp: number; ms: number }[] = [];
     private start = Date.now();
     private timeoutMs: number;
 
@@ -19,9 +20,19 @@ export class Downtime {
         const now = Date.now();
         if ((now - this.lastUpTimestamp) > this.timeoutMs) {
             this.downtimeMs += now - this.lastUpTimestamp - this.timeoutMs;
-            this.downtimeEvents++;
+            this.eventCount++;
+            this.events.push({ timestamp: this.lastUpTimestamp, ms: now - this.lastUpTimestamp - this.timeoutMs });
+            this.cullOldEvents();
         }
         this.lastUpTimestamp = now;
+    }
+
+    private cullOldEvents() {
+       const cutoff = Date.now() - 24 * 60 * 60 * 1000; // 24 hours ago
+       const firstEventToKeep = this.events.findIndex(event => event.timestamp >= cutoff);
+       if (firstEventToKeep > 0) {
+           this.events = this.events.slice(firstEventToKeep);
+       }
     }
 
     public getDowntime() {
@@ -32,9 +43,11 @@ export class Downtime {
             start: Math.round(this.start / 1000),
             downtimePercent: ((totalDowntimeMs / (Date.now() - this.start)) * 100).toFixed(2),
             downtimeS: totalDowntimeMs / 1000,
-            downtimeEvents: this.downtimeEvents,
+            eventCount: this.eventCount,
             lastUpTimestamp: Math.round(this.lastUpTimestamp / 1000),
+            events24h: this.events,
             timeSinceLastUpS: msSinceLastUp / 1000,
+            isUp: msSinceLastUp < this.timeoutMs,
         };
     }
 }
