@@ -10,6 +10,9 @@ export type ChargeInfo = {
    dischargeCurrentLimit: number;
    chargingEnabled: boolean;
    dischargingEnabled: boolean;
+   _meta?: {
+      [key: string]: boolean | number | object;
+   };
 }
 
 export default {
