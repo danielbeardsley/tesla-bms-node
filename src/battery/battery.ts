@@ -151,12 +151,9 @@ export class Battery implements BatteryI {
    async readAll() {
       const beforeUpdate = Date.now();
       logger.info("Reading all battery modules");
-      for (const key in this.modules) {
-         const module = this.modules[key];
+      for (const module of this.getStaleModules()) {
          await this.lock.acquire('key', () =>
-            module
-               .readStatus() // this reads faults and alerts
-               .then(() => module.readValues())
+            module.readValues()
          ); // this reads temperatures and voltages
       }
       const lastUpdate = this.getLastUpdateDate();
@@ -165,5 +162,14 @@ export class Battery implements BatteryI {
       } else {
          logger.warn("Not all modules updated, %ds since last update", Math.round((beforeUpdate - lastUpdate) / 1000));
       }
+   }
+
+   /**
+    * Returns an array of modules that need updating (stalest first)
+    */
+   private getStaleModules() {
+      return Object.values(this.modules).sort((a, b) =>
+         a.lastUpdate - b.lastUpdate
+      );
    }
 }
