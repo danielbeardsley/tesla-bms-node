@@ -11,6 +11,9 @@ const ConfigSchema = z.object({
       serialPort: z.object({
          deviceName: z.string().min(1), // like "/dev/ttyUSB0"
       }),
+      shunt: z.object({
+         deviceName: z.string().min(1), // like "/dev/ttyUSB1"
+      }),
       balance: z.object({
          cellVDiffMax: z.number().min(0.001).max(0.5),
          onlyAbove: z.number().min(0).max(5),
@@ -18,19 +21,22 @@ const ConfigSchema = z.object({
       charging: z.object({
          maxAmps: z.number(),
          maxVolts: z.number(),
-         maxCellVolt: z.number(),
       }),
       discharging: z.object({
          maxAmps: z.number(),
          minVolts: z.number(),
+      }),
+      safety: z.object({
          minCellVolt: z.number(),
+         maxCellVolt: z.number(),
+         highTempCutoffC: z.number(),
+         lowTempCutoffC: z.number(),
+         maxCellVoltBuffer: z.number().min(0.001).max(0.5),
       }),
       capacityPerModuleAh: z.number().min(0),
       // These are used to anchonr the 0% and 100% SoC voltages
       voltsEmpty: z.number(),
       voltsFull: z.number(),
-      highTempCutoffC: z.number(),
-      lowTempCutoffC: z.number(),
    }),
    bms: z.object({
       // How often to read the stats of the battery
@@ -42,7 +48,6 @@ const ConfigSchema = z.object({
       chargingStrategy: z.object({
          name: z.literal("voltageA"),
          voltageA: z.optional(z.object({
-            maxCellVoltBuffer: z.number().min(0.001).max(0.5),
          })),
       }),
    }),
@@ -54,6 +59,11 @@ const ConfigSchema = z.object({
       serialPort: z.object({
          deviceName: z.string().min(1),
          baudRate: z.number().int().min(1),
+      }),
+      canbusSerialPort: z.object({
+         deviceName: z.string().min(1),
+         baudRate: z.number().int().min(1),
+         transmitIntervalMs: z.number().int().min(100).max(10000),
       }),
    }),
 });

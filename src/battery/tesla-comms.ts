@@ -94,14 +94,18 @@ export class TeslaComms {
          const reply = await this.serial.readBytes(sendData.length);
          // Saw this in other implementations, not sure why
          reply[0] = reply[0] & 0b01111111;
-
+         const throwError = () => {
+            const sendDataHex = sendData.map((b) => b.toString(16).padStart(2, '0')).join('');
+            const replyHex = reply.map((b) => b.toString(16).padStart(2, '0')).join('');
+            throw new Error(`Expected reply to echo sent data. sent:${sendDataHex} reply:${replyHex}`);
+         };
          if (reply.length !== sendData.length)
-            throw new Error(
-               `writeByteToDeviceRegistr: Expected ${sendData.length} bytes, got ${reply.length}`
-            );
+            throwError();
+
          for (let i = 0; i < reply.length; i++)
-            if (reply[i] !== sendData[i])
-               throw new Error(`Expected byte ${i} to be ${sendData[i]}, was ${reply[i]}`);
+            if (reply[i] !== sendData[i]) {
+               throwError();
+            }
       });
    }
 }

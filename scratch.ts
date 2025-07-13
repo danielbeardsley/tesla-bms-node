@@ -70,7 +70,7 @@ function roundTrip(hexFrame: string) {
    console.log("decoded   Frame:  " + decodedFrame.toString());
    console.log("original  Frame: " + frame.toString());
    const packet = parsePacket(decodedFrame);
-   const reendcodedPacket = generatePacket(packet.address, packet.command, packet.data, packet.version);
+   const reendcodedPacket = generatePacket(packet.address, packet.command, packet.data);
    const reencodedPacketFrame = encodeFrame(reendcodedPacket);
 
    console.log("just hex length: " + justHex.length);

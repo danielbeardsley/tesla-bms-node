@@ -5,25 +5,31 @@
       "serialPort": {
          "deviceName": "/dev/serial0"
       },
+      "shunt": {
+         "deviceName": "/dev/serial/by-id/usb-Prolific_Technology_Inc._USB-Serial_Controller_D-if00-port0"
+      },
       "balance": {
          "cellVDiffMax": 0.01,
          "onlyAbove": 3.7
       },
       "charging": {
          "maxAmps": 280,
-         "maxVolts": 48,
-         "maxCellVolt": 4.05
+         "maxVolts": 48
       },
       "discharging": {
          "maxAmps": 280,
-         "minVolts": 39,
-         "minCellVolt": 3.3
+         "minVolts": 39
+      },
+      "safety": {
+         "maxCellVolt": 4.05,
+         "minCellVolt": 3.3,
+         "maxCellVoltBuffer": 0.05,
+         "highTempCutoffC": 45,
+         "lowTempCutoffC": -3
       },
       "capacityPerModuleAh": 150,
       "voltsEmpty": 41.4,
-      "voltsFull": 48.5,
-      "highTempCutoffC": 45,
-      "lowTempCutoffC": -3
+      "voltsFull": 48.5
    },
    "bms": {
       "intervalS": 10,
@@ -43,6 +49,11 @@
       "serialPort": {
          "deviceName": "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_BG0106Q6-if00-port0",
          "baudRate": 115200
+      },
+      "canbusSerialPort": {
+         "deviceName": "/dev/serial/by-id/usb-Openlight_Labs_CANable2_b158aa7_github.com_normaldotcom_canable2.git_209030923541-if00",
+         "baudRate": 115200,
+         "transmitIntervalMs": 1000
       }
    }
 }

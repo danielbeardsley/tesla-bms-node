@@ -1,16 +1,10 @@
 import { BatteryI } from "../../battery/battery";
 import { Config } from "../../config";
-import { ChargeInfo } from "../../inverter/commands/get-charge-discharge-info";
-import { inverterLogger } from "../../logger";
-import { ramp } from "../../utils";
-import { ChargingModule } from "./charging-module";
+import { ChargingModule, ChargeParameters } from "./charging-module";
 
 export class VoltageA implements ChargingModule {
    private battery: BatteryI;
    private config: Config;
-   private chargeCurrentSmoothed: number|null = 0;
-   private cellVoltMaxSmoothed: number|null = null;
-   private cellVoltMinSmoothed: number|null = null;
    private fullTime: number|null = null;
 
    constructor(config: Config, battery: BatteryI) {
@@ -26,18 +20,7 @@ export class VoltageA implements ChargingModule {
       return conf;
    }
 
-   getChargeDischargeInfo(): ChargeInfo {
-      const cellVoltageRange = this.battery.getCellVoltageRange();
-      this.cellVoltMinSmoothed = this.smooth(this.cellVoltMinSmoothed, cellVoltageRange.min);
-      this.cellVoltMaxSmoothed = this.smooth(this.cellVoltMaxSmoothed, cellVoltageRange.max);
-
-      inverterLogger.debug("Voltage range: %d - %d", cellVoltageRange.min, cellVoltageRange.max);
-      // Scale down the charging current as the highest volt cell
-      // gets within "buffer" volts of the maxCellVolt setting
-      const maxCellVolt = this.config.battery.charging.maxCellVolt;
-      const buffer = this.myConfig().maxCellVoltBuffer;
-      const chargeScale = ramp(cellVoltageRange.max, maxCellVolt, maxCellVolt - buffer);
-
+   getChargeDischargeInfo(): ChargeParameters {
       const fullyCharged = this.battery.getStateOfCharge() >= 1;
 
       if (!this.fullTime && fullyCharged) {
@@ -52,22 +35,13 @@ export class VoltageA implements ChargingModule {
          this.fullTime = null;
       }
 
-      const chargeEnabled = this.cellVoltMaxSmoothed < this.config.battery.charging.maxCellVolt && !fullyCharged && !recentlyFull;
-      this.chargeCurrentSmoothed = chargeEnabled
-         ? this.smooth(this.chargeCurrentSmoothed, this.config.battery.charging.maxAmps * chargeScale)
-         : 0;
+      const chargeEnabled = !fullyCharged && !recentlyFull;
 
       return {
-         chargeVoltLimit: this.config.battery.charging.maxVolts,
-         dischargeVoltLimit: this.config.battery.discharging.minVolts,
-         chargeCurrentLimit: this.chargeCurrentSmoothed,
+         chargeCurrentLimit: chargeEnabled ? this.config.battery.charging.maxAmps : 0,
          dischargeCurrentLimit: this.config.battery.discharging.maxAmps,
          chargingEnabled: chargeEnabled,
-         dischargingEnabled: this.cellVoltMinSmoothed > this.config.battery.discharging.minCellVolt,
+         dischargingEnabled: true,
       };
-   }
-
-   private smooth(prev: number|null, newVal: number): number {
-      return prev === null ? newVal : prev * 0.9 + newVal * 0.1;
    }
 }

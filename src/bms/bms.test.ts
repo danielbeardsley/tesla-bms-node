@@ -1,18 +1,21 @@
 import { describe, it, expect, vi } from 'vitest';
 import { Packet } from '../inverter/pylontech-packet';
 import { BMS } from './bms';
+import { BatteryI } from '../battery/battery';
 import { FakeBattery } from './fake-battery';
 import { getTestConfig } from '../test-config';
 import { orThrow, sleep } from '../utils';
 import { Command } from 'src/inverter/pylontech-command';
+import type { ChargeInfo } from '../inverter/commands/get-charge-discharge-info';
 import { HistoryColumns } from '../history/history';
+import { Downtime } from '../history/downtime';
 
 describe('BMS', () => {
     it('Should read from the battery immediately', async () => {
         const battery = new FakeBattery();
         const readAllSpy = vi.spyOn(battery, 'readAll');
         const inverter = getInverter();
-        const bms = new BMS(battery, inverter, getTestConfig());
+        const bms = new BMS(battery, inverter, getCanbusInverter(battery), getTestConfig());
         await bms.init();
         expect(readAllSpy).toHaveBeenCalled();
     });
@@ -26,7 +29,7 @@ describe('BMS', () => {
         const inverter = getInverter();
         config.bms.intervalS = 0;
 
-        const bms = new BMS(battery, inverter, config);
+        const bms = new BMS(battery, inverter, getCanbusInverter(battery), config);
         await bms.init();
         readAll.mockClear();
         bms.start();
@@ -61,6 +64,32 @@ describe('BMS', () => {
         const responses = await getBmsResponse(inverterRequest);
         expect(responses).toEqual([]);
     });
+
+    it('Should call canbus.open()', async () => {
+        const {bms, open} = await getBmsWithCanbus();
+        expect(open).toHaveBeenCalled();
+        bms.stop();
+    });
+
+    it('Should call canbus.sendBatteryInfoToInverter()', async () => {
+        const {bms, sendBatteryInfoToInverter} = await getBmsWithCanbus();
+        await sleep(0);
+        expect(sendBatteryInfoToInverter.mock.calls).toMatchInlineSnapshot(`
+          [
+            [
+              {
+                "chargeCurrentLimit": 10,
+                "chargeVoltLimit": 54.6,
+                "chargingEnabled": false,
+                "dischargeCurrentLimit": 100,
+                "dischargeVoltLimit": 40,
+                "dischargingEnabled": false,
+              },
+            ],
+          ]
+        `);
+        bms.stop();
+    });
 });
 
 describe('BMS History', () => {
@@ -72,7 +101,7 @@ describe('BMS History', () => {
         battery.temperatureRange = {min: 18, max: 21, spread: 3};
         battery.voltageRange = {min: 3.6, max: 3.7, spread: 0.1};
         battery.voltage = 48;
-        const bms = new BMS(battery, inverter, config);
+        const bms = new BMS(battery, inverter, getCanbusInverter(battery), config);
         await bms.init();
         bms.start();
         // Let the BMs read the battery and store the history
@@ -90,6 +119,8 @@ describe('BMS History', () => {
         // Let the BMs read the battery and store the history
         const resultCurrent = await fetch(`http://127.0.0.1:${port}/current`);
         const current = await resultCurrent.json();
+        (current as ({timeSinceInverterComms: number|null})).timeSinceInverterComms = null; // we don't test this
+        (current as ({downtime: object|null})).downtime = null; // we don't test this
         expect(current).toEqual({
             cellVoltageRange: {
                 min: 3.6,
@@ -114,6 +145,8 @@ describe('BMS History', () => {
             ],
             stateOfCharge: 0,
             modulesInSeries: [[0,1]],
+            timeSinceInverterComms: null,
+            downtime: null,
         });
         bms.stop();
     });
@@ -140,6 +173,17 @@ function getInverter() {
     };
 }
 
+// ===============
+function getCanbusInverter(_battery: BatteryI) {
+   return {
+     async open(): Promise<void> { },
+     close(): void { },
+     sendBatteryInfoToInverter(_chargeData: ChargeInfo) { },
+     getTsOflastInverterMessage() { return 0 },
+     downtime: new Downtime(1000),
+   }
+}
+
 function getRequestPacket(command: Command, address: number) {
     return {
         version: 0x20,
@@ -151,13 +195,27 @@ function getRequestPacket(command: Command, address: number) {
     }
 }
 
+async function getBmsWithCanbus() {
+    const battery = new FakeBattery();
+    const config = getTestConfig();
+    const inverter = getInverter();
+    const canbusInverter = getCanbusInverter(battery);
+    const open = vi.spyOn(canbusInverter, 'open');
+    const sendBatteryInfoToInverter = vi.spyOn(canbusInverter, 'sendBatteryInfoToInverter');
+    config.inverter.canbusSerialPort.transmitIntervalMs = 0;
+    const bms = new BMS(battery, inverter, canbusInverter, config);
+    await bms.init();
+    bms.start();
+    return { bms, battery, inverter, canbusInverter, open, sendBatteryInfoToInverter };
+}
+
 async function getBmsResponse(inverterRequest: Packet) {
     const battery = new FakeBattery();
     const config = getTestConfig();
     const inverter = getInverter();
     const writePacket = vi.spyOn(inverter, 'writePacket');
     config.bms.intervalS = 0;
-    const bms = new BMS(battery, inverter, config);
+    const bms = new BMS(battery, inverter, getCanbusInverter(battery), config);
     await bms.init();
     bms.start();
     // Let the BMs read the battery

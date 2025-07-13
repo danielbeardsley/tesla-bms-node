@@ -5,39 +5,50 @@ import { Inverter } from '../inverter/inverter';
 import { Command, commandToMessage } from '../inverter/pylontech-command';
 import type { Packet } from '../inverter/pylontech-packet';
 import { History } from '../history/history';
+import type { CanbusSerialPortI } from '../inverter/canbus';
 // =========
-import GetChargeDischargeInfo from '../inverter/commands/get-charge-discharge-info';
+import GetChargeDischargeInfo, { ChargeInfo } from '../inverter/commands/get-charge-discharge-info';
 import GetBatteryValues from '../inverter/commands/get-battery-values';
 import GetAlarmInfo, { AlarmState } from '../inverter/commands/get-alarm-info';
 import { ChargingModule } from './charging/charging-module';
 import { VoltageA } from './charging/voltage-a';
+import { BatterySafety } from './battery-safety';
 import { HistoryServer } from '../history/history-server';
+import { Downtime } from '../history/downtime';
 
 const BATTERY_ADDRESS = 2;
 
 class BMS {
     private battery: BatteryI;
-    private timeout: NodeJS.Timeout;
+    private batteryTimer: NodeJS.Timeout;
+    private inverterTimer: NodeJS.Timeout;
     private config: Config;
     private inverter: Inverter;
+    public readonly canbusInverter: CanbusSerialPortI;
     private history: History;
     private historyServer: HistoryServer;
+    private batterySafety: BatterySafety;
     private chargingModules: {
         voltageA: ChargingModule;
     }
+    public readonly inverterRs485Downtime: Downtime;
 
-    constructor(battery: BatteryI, inverter: Inverter, config: Config) {
+    constructor(battery: BatteryI, inverter: Inverter, canbusInverter: CanbusSerialPortI, config: Config) {
         this.battery = battery;
         this.config = config;
         this.inverter = inverter;
+        this.canbusInverter = canbusInverter;
         inverterLogger.info("Using config %j", config.inverter);
         batteryLogger.info("Using config %j", config.battery);
         logger.info("Using history config %j", config.history);
         this.history = new History(config.history.samplesToKeep);
-        this.historyServer = new HistoryServer(this.history, battery, config);
+        this.historyServer = new HistoryServer(this.history, battery, config, this);
         this.chargingModules = {
             "voltageA": new VoltageA(config, battery),
         };
+        this.batterySafety = new BatterySafety(config, battery);
+        // RS485 messages typically come every 2 seconds, so we set a downtime of 10 seconds
+        this.inverterRs485Downtime = new Downtime(10_000);
     }
 
     async init() {
@@ -67,6 +78,9 @@ class BMS {
             inverterLogger.silly('Packet not for us (%s): %j', commandText, packet);
             return;
         }
+
+        this.inverterRs485Downtime.up();
+
         inverterLogger.verbose('Received packet (%s): %j', commandText, packet);
         let responsePacket: Buffer|null = null;
         const modules = Object.values(this.battery.modules);
@@ -105,20 +119,22 @@ class BMS {
 
             inverterLogger.silly("Battery temp range: %d - %d", tempRange.min, tempRange.max);
             if (!safeTemp) {
-                inverterLogger.warn("Battery temperature out of range (%d - %d), battery disabled", this.config.battery.lowTempCutoffC, this.config.battery.highTempCutoffC);
+                inverterLogger.warn("Battery temperature out of range (%d - %d), battery disabled", this.config.battery.safety.lowTempCutoffC, this.config.battery.safety.highTempCutoffC);
             }
+
+            const safeChargeInfo = this.batterySafety.getChargeDischargeInfo();
 
             const chargingStrategyName = this.config.bms.chargingStrategy.name;
             const strategy = this.chargingModules[chargingStrategyName];
             const chargeInfo = strategy.getChargeDischargeInfo();
 
             responsePacket = GetChargeDischargeInfo.Response.generate(packet.address, {
-                chargeVoltLimit: chargeInfo.chargeVoltLimit,
-                dischargeVoltLimit: chargeInfo.dischargeVoltLimit,
-                chargeCurrentLimit: chargeInfo.chargeCurrentLimit,
-                dischargeCurrentLimit: chargeInfo.dischargeCurrentLimit,
-                chargingEnabled: safeTemp && batteryInfoRecent && chargeInfo.chargingEnabled,
-                dischargingEnabled: safeTemp && batteryInfoRecent && chargeInfo.dischargingEnabled,
+                chargeVoltLimit: this.config.battery.charging.maxVolts,
+                dischargeVoltLimit: this.config.battery.discharging.minVolts,
+                chargeCurrentLimit: Math.min(safeChargeInfo.chargeCurrentLimit, chargeInfo.chargeCurrentLimit),
+                dischargeCurrentLimit: Math.min(safeChargeInfo.dischargeCurrentLimit, chargeInfo.dischargeCurrentLimit),
+                chargingEnabled:    safeTemp && batteryInfoRecent && safeChargeInfo.chargingEnabled    && chargeInfo.chargingEnabled,
+                dischargingEnabled: safeTemp && batteryInfoRecent && safeChargeInfo.dischargingEnabled && chargeInfo.dischargingEnabled,
             });
         }
 
@@ -129,7 +145,7 @@ class BMS {
 
     public start() {
         batteryLogger.info(`Starting Battery monitoring every %ds`, this.config.bms.intervalS);
-        if (this.timeout) {
+        if (this.batteryTimer) {
             throw new Error("BMS already running");
         }
         void this.monitorBattery();
@@ -137,11 +153,52 @@ class BMS {
         if (this.config.history.httpPort) {
             void this.historyServer.start();
         }
+        void this.canbusInverter.open().then(() => this.startCanbusTransmission());
+    }
+
+    private startCanbusTransmission() {
+        if (!this.config.inverter.canbusSerialPort) {
+            inverterLogger.warn("Canbus serial port not configured, skipping canbus transmission");
+            return;
+        }
+        const intervalMs = this.config.inverter.canbusSerialPort.transmitIntervalMs;
+        logger.info("Starting canbus transmission");
+        this.inverterTimer = setInterval(() => {
+            const chargeData = this.getChargeDischargeInfo();
+            this.canbusInverter.sendBatteryInfoToInverter(chargeData);
+        }, intervalMs);
     }
 
     public stop() {
-        clearInterval(this.timeout);
+        clearTimeout(this.batteryTimer);
+        clearInterval(this.inverterTimer);
     }
+
+    public getTimeSinceInverterComms() {
+        const rs485 = this.inverterRs485Downtime.getDowntime();
+        const canbus = this.canbusInverter.downtime.getDowntime();
+        return Math.min(rs485.timeSinceLastUpS, canbus.timeSinceLastUpS);
+    }
+
+    private getChargeDischargeInfo(): ChargeInfo {
+        const batteryInfoRecent = Date.now() - this.battery.getLastUpdateDate() < this.config.bms.batteryRecencyLimitS * 1000;
+        const safeTemp = this.battery.isTemperatureSafe();
+
+        const safeChargeInfo = this.batterySafety.getChargeDischargeInfo();
+
+        const chargingStrategyName = this.config.bms.chargingStrategy.name;
+        const strategy = this.chargingModules[chargingStrategyName];
+        const chargeInfo = strategy.getChargeDischargeInfo();
+        return {
+            chargeVoltLimit: this.config.battery.charging.maxVolts,
+            dischargeVoltLimit: this.config.battery.discharging.minVolts,
+            chargeCurrentLimit: Math.min(safeChargeInfo.chargeCurrentLimit, chargeInfo.chargeCurrentLimit),
+            dischargeCurrentLimit: Math.min(safeChargeInfo.dischargeCurrentLimit, chargeInfo.dischargeCurrentLimit),
+            chargingEnabled:    safeTemp && batteryInfoRecent && safeChargeInfo.chargingEnabled    && chargeInfo.chargingEnabled,
+            dischargingEnabled: safeTemp && batteryInfoRecent && safeChargeInfo.dischargingEnabled && chargeInfo.dischargingEnabled,
+        };
+    }
+
 
     private async monitorBattery() {
         const now = Date.now();
@@ -152,7 +209,7 @@ class BMS {
             logger.error(err)
         }
         batteryLogger.debug("Finished work loop in %d ms", Date.now() - now);
-        this.timeout = setTimeout(this.monitorBattery.bind(this), this.config.bms.intervalS * 1000);
+        this.batteryTimer = setTimeout(this.monitorBattery.bind(this), this.config.bms.intervalS * 1000);
     }
 
     private async work() {
@@ -160,7 +217,7 @@ class BMS {
         await this.battery.readAll();
         const range = this.battery.getCellVoltageRange();
         await this.battery.balance(this.config.bms.intervalS);
-        batteryLogger.debug(`Cell voltage spread:${(range.spread*1000).toFixed(0)}mV range: ${range.min.toFixed(3)}V - ${range.max.toFixed(3)}V`);
+        batteryLogger.verbose(`Cell voltage spread:${(range.spread*1000).toFixed(0)}mV range: ${range.min.toFixed(3)}V - ${range.max.toFixed(3)}V`);
         this.recordHistory();
     }
 

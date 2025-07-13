@@ -1,7 +1,8 @@
 import { BatteryI } from "../battery/battery";
 import { BatteryModuleI } from "../battery/tesla-module";
+import { Downtime } from "../history/downtime";
 
-class FakeModule implements BatteryModuleI {
+export class FakeModule implements BatteryModuleI {
    public cellVoltages: number[];
    public temperatures: number[];
    public moduleVolts: number;
@@ -17,7 +18,7 @@ class FakeModule implements BatteryModuleI {
    async balanceCellsAbove(_balanceAboveV: number, _balanceTimeSec: number): Promise<number> {
       return 0;
    }
-   getCellVoltageSum() { return 0 }
+   getCellVoltageSum() { return this.cellVoltages.reduce((acc, v) => acc + v, 0) }
    getMinVoltage() { return 0 }
    getMaxVoltage() { return 0 }
 
@@ -32,6 +33,7 @@ export class FakeBattery implements BatteryI {
    public modules: { [key: number]: FakeModule } = {};
    public voltage: number = 0;
    public capacity: number = 0;
+   public current: number = 0;
    public remainingCapacity: number = 0;
    public voltageRange: { min: number, max: number, spread: number } = { min: 0, max: 0, spread: 0 };
    public temperatureRange: { min: number, max: number, spread: number } = { min: 0, max: 0, spread: 0 };
@@ -39,6 +41,7 @@ export class FakeBattery implements BatteryI {
    public stateOfCharge: number = 0;
    public temperatureIsSafe: boolean = true;
    public lastUpdateDate: number = 0;
+   public readonly downtime: Downtime = new Downtime(1000);
 
    constructor() {
       // const c = cellVolt * (Math.random()
@@ -68,6 +71,10 @@ export class FakeBattery implements BatteryI {
       return this.remainingCapacity;
    }
 
+   getCurrent() {
+      return this.current;
+   }
+
    getCellVoltageRange() {
       return this.voltageRange;
    }
@@ -78,6 +85,10 @@ export class FakeBattery implements BatteryI {
 
    getStateOfCharge(): number {
       return this.stateOfCharge;
+   }
+
+   getStateOfHealth(): number {
+      return 1;
    }
 
    getLastUpdateDate(): number {
@@ -99,3 +110,13 @@ export class FakeBattery implements BatteryI {
    async readAll() {
    }
 }
+
+export function getFakeShunt() {
+    return {
+       getSOC: () => 0.5,
+       getLastUpdate: () => 0,
+       close: () => {},
+       getCurrent: () => 10,
+    };
+}
+

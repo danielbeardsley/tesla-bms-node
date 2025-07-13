@@ -6,6 +6,9 @@ import { Battery } from '../battery/battery';
 import { getConfig } from '../config';
 import { Pylontech } from '../inverter/pylontech';
 import { discoverModules } from '../battery/tesla-module-factory';
+import { VictronSmartShunt } from '../battery/shunt';
+import { SerialPort } from 'serialport';
+import { sleep } from '../utils';
 
 const result = yargs(hideBin(process.argv))
    .command(
@@ -27,6 +30,18 @@ const result = yargs(hideBin(process.argv))
          const battery = await getBattery();
          const range = battery.getCellVoltageRange();
          console.log(`Cell voltage spread:${(range.spread*1000).toFixed(0)}mV range: ${range.min.toFixed(3)}V - ${range.max.toFixed(3)}V`);
+      }
+   )
+   .command(
+      'soc',
+      'stream the state of charge',
+      () => {},
+      async () => {
+         const shunt = await getShunt();
+         while (await sleep(1000)) {
+            const soc = shunt.getSOC() || 0;
+            console.log("SOC:", (soc*100).toFixed(2), "%");
+         }
       }
    )
    .command(
@@ -57,7 +72,7 @@ result.finally(() => {
 async function getTeslaComms() {
    const config = getConfig();
    const serialConfig = config.battery.serialPort;
-   const serial = new SerialWrapper(serialConfig.deviceName, TeslaComms.BAUD);
+   const serial = new SerialWrapper(serialConfig.deviceName, TeslaComms.BAUD, "tesla bms");
    await serial.open();
    return new TeslaComms(serial);
 }
@@ -66,9 +81,21 @@ async function getBattery() {
    const config = getConfig();
    const teslaComms = await getTeslaComms();
    const modules = await discoverModules(teslaComms, config, true);
-   const battery = new Battery(modules, config);
+   const battery = new Battery(modules, getShunt(), config);
    await battery.readAll();
    return battery;
+}
+
+function getShunt() {
+   const config = getConfig();
+   const path = config.battery.shunt.deviceName;
+   const port = new SerialPort({
+      path,
+      baudRate: 19200,
+      dataBits: 8,
+      parity: 'none',
+   });
+   return new VictronSmartShunt(port);
 }
 
 async function getInverter() {
@@ -76,7 +103,9 @@ async function getInverter() {
    const inverterConfig = config.inverter.serialPort;
    const serial = new SerialWrapper(
       inverterConfig.deviceName,
-      inverterConfig.baudRate);
+      inverterConfig.baudRate,
+      "pylontech RS485 inverter"
+   );
    serial.open();
    return new Pylontech(serial);
 }

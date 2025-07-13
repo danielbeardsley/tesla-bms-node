@@ -8,6 +8,9 @@ export function getTestConfig(): Config {
             serialPort: {
                 deviceName: '/dev/ttyUSB0',
             },
+            shunt: {
+                deviceName: '/dev/ttyUSB2',
+            },
             balance: {
                 cellVDiffMax: 0.1,
                 onlyAbove: 3.5,
@@ -15,18 +18,21 @@ export function getTestConfig(): Config {
             charging: {
                 maxAmps: 100,
                 maxVolts: 54.6,
-                maxCellVolt: 4.2,
             },
             discharging: {
                 maxAmps: 100,
                 minVolts: 40,
+            },
+            safety: {
                 minCellVolt: 3.0,
+                maxCellVolt: 4.2,
+                highTempCutoffC: 60,
+                lowTempCutoffC: 0,
+                maxCellVoltBuffer: 0.1, // Buffer for the max cell voltage to prevent overcharging
             },
             voltsEmpty: 40,
             voltsFull: 50,
             capacityPerModuleAh: 100,
-            highTempCutoffC: 60,
-            lowTempCutoffC: 0,
         },
         bms: {
             intervalS: 5,
@@ -46,6 +52,11 @@ export function getTestConfig(): Config {
                 deviceName: '/dev/ttyUSB1',
                 baudRate: 115200,
             },
+            canbusSerialPort: {
+                deviceName: '/dev/ttyACM0',
+                baudRate: 115200,
+                transmitIntervalMs: 1000,
+            }
         },
     };
 }

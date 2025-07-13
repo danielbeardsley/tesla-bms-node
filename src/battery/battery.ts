@@ -3,6 +3,8 @@ import { BatteryModuleI } from './tesla-module';
 import { clamp } from '../utils';
 import type { Config } from '../config';
 import { logger } from '../logger';
+import { Shunt } from './shunt';
+import { Downtime } from '../history/downtime';
 
 export interface BatteryI {
    modules: { [key: number]: BatteryModuleI };
@@ -10,23 +12,30 @@ export interface BatteryI {
    balance(forSeconds: number): Promise<number>;
    stopBalancing(): Promise<void>;
    getVoltage() : number;
+   getCurrent() : number | undefined;
    getCapacityAh(): number;
    getStateOfCharge(): number;
+   getStateOfHealth(): number;
    getCellVoltageRange(): { min: number, max: number, spread: number };
    getTemperatureRange(): { min: number, max: number, spread: number };
    getLastUpdateDate(): number;
    isTemperatureSafe(): boolean;
+   readonly downtime: Downtime;
 }
 
 export class Battery implements BatteryI {
    public modules: { [key: number]: BatteryModuleI };
+   private shunt: Shunt;
    private config: Config;
    private lock: AsyncLock;
+   public readonly downtime: Downtime;
 
-   constructor(modules: BatteryModuleI[], config: Config) {
+   constructor(modules: BatteryModuleI[], shunt: Shunt, config: Config) {
       this.modules = modules;
+      this.shunt = shunt;
       this.lock = new AsyncLock();
       this.config = config;
+      this.downtime = new Downtime(this.config.bms.intervalS * 1_000 * 1.3);
    }
 
    async sleep() {
@@ -44,6 +53,10 @@ export class Battery implements BatteryI {
       return sum / (moduleVolts.length / 2);
    }
 
+   getCurrent() {
+      return this.shunt.getCurrent();
+   }
+
    getCapacityAh() {
       return this.config.battery.capacityPerModuleAh * this.config.battery.moduleCount / 2
    }
@@ -53,7 +66,15 @@ export class Battery implements BatteryI {
       const voltageBasedChargeLevel =
        (this.getVoltage() - bat.voltsEmpty) /
        (bat.voltsFull - bat.voltsEmpty);
-       return clamp(voltageBasedChargeLevel, 0, 1);
+      const shuntSOC = this.shunt.getSOC();
+      const soc = clamp(voltageBasedChargeLevel, 0, 1);
+      logger.info("SOC - Voltage: %s%", (100 * soc).toFixed(2));
+      logger.info("SOC - Shunt:   %s%", (100 * (shuntSOC || 0)).toFixed(2));
+      return soc;
+   }
+
+   getStateOfHealth() {
+      return 1;
    }
 
    getCellVoltageRange() {
@@ -81,7 +102,8 @@ export class Battery implements BatteryI {
 
    isTemperatureSafe() {
       const tempRange = this.getTemperatureRange();
-      return tempRange.min >= this.config.battery.lowTempCutoffC && tempRange.max <= this.config.battery.highTempCutoffC;
+      return tempRange.min >= this.config.battery.safety.lowTempCutoffC &&
+             tempRange.max <= this.config.battery.safety.highTempCutoffC;
    }
 
    /**
@@ -126,6 +148,8 @@ export class Battery implements BatteryI {
    }
 
    async readAll() {
+      const beforeUpdate = Date.now();
+      logger.info("Reading all battery modules");
       for (const key in this.modules) {
          const module = this.modules[key];
          await this.lock.acquire('key', () =>
@@ -133,6 +157,12 @@ export class Battery implements BatteryI {
                .readStatus() // this reads faults and alerts
                .then(() => module.readValues())
          ); // this reads temperatures and voltages
+      }
+      const lastUpdate = this.getLastUpdateDate();
+      if (lastUpdate > beforeUpdate) {
+         this.downtime.up();
+      } else {
+         logger.warn("Not all modules updated, %ds since last update", Math.round((beforeUpdate - lastUpdate) / 1000));
       }
    }
 }
