@@ -42,6 +42,7 @@ export class FakeBattery implements BatteryI {
    public temperatureIsSafe: boolean = true;
    public lastUpdateDate: number = 0;
    public readonly downtime: Downtime = new Downtime(1000);
+   public readonly shunt = getFakeShunt();
 
    constructor() {
       // const c = cellVolt * (Math.random()
@@ -117,6 +118,7 @@ export function getFakeShunt() {
        getLastUpdate: () => 0,
        close: () => {},
        getCurrent: () => 10,
+       downtime: new Downtime(1000),
     };
 }
 

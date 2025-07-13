@@ -3,18 +3,23 @@ import { DelimiterParser } from '@serialport/parser-delimiter'
 import VEDirectParser from '@bencevans/ve.direct/parser';
 import { batteryLogger as logger } from '../logger';
 import { autoReconnect } from '../comms/serial-auto-reconnect';
+import { Downtime } from '../history/downtime';
 
 export interface Shunt {
    getLastUpdate(): number;
    getSOC(): number | undefined;
    getCurrent(): number | undefined;
    close(): void;
+   readonly downtime: Downtime;
 }
+
+const SHUNT_INTERVAL_S = 1; // expected update interval in seconds
 
 export class VictronSmartShunt implements Shunt {
    private serialPort: SerialPort;
    private lastUpdate: number = 0;
    private data: Record<string, number> = {};
+   public readonly downtime: Downtime;
 
    constructor(serialPort: SerialPort) {
       this.serialPort = serialPort;
@@ -28,10 +33,13 @@ export class VictronSmartShunt implements Shunt {
       serialPort.pipe(delimiter).pipe(veDirectParser);
 
       veDirectParser.on("data", this.ingestData.bind(this));
+      // Consider it downtime if we don't receive data for 2 intervals
+      this.downtime = new Downtime(SHUNT_INTERVAL_S * 1000 * 2);
    }
 
    private ingestData(data: Record<string, number>) {
       if (data && data.SOC !== undefined) {
+         this.downtime.up();
          this.data.SOC = data.SOC / 1000;
          this.data.I = data.I / 1000;
          this.lastUpdate = Date.now();

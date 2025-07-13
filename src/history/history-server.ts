@@ -49,6 +49,7 @@ export class HistoryServer {
                 rs485: this.bms.inverterRs485Downtime.getDowntime(),
                 canbus: this.bms.canbusInverter.downtime.getDowntime(),
                 battery: this.battery.downtime.getDowntime(),
+                shunt: this.battery.shunt.downtime.getDowntime(),
             },
          };
          res.json(response);

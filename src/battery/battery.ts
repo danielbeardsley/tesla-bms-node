@@ -21,11 +21,12 @@ export interface BatteryI {
    getLastUpdateDate(): number;
    isTemperatureSafe(): boolean;
    readonly downtime: Downtime;
+   shunt: Shunt;
 }
 
 export class Battery implements BatteryI {
    public modules: { [key: number]: BatteryModuleI };
-   private shunt: Shunt;
+   public readonly shunt: Shunt;
    private config: Config;
    private lock: AsyncLock;
    public readonly downtime: Downtime;
