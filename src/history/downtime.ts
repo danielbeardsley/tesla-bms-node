@@ -21,7 +21,7 @@ export class Downtime {
         if ((now - this.lastUpTimestamp) > this.timeoutMs) {
             this.downtimeMs += now - this.lastUpTimestamp - this.timeoutMs;
             this.eventCount++;
-            this.events.push({ timestamp: this.lastUpTimestamp, ms: now - this.lastUpTimestamp - this.timeoutMs });
+            this.events.push({ timestamp: (this.lastUpTimestamp + this.timeoutMs), ms: now - this.lastUpTimestamp - this.timeoutMs });
             this.cullOldEvents();
         }
         this.lastUpTimestamp = now;
