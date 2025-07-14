@@ -5,6 +5,7 @@ import { logger } from '../logger';
 
 export const BROADCAST_ADDR = 0x3f;
 export const RESET_VALUE = 0xa5;
+const MAX_ATTEMPTS = 3;
 
 export class TeslaComms {
    private serial: SerialWrapper;
@@ -55,8 +56,9 @@ export class TeslaComms {
       device: number,
       register: number,
       byteCount: number,
-      timeout: number = 100
-   ) {
+      timeout: number = 100,
+      attempt: number = 1
+   ): Promise<number[]> {
       logger.silly('Reading %d bytes from module %d register %d', byteCount, device, register);
       const sendData = [device << 1, register, byteCount];
 
@@ -81,10 +83,16 @@ export class TeslaComms {
             throw new Error(
                `readBytesFromDeviceRegister: Expected ${byteCount + 4} bytes, got ${data.length}`
             );
+      }).catch((err) => {
+         if (attempt < MAX_ATTEMPTS) {
+            return this.readBytesFromDeviceRegister(device, register, byteCount, timeout, attempt + 1);
+         } else {
+            throw err;
+         }
       });
    }
 
-   async writeByteToDeviceRegister(device: number, register: number, byte: number) {
+   async writeByteToDeviceRegister(device: number, register: number, byte: number, attempt: number = 1): Promise<void> {
       logger.silly('Writing byte %d to module %d register %d', byte, device, register);
       const sendData = [(device << 1) | 1, register, byte];
 
@@ -106,6 +114,12 @@ export class TeslaComms {
             if (reply[i] !== sendData[i]) {
                throwError();
             }
+      }).catch((err) => {
+         if (attempt < MAX_ATTEMPTS) {
+            return this.writeByteToDeviceRegister(device, register, byte, attempt + 1);
+         } else {
+            throw err;
+         }
       });
    }
 }
