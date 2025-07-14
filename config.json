@@ -33,7 +33,7 @@
    },
    "bms": {
       "intervalS": 10,
-      "batteryRecencyLimitS": 40,
+      "batteryRecencyLimitS": 180,
       "chargingStrategy": {
          "name": "voltageA",
          "voltageA": {
