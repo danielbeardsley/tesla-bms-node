@@ -213,7 +213,7 @@ class BMS {
         } catch (err) {
             logger.error(err)
         }
-        batteryLogger.debug("Finished work loop in %d ms", Date.now() - now);
+        batteryLogger.verbose("Finished work loop in %d ms", Date.now() - now);
         this.batteryTimer = setTimeout(this.monitorBattery.bind(this), this.config.bms.intervalS * 1000);
     }
 

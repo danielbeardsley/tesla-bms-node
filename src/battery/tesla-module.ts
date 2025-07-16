@@ -140,7 +140,7 @@ class TeslaModule implements BatteryModuleI {
       this.temperatures[0] = this.convertUint16ToTemp(uint16s[7]);
       this.temperatures[1] = this.convertUint16ToTemp(uint16s[8]);
       this.lastUpdate = Date.now();
-      logger.verbose('Module %d: cell volts: %s temps: %s', this.id, this.cellVoltagesString(), this.temperaturesString());
+      logger.silly('Module %d: cell volts: %s temps: %s', this.id, this.cellVoltagesString(), this.temperaturesString());
    }
 
    private convertUint16ToTemp(uint16: number) {
