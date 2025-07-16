@@ -14,7 +14,7 @@ async function getTeslaComms() {
    const config = getConfig();
    const serialConfig = config.battery.serialPort;
    const serial = new SerialWrapper(serialConfig.deviceName, TeslaComms.BAUD, "tesla bms ttl");
-   await serial.open();
+   void serial.open();
    return new TeslaComms(serial);
 }
 
@@ -22,7 +22,7 @@ async function getBattery() {
    const config = getConfig();
    batteryLogger.info('Starting battery communications');
    const teslaComms = await getTeslaComms();
-   batteryLogger.info('Serial port open');
+   batteryLogger.info('Tesla comms initialized');
    batteryLogger.info('Discovering battery modules');
    const modules = await discoverModules(teslaComms, config, true);
    const battery = new Battery(modules, getShunt(), config);
@@ -50,7 +50,7 @@ async function getInverter() {
       inverterConfig.baudRate,
       'pylontech RS485 inverter',
    );
-   await serial.open();
+   void serial.open();
    inverterLogger.info('Serial port open');
    return new Pylontech(serial);
 }
@@ -68,10 +68,10 @@ async function getCanbusInverter(battery: Battery) {
 }
 
 async function main() {
-   const battery = await getBattery();
-   const inverter = await getInverter();
-   const canbusInverter = await getCanbusInverter(battery);
-   const bms = new BMS(battery, inverter, canbusInverter, getConfig());
+   const battery = getBattery();
+   const inverter = getInverter();
+   const canbusInverter = getCanbusInverter(await battery);
+   const bms = new BMS(await battery, await inverter, await canbusInverter, getConfig());
    await bms.init();
    await bms.start();
 }
