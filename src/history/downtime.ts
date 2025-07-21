@@ -46,6 +46,7 @@ export class Downtime {
             eventCount: this.eventCount,
             lastUpTimestamp: Math.round(this.lastUpTimestamp / 1000),
             events24h: this.events,
+            timeoutMs: this.timeoutMs,
             timeSinceLastUpS: msSinceLastUp / 1000,
             isUp: msSinceLastUp < this.timeoutMs,
         };
