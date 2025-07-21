@@ -43,6 +43,12 @@ export interface BatteryModuleI {
    lastUpdate: number;
 }
 
+// How many milliseconds to wait between forcing the module into the
+// measurement mode. We generally only need to do this once each time
+// the tesla BMS boots, but in case a board is ever disconnected get
+// disconnected we need to heal.
+const MODULE_MODE_ASSERT_FREQ = 5 * 60 * 1000;
+
 class TeslaModule implements BatteryModuleI {
    private teslaComms: TeslaComms;
    private id: number;
@@ -54,6 +60,7 @@ class TeslaModule implements BatteryModuleI {
    public covFaults!: number;
    public cuvFaults!: number;
    public lastUpdate: number = 0;
+   private lastModeAssertion: number = 0;
 
    constructor(teslaComms: TeslaComms, id: number) {
       this.teslaComms = teslaComms;
@@ -111,10 +118,14 @@ class TeslaModule implements BatteryModuleI {
       //ADC Auto mode, read every ADC input we can (Both Temps, Pack, 6 cells)
       //enable temperature measurement VSS pins
       //start all ADC conversions
-      return this.writeADCControl(false, true, true, true, 6)
-         .then(() => this.writeIOControl(false, false, false, false, true, true)) // wait one ms here?
-         .then(() => this.writeADCConvert(true))
-         .then(() => this.readMultiRegisters())
+      if (Date.now() - this.lastModeAssertion > MODULE_MODE_ASSERT_FREQ) {
+         logger.debug('Tesla BMS - Requesting measurement mode ', this.id);
+         await this.writeADCControl(false, true, true, true, 6);
+         await this.writeIOControl(false, false, false, false, true, true);
+         await this.writeADCConvert(true);
+         this.lastModeAssertion = Date.now();
+      }
+      return this.readMultiRegisters();
    }
 
    /**
