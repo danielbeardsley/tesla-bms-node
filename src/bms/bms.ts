@@ -207,23 +207,32 @@ class BMS {
 
     private async monitorBattery() {
         const now = Date.now();
+        let success = false;
         try {
             batteryLogger.debug("Starting work loop");
-            await this.work();
+            success = await this.work();
         } catch (err) {
             logger.error(err)
         }
         batteryLogger.verbose("Finished work loop in %d ms", Date.now() - now);
-        this.batteryTimer = setTimeout(this.monitorBattery.bind(this), this.config.bms.intervalS * 1000);
+        const refreshDelay = this.config.bms.intervalS * 1000
+        this.batteryTimer = setTimeout(
+            this.monitorBattery.bind(this),
+            // refresh sooner if we failed
+            success ? refreshDelay : refreshDelay / 2
+        );
     }
 
     private async work() {
+        const beforeUpdate = Date.now();
         await this.battery.stopBalancing();
         await this.battery.readAll();
         const range = this.battery.getCellVoltageRange();
         await this.battery.balance(this.config.bms.intervalS);
         batteryLogger.verbose(`Cell voltage spread:${(range.spread*1000).toFixed(0)}mV range: ${range.min.toFixed(3)}V - ${range.max.toFixed(3)}V`);
         this.recordHistory();
+        // Return true if all batteries were updated
+        return this.battery.getLastUpdateDate() > beforeUpdate;
     }
 
     private recordHistory() {
