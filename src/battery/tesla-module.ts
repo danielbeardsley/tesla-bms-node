@@ -1,5 +1,5 @@
 import { TeslaComms } from './tesla-comms';
-import { bytesToUint16s } from '../utils';
+import { bytesToUint16s, clamp } from '../utils';
 import { logger } from '../logger';
 
 // TODO: Move to class for the TI BQ76PL536A-Q1 chip
@@ -145,7 +145,8 @@ class TeslaModule implements BatteryModuleI {
       this.moduleVolts = uint16s[0] * (6.25 / (0.1875 * 2 ** 14)); // 0.002034609;
       for (let i = 0; i < 6; i++) {
          const cellVoltage = uint16s[i + 1] * (6250 / (16383 * 1000));
-         this.cellVoltages[i] = Number(cellVoltage.toFixed(3));
+         // In case of corrupt data, clamp these to a reasonable range
+         this.cellVoltages[i] = Number(clamp(cellVoltage, 2.5, 4.3).toFixed(3));
       }
 
       this.temperatures[0] = this.convertUint16ToTemp(uint16s[7]);
@@ -160,7 +161,8 @@ class TeslaModule implements BatteryModuleI {
       const tempCalc =
          1.0 /
          (0.0007610373573 + 0.0002728524832 * logTempTemp + 0.0000001022822735 * logTempTemp ** 3);
-      const temp = tempCalc - 273.15;
+      // in case of corrupt data, Clamp the temperature to a reasonable range
+      const temp = clamp(tempCalc - 273.15, -40, 100);
       return Math.round(10 * temp) / 10;
    }
 
