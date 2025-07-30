@@ -37,6 +37,7 @@ export interface BatteryModuleI {
    readValues(): Promise<void>;
    balance(cells: boolean[]): Promise<void>;
    balanceCellsAbove(balanceAboveV: number, balanceTimeSec: number): Promise<number>;
+   stopBalancing(): Promise<void>;
    getCellVoltageSum(): number;
    getMinVoltage(): number;
    getMaxVoltage(): number;

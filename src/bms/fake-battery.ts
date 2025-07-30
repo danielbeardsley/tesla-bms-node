@@ -18,6 +18,7 @@ export class FakeModule implements BatteryModuleI {
    async balanceCellsAbove(_balanceAboveV: number, _balanceTimeSec: number): Promise<number> {
       return 0;
    }
+   async stopBalancing() {}
    getCellVoltageSum() { return this.cellVoltages.reduce((acc, v) => acc + v, 0) }
    getMinVoltage() { return 0 }
    getMaxVoltage() { return 0 }

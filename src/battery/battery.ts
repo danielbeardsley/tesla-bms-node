@@ -141,10 +141,8 @@ export class Battery implements BatteryI {
    }
 
    async stopBalancing() {
-      const falses = [false, false, false, false, false, false];
-
       for (const index in this.modules) {
-         await this.lock.acquire('key', () => this.modules[index].balance(falses));
+         await this.lock.acquire('key', () => this.modules[index].stopBalancing());
       }
    }
 
