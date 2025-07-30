@@ -83,12 +83,12 @@ export class TeslaComms {
                throw new Error(
                   `last byte is ${data[data.length - 1]}, not expected crc ${checksum}`
                );
+            packetStats.good++;
             return data.slice(3, 3 + byteCount);
          } else
             throw new Error(
                `readBytesFromDeviceRegister: Expected ${byteCount + 4} bytes, got ${data.length}`
             );
-         packetStats.good++;
       }).catch((err) => {
          packetStats.bad++;
          if (attempt < MAX_ATTEMPTS) {
