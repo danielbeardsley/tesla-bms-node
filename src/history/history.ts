@@ -4,6 +4,7 @@ export type HistoryColumns = {
    batteryCellVoltsMax: number[];
    batteryTempMin: number[];
    batteryTempMax: number[];
+   teslaBadPacketRatio: number[];
 }
 
 type HistoryRecord = Record<keyof HistoryColumns, number>;
@@ -25,6 +26,7 @@ export class History {
          batteryCellVoltsMax: empty(),
          batteryTempMin: empty(),
          batteryTempMax: empty(),
+         teslaBadPacketRatio: empty(),
       };
       this.index = 0;
    }
@@ -38,6 +40,7 @@ export class History {
       this.values.batteryCellVoltsMax[this.index] = round(values.batteryCellVoltsMax);
       this.values.batteryTempMin[this.index] = round(values.batteryTempMin);
       this.values.batteryTempMax[this.index] = round(values.batteryTempMax);
+      this.values.teslaBadPacketRatio[this.index] = round(values.teslaBadPacketRatio);
       this.index = (this.index + 1) % this.samplesToKeep;
    }
 
@@ -49,6 +52,7 @@ export class History {
          batteryCellVoltsMax: this.linearize(this.values.batteryCellVoltsMax, count),
          batteryTempMin: this.linearize(this.values.batteryTempMin, count),
          batteryTempMax: this.linearize(this.values.batteryTempMax, count),
+         teslaBadPacketRatio: this.linearize(this.values.teslaBadPacketRatio, count),
       };
       return values;
    }

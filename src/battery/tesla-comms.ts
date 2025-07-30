@@ -5,6 +5,11 @@ import { logger } from '../logger';
 
 export const BROADCAST_ADDR = 0x3f;
 export const RESET_VALUE = 0xa5;
+
+export const packetStats = {
+   good: 0,
+   bad: 0,
+}
 const MAX_ATTEMPTS = 3;
 
 export class TeslaComms {
@@ -83,7 +88,9 @@ export class TeslaComms {
             throw new Error(
                `readBytesFromDeviceRegister: Expected ${byteCount + 4} bytes, got ${data.length}`
             );
+         packetStats.good++;
       }).catch((err) => {
+         packetStats.bad++;
          if (attempt < MAX_ATTEMPTS) {
             return this.readBytesFromDeviceRegister(device, register, byteCount, timeout, attempt + 1);
          } else {
@@ -114,7 +121,9 @@ export class TeslaComms {
             if (reply[i] !== sendData[i]) {
                throwError();
             }
+         packetStats.good++;
       }).catch((err) => {
+         packetStats.bad++;
          if (attempt < MAX_ATTEMPTS) {
             return this.writeByteToDeviceRegister(device, register, byte, attempt + 1);
          } else {
