@@ -1,6 +1,8 @@
 import { Transform } from 'stream';
 
-type Frame = Record<string, string|number>;
+type Frame = {
+   ChecksumValid?: boolean;
+} & Record<string, string|number>;
 
 const checksum = (blockBuffer: Buffer) => {
    return blockBuffer.reduce((prev, curr) => {
@@ -73,33 +75,40 @@ const parseValues = (frame: Frame) => {
    return frame;
 };
 
+const DELIMITER = Buffer.from([0x0d, 0x0a]);
+
 class VEDirectParser extends Transform {
-   private buf: Buffer;
+   private buffers: Buffer[] = [];
    private blk: Frame
+
+   public packets: number = 0;
+   public badPackets: number = 0;
+
    constructor() {
       super({
          readableObjectMode: true,
       });
 
-      this.buf = Buffer.alloc(0);
       this.blk = {};
    }
 
    _transform(chunk: Buffer, _encoding: string, cb: (err?: Error | null) => void) {
       const [key, val] = chunk.toString().split("\t");
 
+      // What is this about?
       if (key[0] === ":") {
          return cb();
       }
 
-      this.buf = Buffer.concat([this.buf, Buffer.from([0x0d, 0x0a]), chunk]);
+      this.buffers.push(DELIMITER, chunk);
 
       if (key === "Checksum") {
-         if (checksum(this.buf) === 0) {
-            this.push(parseValues(this.blk));
-         }
-
-         this.buf = Buffer.alloc(0);
+         this.packets++;
+         const fullBlock = Buffer.concat(this.buffers);
+         const checksumValue = checksum(fullBlock);
+         this.blk.ChecksumValid = checksumValue === 0;
+         this.push(parseValues(this.blk));
+         this.buffers = [];
          this.blk = {};
       } else {
          this.blk[key] = val;

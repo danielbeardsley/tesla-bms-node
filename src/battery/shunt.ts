@@ -19,32 +19,60 @@ export class VictronSmartShunt implements Shunt {
    private serialPort: SerialPort;
    private lastUpdate: number = 0;
    private data: Record<string, number> = {};
+   private parser: VEDirectParser;
+   private onDataUpdate: () => void;
+   private packetStats: {
+      total: number;
+      bad: number;
+   } = {
+      total: 0,
+      bad: 0
+   };
    public readonly downtime: Downtime;
 
-   constructor(serialPort: SerialPort) {
+   constructor(serialPort: SerialPort, onDataUpdate: () => void = () => {}) {
       this.serialPort = serialPort;
       autoReconnect(serialPort, { delayMs: 1000, humanName: 'Victron SmartShunt' });
       const delimiter = new DelimiterParser({
         delimiter: Buffer.from("0d0a", 'hex'),
         includeDelimiter: false
       });
-      const veDirectParser = new VEDirectParser();
+      this.parser = new VEDirectParser();
 
-      serialPort.pipe(delimiter).pipe(veDirectParser);
+      serialPort.pipe(delimiter).pipe(this.parser);
 
-      veDirectParser.on("data", this.ingestData.bind(this));
+      this.parser.on("data", this.ingestData.bind(this));
       // Consider it downtime if we don't receive data for 2 intervals
       this.downtime = new Downtime(SHUNT_INTERVAL_S * 1000 * 2);
+      this.onDataUpdate = onDataUpdate;
    }
 
    private ingestData(data: Record<string, number>) {
-      if (data && data.SOC !== undefined) {
+      logger.silly("Shunt data received (valid: %s): %j",
+         data.ChecksumValid ? "yes" : "no",
+         data
+      );
+
+      this.packetStats.total++;
+
+      if (data.ChecksumValid) {
          this.downtime.up();
-         this.data.SOC = data.SOC / 1000;
-         this.data.I = data.I / 1000;
-         this.lastUpdate = Date.now();
-         logger.silly("Shunt data received SOC:%s I:%s", this.data.SOC, this.data.I);
+         if (data.SOC !== undefined) {
+            this.data.SOC = data.SOC / 1000;
+            this.data.I = data.I / 1000;
+            this.lastUpdate = Date.now();
+         }
+      } else {
+         this.packetStats.bad++;
       }
+      this.onDataUpdate();
+   }
+
+   getPacketStats() {
+      return {
+         total: this.packetStats.total,
+         bad: this.packetStats.bad,
+      };
    }
 
    getLastUpdate(): number {
