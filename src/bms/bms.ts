@@ -53,6 +53,7 @@ class BMS {
     }
 
     async init() {
+        await this.battery.stopBalancing();
         await this.battery.readAll();
     }
 
