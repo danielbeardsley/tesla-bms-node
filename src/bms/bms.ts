@@ -238,13 +238,13 @@ class BMS {
             const badPackets = packetStats.bad - bad;
             const packetBadRatio = (goodPackets + badPackets) > 0 ? badPackets / (goodPackets + badPackets) : 0;
             batteryLogger.verbose("Packets: total: %d, bad: %d%", goodPackets + badPackets, (packetBadRatio * 100).toFixed(2) );
-            this.recordHistory(packetBadRatio);
+            this.recordHistory({total: goodPackets + badPackets, bad: badPackets});
         }
         // Return true if all batteries were updated
         return this.battery.getLastUpdateDate() > beforeUpdate;
     }
 
-    private recordHistory(teslaPacketRatio: number) {
+    private recordHistory(teslaPackets: {bad: number, total: number}) {
         const cellVoltageRange = this.battery.getCellVoltageRange();
         const tempRange = this.battery.getTemperatureRange();
         this.history.add(Date.now(), {
@@ -253,7 +253,8 @@ class BMS {
             batteryCellVoltsMax: cellVoltageRange.max,
             batteryTempMin: tempRange.min,
             batteryTempMax: tempRange.max,
-            teslaBadPacketRatio: teslaPacketRatio,
+            teslaPackets: teslaPackets.total,
+            teslaPacketsBad: teslaPackets.bad,
         });
     }
 }

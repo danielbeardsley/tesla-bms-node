@@ -12,6 +12,8 @@ describe('History module', () => {
             batteryCellVoltsMax: i+3,
             batteryTempMin: i+4,
             batteryTempMax: i+5,
+            teslaPackets: 0,
+            teslaPacketsBad: 0,
          });
       }
       const values = history.getValues();
@@ -28,6 +30,8 @@ describe('History module', () => {
             batteryCellVoltsMax: i+3,
             batteryTempMin: i+4,
             batteryTempMax: i+5,
+            teslaPackets: 0,
+            teslaPacketsBad: 0,
          });
       }
       const values = history.getValues();
@@ -44,6 +48,8 @@ describe('History module', () => {
             batteryCellVoltsMax: i+3,
             batteryTempMin: i+4,
             batteryTempMax: i+5,
+            teslaPackets: 0,
+            teslaPacketsBad: 0,
          });
       }
       const values3 = history.getValues(3);
