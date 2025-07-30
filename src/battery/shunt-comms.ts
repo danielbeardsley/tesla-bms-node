@@ -109,5 +109,4 @@ class VEDirectParser extends Transform {
    }
 }
 
-module.exports = VEDirectParser;
-module.exports.checksum = checksum;
+export default VEDirectParser;

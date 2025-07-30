@@ -1,6 +1,6 @@
 import { SerialPort } from 'serialport';
 import { DelimiterParser } from '@serialport/parser-delimiter'
-import VEDirectParser from '@bencevans/ve.direct/parser';
+import VEDirectParser from './shunt-comms';
 import { batteryLogger as logger } from '../logger';
 import { autoReconnect } from '../comms/serial-auto-reconnect';
 import { Downtime } from '../history/downtime';
