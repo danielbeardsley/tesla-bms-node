@@ -1,13 +1,15 @@
-const { Transform } = require("stream");
+import { Transform } from 'stream';
 
-const checksum = (blockBuffer) => {
+type Frame = Record<string, string|number>;
+
+const checksum = (blockBuffer: Buffer) => {
    return blockBuffer.reduce((prev, curr) => {
       return (prev + curr) & 255;
    }, 0);
 };
 
-const parseValues = (frame) => {
-   for (let key in frame) {
+const parseValues = (frame: Frame) => {
+   for (const key in frame) {
       switch (key) {
          case "V":
          case "V2":
@@ -63,12 +65,7 @@ const parseValues = (frame) => {
          case "AC_OUT_S":
          case "WARN":
          case "MPPT":
-            frame[key] = parseInt(frame[key]);
-            break;
-
-         default:
-            frame[key] = frame[key];
-
+            frame[key] = parseInt(String(frame[key]));
             break;
       }
    }
@@ -77,6 +74,8 @@ const parseValues = (frame) => {
 };
 
 class VEDirectParser extends Transform {
+   private buf: Buffer;
+   private blk: Frame
    constructor() {
       super({
          readableObjectMode: true,
@@ -86,7 +85,7 @@ class VEDirectParser extends Transform {
       this.blk = {};
    }
 
-   _transform(chunk, _, cb) {
+   _transform(chunk: Buffer, _encoding: string, cb: (err?: Error | null) => void) {
       const [key, val] = chunk.toString().split("\t");
 
       if (key[0] === ":") {
