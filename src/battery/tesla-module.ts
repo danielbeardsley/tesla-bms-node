@@ -123,9 +123,9 @@ class TeslaModule implements BatteryModuleI {
          logger.debug('Tesla BMS - Requesting measurement mode ', this.id);
          await this.writeADCControl(false, true, true, true, 6);
          await this.writeIOControl(false, false, false, false, true, true);
-         await this.writeADCConvert(true);
          this.lastModeAssertion = Date.now();
       }
+      await this.writeADCConvert(true);
       return this.readMultiRegisters();
    }
 
