@@ -234,16 +234,17 @@ class BMS {
             await this.battery.balance(this.config.bms.intervalS);
             batteryLogger.verbose(`Cell voltage spread:${(range.spread*1000).toFixed(0)}mV range: ${range.min.toFixed(3)}V - ${range.max.toFixed(3)}V`);
         } finally {
-            const bat = batteryPacketStats.getStatsAndReset();
-            const batRatio = bat.total > 0 ? bat.bad / bat.total : 0;
-            batteryLogger.verbose("Tesla Packets: total: %d, bad: %d%", bat.total, (batRatio * 100).toFixed(2) );
-            this.recordHistory(bat);
+            this.recordHistory();
         }
         // Return true if all batteries were updated
         return this.battery.getLastUpdateDate() > beforeUpdate;
     }
 
-    private recordHistory(teslaPackets: {bad: number, total: number}) {
+    private recordHistory() {
+        const bat = batteryPacketStats.getStatsAndReset();
+        const batRatio = bat.total > 0 ? bat.bad / bat.total : 0;
+        batteryLogger.verbose("Tesla Packets: total: %d, bad: %d%", bat.total, (batRatio * 100).toFixed(2) );
+
         const cellVoltageRange = this.battery.getCellVoltageRange();
         const tempRange = this.battery.getTemperatureRange();
         this.history.add(Date.now(), {
@@ -252,8 +253,8 @@ class BMS {
             batteryCellVoltsMax: cellVoltageRange.max,
             batteryTempMin: tempRange.min,
             batteryTempMax: tempRange.max,
-            teslaPackets: teslaPackets.total,
-            teslaPacketsBad: teslaPackets.bad,
+            teslaPackets: bat.total,
+            teslaPacketsBad: bat.bad,
         });
     }
 }
