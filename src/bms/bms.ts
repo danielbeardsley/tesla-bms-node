@@ -243,7 +243,9 @@ class BMS {
     private recordHistory() {
         const bat = batteryPacketStats.getStatsAndReset();
         const batRatio = bat.total > 0 ? bat.bad / bat.total : 0;
-        batteryLogger.verbose("Tesla Packets: total: %d, bad: %d%", bat.total, (batRatio * 100).toFixed(2) );
+        if (bat.bad) {
+            batteryLogger.warn("Tesla Packets: total: %d, bad: %d%", bat.total, (batRatio * 100).toFixed(2));
+        }
 
         const cellVoltageRange = this.battery.getCellVoltageRange();
         const tempRange = this.battery.getTemperatureRange();
