@@ -2,14 +2,12 @@ import { SerialWrapper } from '../comms/serial-wrapper';
 import { crc } from '../utils';
 import { Registers } from './tesla-module';
 import { logger } from '../logger';
+import { PacketStats } from '../comms/packet-stats';
 
 export const BROADCAST_ADDR = 0x3f;
 export const RESET_VALUE = 0xa5;
 
-export const packetStats = {
-   good: 0,
-   bad: 0,
-}
+export const packetStats = new PacketStats();
 const MAX_ATTEMPTS = 3;
 
 export class TeslaComms {
@@ -69,6 +67,7 @@ export class TeslaComms {
 
       return this.serial.write(sendData).then(async () => {
          const data = await this.serial.readBytes(byteCount + 4, timeout);
+         packetStats.incrementTotal();
          // Saw this in other implementations, not sure why
          data[0] = data[0] & 0b01111111;
          const checksum = crc(data.slice(0, byteCount + 3));
@@ -83,14 +82,13 @@ export class TeslaComms {
                throw new Error(
                   `last byte is ${data[data.length - 1]}, not expected crc ${checksum}`
                );
-            packetStats.good++;
             return data.slice(3, 3 + byteCount);
          } else
             throw new Error(
                `readBytesFromDeviceRegister: Expected ${byteCount + 4} bytes, got ${data.length}`
             );
       }).catch((err) => {
-         packetStats.bad++;
+         packetStats.incrementBad();
          if (attempt < MAX_ATTEMPTS) {
             return this.readBytesFromDeviceRegister(device, register, byteCount, timeout, attempt + 1);
          } else {
@@ -107,6 +105,7 @@ export class TeslaComms {
       this.serial.flushInput();
       return this.serial.write(sendData).then(async () => {
          const reply = await this.serial.readBytes(sendData.length);
+         packetStats.incrementTotal();
          // Saw this in other implementations, not sure why
          reply[0] = reply[0] & 0b01111111;
          const throwError = () => {
@@ -121,9 +120,8 @@ export class TeslaComms {
             if (reply[i] !== sendData[i]) {
                throwError();
             }
-         packetStats.good++;
       }).catch((err) => {
-         packetStats.bad++;
+         packetStats.incrementBad();
          if (attempt < MAX_ATTEMPTS) {
             return this.writeByteToDeviceRegister(device, register, byte, attempt + 1);
          } else {

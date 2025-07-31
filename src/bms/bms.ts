@@ -6,7 +6,7 @@ import { Command, commandToMessage } from '../inverter/pylontech-command';
 import type { Packet } from '../inverter/pylontech-packet';
 import { History } from '../history/history';
 import type { CanbusSerialPortI } from '../inverter/canbus';
-import { packetStats } from '../battery/tesla-comms';
+import { packetStats as batteryPacketStats } from '../battery/tesla-comms';
 // =========
 import GetChargeDischargeInfo, { ChargeInfo } from '../inverter/commands/get-charge-discharge-info';
 import GetBatteryValues from '../inverter/commands/get-battery-values';
@@ -227,7 +227,6 @@ class BMS {
 
     private async work() {
         const beforeUpdate = Date.now();
-        const {good, bad} = packetStats;
         try {
             await this.battery.stopBalancing();
             await this.battery.readAll();
@@ -235,11 +234,10 @@ class BMS {
             await this.battery.balance(this.config.bms.intervalS);
             batteryLogger.verbose(`Cell voltage spread:${(range.spread*1000).toFixed(0)}mV range: ${range.min.toFixed(3)}V - ${range.max.toFixed(3)}V`);
         } finally {
-            const goodPackets = packetStats.good - good;
-            const badPackets = packetStats.bad - bad;
-            const packetBadRatio = (goodPackets + badPackets) > 0 ? badPackets / (goodPackets + badPackets) : 0;
-            batteryLogger.verbose("Packets: total: %d, bad: %d%", goodPackets + badPackets, (packetBadRatio * 100).toFixed(2) );
-            this.recordHistory({total: goodPackets + badPackets, bad: badPackets});
+            const bat = batteryPacketStats.getStatsAndReset();
+            const batRatio = bat.total > 0 ? bat.bad / bat.total : 0;
+            batteryLogger.verbose("Tesla Packets: total: %d, bad: %d%", bat.total, (batRatio * 100).toFixed(2) );
+            this.recordHistory(bat);
         }
         // Return true if all batteries were updated
         return this.battery.getLastUpdateDate() > beforeUpdate;
