@@ -1,6 +1,7 @@
 import { BatteryI } from "../battery/battery";
 import { BatteryModuleI } from "../battery/tesla-module";
 import { Downtime } from "../history/downtime";
+import { PacketStats } from "../comms/packet-stats";
 
 export class FakeModule implements BatteryModuleI {
    public cellVoltages: number[];
@@ -120,6 +121,7 @@ export function getFakeShunt() {
        close: () => {},
        getCurrent: () => 10,
        downtime: new Downtime(1000),
+       packetStats: new PacketStats(),
     };
 }
 

@@ -4,6 +4,7 @@ import VEDirectParser from './shunt-comms';
 import { batteryLogger as logger } from '../logger';
 import { autoReconnect } from '../comms/serial-auto-reconnect';
 import { Downtime } from '../history/downtime';
+import { PacketStats } from '../comms/packet-stats';
 
 export interface Shunt {
    getLastUpdate(): number;
@@ -11,6 +12,7 @@ export interface Shunt {
    getCurrent(): number | undefined;
    close(): void;
    readonly downtime: Downtime;
+   readonly packetStats: PacketStats;
 }
 
 const SHUNT_INTERVAL_S = 1; // expected update interval in seconds
@@ -21,13 +23,7 @@ export class VictronSmartShunt implements Shunt {
    private data: Record<string, number> = {};
    private parser: VEDirectParser;
    private onDataUpdate: () => void;
-   private packetStats: {
-      total: number;
-      bad: number;
-   } = {
-      total: 0,
-      bad: 0
-   };
+   public readonly packetStats = new PacketStats();
    public readonly downtime: Downtime;
 
    constructor(serialPort: SerialPort, onDataUpdate: () => void = () => {}) {
@@ -53,7 +49,7 @@ export class VictronSmartShunt implements Shunt {
          data
       );
 
-      this.packetStats.total++;
+      this.packetStats.incrementTotal();
 
       if (data.ChecksumValid) {
          this.downtime.up();
@@ -63,16 +59,9 @@ export class VictronSmartShunt implements Shunt {
             this.lastUpdate = Date.now();
          }
       } else {
-         this.packetStats.bad++;
+         this.packetStats.incrementBad();
       }
       this.onDataUpdate();
-   }
-
-   getPacketStats() {
-      return {
-         total: this.packetStats.total,
-         bad: this.packetStats.bad,
-      };
    }
 
    getLastUpdate(): number {
