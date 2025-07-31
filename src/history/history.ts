@@ -8,6 +8,14 @@ export type HistoryColumns = {
       total: number[];
       bad: number[];
    };
+   rs485: {
+      total: number[];
+      bad: number[];
+   };
+   shunt: {
+      total: number[];
+      bad: number[];
+   };
 }
 
 type HistoryRecord = {
@@ -17,6 +25,14 @@ type HistoryRecord = {
    batteryTempMin: number;
    batteryTempMax: number;
    tesla: {
+      total: number;
+      bad: number;
+   };
+   rs485: {
+      total: number;
+      bad: number;
+   };
+   shunt: {
       total: number;
       bad: number;
    };
@@ -43,6 +59,14 @@ export class History {
             total: empty(),
             bad: empty(),
          },
+         rs485: {
+            total: empty(),
+            bad: empty(),
+         },
+         shunt: {
+            total: empty(),
+            bad: empty(),
+         },
       };
       this.index = 0;
    }
@@ -58,6 +82,10 @@ export class History {
       this.values.batteryTempMax[this.index] = round(values.batteryTempMax);
       this.values.tesla.total[this.index] = values.tesla.total;
       this.values.tesla.bad[this.index] = values.tesla.bad;
+      this.values.rs485.total[this.index] = values.rs485.total;
+      this.values.rs485.bad[this.index] = values.rs485.bad;
+      this.values.shunt.total[this.index] = values.shunt.total;
+      this.values.shunt.bad[this.index] = values.shunt.bad;
       this.index = (this.index + 1) % this.samplesToKeep;
    }
 
@@ -72,6 +100,14 @@ export class History {
          tesla: {
             total: this.linearize(this.values.tesla.total, count),
             bad: this.linearize(this.values.tesla.bad, count),
+         },
+         rs485: {
+            total: this.linearize(this.values.rs485.total, count),
+            bad: this.linearize(this.values.rs485.bad, count),
+         },
+         shunt: {
+            total: this.linearize(this.values.shunt.total, count),
+            bad: this.linearize(this.values.shunt.bad, count),
          },
       };
       return values;

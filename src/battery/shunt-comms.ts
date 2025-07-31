@@ -81,9 +81,6 @@ class VEDirectParser extends Transform {
    private buffers: Buffer[] = [];
    private blk: Frame
 
-   public packets: number = 0;
-   public badPackets: number = 0;
-
    constructor() {
       super({
          readableObjectMode: true,
@@ -103,7 +100,6 @@ class VEDirectParser extends Transform {
       this.buffers.push(DELIMITER, chunk);
 
       if (key === "Checksum") {
-         this.packets++;
          const fullBlock = Buffer.concat(this.buffers);
          const checksumValue = checksum(fullBlock);
          this.blk.ChecksumValid = checksumValue === 0;

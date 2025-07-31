@@ -7,6 +7,7 @@ import type { Packet } from '../inverter/pylontech-packet';
 import { History } from '../history/history';
 import type { CanbusSerialPortI } from '../inverter/canbus';
 import { packetStats as batteryPacketStats } from '../battery/tesla-comms';
+import { PacketStats } from '../comms/packet-stats';
 // =========
 import GetChargeDischargeInfo, { ChargeInfo } from '../inverter/commands/get-charge-discharge-info';
 import GetBatteryValues from '../inverter/commands/get-battery-values';
@@ -33,6 +34,7 @@ class BMS {
         voltageA: ChargingModule;
     }
     public readonly inverterRs485Downtime: Downtime;
+    private readonly rs485PacketStats = new PacketStats();
 
     constructor(battery: BatteryI, inverter: Inverter, canbusInverter: CanbusSerialPortI, config: Config) {
         this.battery = battery;
@@ -60,6 +62,7 @@ class BMS {
     private async listenForInverterPacket() {
         try {
             const packet = await this.inverter.readPacket();
+            this.rs485PacketStats.incrementTotal();
             try {
                 await this.handlePacket(packet);
             } catch (e) {
@@ -67,6 +70,7 @@ class BMS {
                 logger.error("Failed when creating inverter response packet", e)
             }
         } catch (e) {
+            this.rs485PacketStats.incrementBad();
             // TODO actually log this 'e', logger.error doesn't
             logger.error("Failed when reading inverter packet", e)
         } finally {
@@ -256,6 +260,8 @@ class BMS {
             batteryTempMin: tempRange.min,
             batteryTempMax: tempRange.max,
             tesla: bat,
+            rs485: this.rs485PacketStats.getStatsAndReset(),
+            shunt: this.battery.shunt.packetStats.getStatsAndReset(),
         });
     }
 }

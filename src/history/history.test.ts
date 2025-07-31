@@ -42,6 +42,8 @@ function addSamples(history: History, samples: number) {
          batteryTempMin: i+4,
          batteryTempMax: i+5,
          tesla: packetStats(i+7, i+8),
+         rs485: packetStats(i+9, i+10),
+         shunt: packetStats(i+11, i+12),
       });
    }
 }
