@@ -255,8 +255,7 @@ class BMS {
             batteryCellVoltsMax: cellVoltageRange.max,
             batteryTempMin: tempRange.min,
             batteryTempMax: tempRange.max,
-            teslaPackets: bat.total,
-            teslaPacketsBad: bat.bad,
+            tesla: bat,
         });
     }
 }

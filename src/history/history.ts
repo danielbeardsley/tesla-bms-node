@@ -4,11 +4,23 @@ export type HistoryColumns = {
    batteryCellVoltsMax: number[];
    batteryTempMin: number[];
    batteryTempMax: number[];
-   teslaPackets: number[];
-   teslaPacketsBad: number[];
+   tesla: {
+      total: number[];
+      bad: number[];
+   };
 }
 
-type HistoryRecord = Record<keyof HistoryColumns, number>;
+type HistoryRecord = {
+   batteryVolts: number;
+   batteryCellVoltsMin: number;
+   batteryCellVoltsMax: number;
+   batteryTempMin: number;
+   batteryTempMax: number;
+   tesla: {
+      total: number;
+      bad: number;
+   };
+}
 
 export class History {
    public timestamps: number[];
@@ -27,8 +39,10 @@ export class History {
          batteryCellVoltsMax: empty(),
          batteryTempMin: empty(),
          batteryTempMax: empty(),
-         teslaPackets: empty(),
-         teslaPacketsBad: empty(),
+         tesla: {
+            total: empty(),
+            bad: empty(),
+         },
       };
       this.index = 0;
    }
@@ -42,8 +56,8 @@ export class History {
       this.values.batteryCellVoltsMax[this.index] = round(values.batteryCellVoltsMax);
       this.values.batteryTempMin[this.index] = round(values.batteryTempMin);
       this.values.batteryTempMax[this.index] = round(values.batteryTempMax);
-      this.values.teslaPackets[this.index] = round(values.teslaPackets);
-      this.values.teslaPacketsBad[this.index] = round(values.teslaPacketsBad);
+      this.values.tesla.total[this.index] = values.tesla.total;
+      this.values.tesla.bad[this.index] = values.tesla.bad;
       this.index = (this.index + 1) % this.samplesToKeep;
    }
 
@@ -55,8 +69,10 @@ export class History {
          batteryCellVoltsMax: this.linearize(this.values.batteryCellVoltsMax, count),
          batteryTempMin: this.linearize(this.values.batteryTempMin, count),
          batteryTempMax: this.linearize(this.values.batteryTempMax, count),
-         teslaPackets: this.linearize(this.values.teslaPackets, count),
-         teslaPacketsBad: this.linearize(this.values.teslaPacketsBad, count),
+         tesla: {
+            total: this.linearize(this.values.tesla.total, count),
+            bad: this.linearize(this.values.tesla.bad, count),
+         },
       };
       return values;
    }
