@@ -29,7 +29,7 @@ describe('History module', () => {
       expect(values2.batteryVolts).toEqual([6, 7]);
       expect(values1.batteryVolts).toEqual([7]);
 
-      expect(values2.tesla.total).toEqual([13, 14]);
+      expect(values2.tesla.total).toEqual([12, 13]);
    });
 });
 

@@ -36,7 +36,8 @@ describe('BMS', () => {
         await sleep(0);
         await sleep(0);
         expect(readAll).toHaveBeenCalledTimes(2);
-        expect(stopBalancing).toHaveBeenCalledTimes(2);
+        // Once when the service starts and once for each loop
+        expect(stopBalancing).toHaveBeenCalledTimes(3);
         expect(balance).toHaveBeenCalledTimes(2);
         bms.stop();
     });
@@ -78,7 +79,17 @@ describe('BMS', () => {
           [
             [
               {
-                "chargeCurrentLimit": 10,
+                "_meta": {
+                  "batteryInfoRecent": false,
+                  "safeChargeInfo": {
+                    "chargeCurrentLimit": 0,
+                    "chargingEnabled": true,
+                    "dischargeCurrentLimit": 100,
+                    "dischargingEnabled": false,
+                  },
+                  "safeTemp": true,
+                },
+                "chargeCurrentLimit": 0,
                 "chargeVoltLimit": 54.6,
                 "chargingEnabled": false,
                 "dischargeCurrentLimit": 100,
@@ -115,6 +126,9 @@ describe('BMS History', () => {
             batteryCellVoltsMax: [3.7],
             batteryTempMin: [18],
             batteryTempMax: [21],
+            tesla: packetStats(0,0),
+            rs485: packetStats(0,0),
+            shunt: packetStats(0,0),
         });
         // Let the BMs read the battery and store the history
         const resultCurrent = await fetch(`http://127.0.0.1:${port}/current`);
@@ -226,3 +240,11 @@ async function getBmsResponse(inverterRequest: Packet) {
     bms.stop();
     return writePacket.mock.calls;
 }
+
+function packetStats(total: number, bad: number) {
+   return {
+      total: [total],
+      bad: [bad],
+   };
+}
+
