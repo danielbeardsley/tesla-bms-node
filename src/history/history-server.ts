@@ -51,6 +51,7 @@ export class HistoryServer {
                 battery: this.battery.downtime.getDowntime(),
                 shunt: this.battery.shunt.downtime.getDowntime(),
             },
+            history: this.history.getValues(30),
          };
          res.json(response);
       });
