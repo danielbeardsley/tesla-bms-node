@@ -9,6 +9,7 @@ import { Command } from 'src/inverter/pylontech-command';
 import type { ChargeInfo } from '../inverter/commands/get-charge-discharge-info';
 import { HistoryColumns } from '../history/history';
 import { Downtime } from '../history/downtime';
+import { PacketStats } from '../comms/packet-stats';
 
 describe('BMS', () => {
     it('Should read from the battery immediately', async () => {
@@ -184,6 +185,7 @@ function getInverter() {
         },
         writePacket: async (_packet: Buffer) => {
         },
+        packetStats: new PacketStats(),
     };
 }
 
