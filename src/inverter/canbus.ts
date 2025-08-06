@@ -5,15 +5,17 @@ import { sendAllPackets } from './can-packet';
 import { BatteryI } from '../battery/battery';
 import { autoReconnect } from '../comms/serial-auto-reconnect';
 import { Downtime } from '../history/downtime';
+import { PacketStats } from '../comms/packet-stats';
 
 // The start of a message sent by the inverter to the bms in reply.
-const INVERTER_COMMS_FRAGMENT = "t305800";
+const INVERTER_COMMS_FRAGMENT = /t30[75]80000000000000000/;
 
 export interface CanbusSerialPortI {
    open(): Promise<void>;
    close(): void;
    sendBatteryInfoToInverter(chargeData: ChargeInfo): void;
    readonly downtime: Downtime;
+   readonly packetStats: PacketStats;
 }
 
 export class CanbusSerialPort implements CanbusSerialPortI {
@@ -23,6 +25,7 @@ export class CanbusSerialPort implements CanbusSerialPortI {
    private speed: number;
    private battery: BatteryI;
    public readonly downtime: Downtime;
+   public readonly packetStats: PacketStats;
 
    constructor(device: string, speed: number, humanName: string, battery: BatteryI) {
       this.humanName = humanName;
@@ -31,6 +34,7 @@ export class CanbusSerialPort implements CanbusSerialPortI {
       this.battery = battery;
       // canbus replies come immediately after a send and we send every second
       this.downtime = new Downtime(2_000);
+      this.packetStats = new PacketStats();
    }
 
    async open(): Promise<void> {
@@ -48,8 +52,9 @@ export class CanbusSerialPort implements CanbusSerialPortI {
 
          this.port.on('data', (data: Buffer) => {
             logger.silly('Received %d canbus bytes: %s', data.length, data.toString());
-            if (data.toString().startsWith(INVERTER_COMMS_FRAGMENT)) {
+            if (data.toString().match(INVERTER_COMMS_FRAGMENT)) {
                this.downtime.up();
+               this.packetStats.incrementTotal();
             }
          });
 

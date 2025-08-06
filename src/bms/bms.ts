@@ -258,6 +258,7 @@ class BMS {
             tesla: bat,
             rs485: this.inverter.packetStats.getStatsAndReset(),
             shunt: this.battery.shunt.packetStats.getStatsAndReset(),
+            canbus: this.canbusInverter.packetStats.getStatsAndReset(),
         });
     }
 }

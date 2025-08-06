@@ -16,6 +16,10 @@ export type HistoryColumns = {
       total: number[];
       bad: number[];
    };
+   canbus: {
+      total: number[];
+      bad: number[];
+   };
 }
 
 type HistoryRecord = {
@@ -33,6 +37,10 @@ type HistoryRecord = {
       bad: number;
    };
    shunt: {
+      total: number;
+      bad: number;
+   };
+   canbus: {
       total: number;
       bad: number;
    };
@@ -67,6 +75,10 @@ export class History {
             total: empty(),
             bad: empty(),
          },
+         canbus: {
+            total: empty(),
+            bad: empty(),
+         },
       };
       this.index = 0;
    }
@@ -86,6 +98,8 @@ export class History {
       this.values.rs485.bad[this.index] = values.rs485.bad;
       this.values.shunt.total[this.index] = values.shunt.total;
       this.values.shunt.bad[this.index] = values.shunt.bad;
+      this.values.canbus.total[this.index] = values.canbus.total;
+      this.values.canbus.bad[this.index] = values.canbus.bad;
       this.index = (this.index + 1) % this.samplesToKeep;
    }
 
@@ -108,6 +122,10 @@ export class History {
          shunt: {
             total: this.linearize(this.values.shunt.total, count),
             bad: this.linearize(this.values.shunt.bad, count),
+         },
+         canbus: {
+            total: this.linearize(this.values.canbus.total, count),
+            bad: this.linearize(this.values.canbus.bad, count),
          },
       };
       return values;

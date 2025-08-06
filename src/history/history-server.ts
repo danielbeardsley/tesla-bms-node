@@ -39,6 +39,7 @@ export class HistoryServer {
             tempRange: this.battery.getTemperatureRange(),
             stateOfCharge: this.battery.getStateOfCharge(),
             voltage: this.battery.getVoltage(),
+            current: this.battery.getCurrent(),
             modules: Object.values(this.battery.modules).map(module => ({
                cellVoltages: module.cellVoltages,
                temperatures: module.temperatures,

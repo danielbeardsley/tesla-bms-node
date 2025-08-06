@@ -44,6 +44,7 @@ function addSamples(history: History, samples: number) {
          tesla: packetStats(i+7, i+8),
          rs485: packetStats(i+9, i+10),
          shunt: packetStats(i+11, i+12),
+         canbus: packetStats(i+13, i+14),
       });
    }
 }
