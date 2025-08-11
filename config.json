@@ -28,7 +28,7 @@
          "lowTempCutoffC": -3
       },
       "capacityPerModuleAh": 150,
-      "voltsEmpty": 41.4,
+      "voltsEmpty": 39.6,
       "voltsFull": 48.5
    },
    "bms": {
