@@ -8,7 +8,7 @@ export const BROADCAST_ADDR = 0x3f;
 export const RESET_VALUE = 0xa5;
 
 export const packetStats = new PacketStats();
-const MAX_ATTEMPTS = 3;
+const MAX_ATTEMPTS = 5;
 
 export class TeslaComms {
    private serial: SerialWrapper;
