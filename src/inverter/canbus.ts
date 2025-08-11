@@ -78,7 +78,7 @@ export class CanbusSerialPort implements CanbusSerialPortI {
 
    sendBatteryInfoToInverter(chargeData: ChargeInfo) {
       if (!this.port.isOpen) {
-         logger.verbose("Cannot canbus send data to inverter, serial port is not open");
+         logger.debug("Cannot canbus send data to inverter, serial port is not open");
          return;
       }
       logger.info("Sending packets to inverter via canbus");

@@ -64,7 +64,7 @@ function frame(packet: { id: CanMsgType, data: Buffer }) {
    frame.writeString(bufferToHex(packet.data));
    frame.writeString("\r");
    const bytes = frame.toBuffer();
-   logger.verbose("Writing to canbus usb: %s", bytes.toString());
+   logger.silly("Writing to canbus usb: %s", bytes.toString());
    return bytes;
 }
 
