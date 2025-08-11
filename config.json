@@ -14,16 +14,16 @@
       },
       "charging": {
          "maxAmps": 130,
-         "maxVolts": 48
+         "maxVolts": 49
       },
       "discharging": {
          "maxAmps": 280,
          "minVolts": 39
       },
       "safety": {
-         "maxCellVolt": 4.05,
+         "maxCellVolt": 4.03,
          "minCellVolt": 3.3,
-         "maxCellVoltBuffer": 0.05,
+         "maxCellVoltBuffer": 0.03,
          "highTempCutoffC": 45,
          "lowTempCutoffC": -3
       },
