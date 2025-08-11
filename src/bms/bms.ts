@@ -209,10 +209,9 @@ class BMS {
 
     private async monitorBattery() {
         const now = Date.now();
-        let success = false;
         try {
             batteryLogger.debug("Starting work loop");
-            success = await this.work();
+            await this.work();
         } catch (err) {
             logger.error(err)
         }
@@ -220,8 +219,7 @@ class BMS {
         const refreshDelay = this.config.bms.intervalS * 1000
         this.batteryTimer = setTimeout(
             this.monitorBattery.bind(this),
-            // refresh sooner if we failed
-            success ? refreshDelay : refreshDelay / 2
+            refreshDelay
         );
     }
 
