@@ -13,7 +13,7 @@
          "onlyAbove": 3.7
       },
       "charging": {
-         "maxAmps": 130,
+         "maxAmps": 280,
          "maxVolts": 49
       },
       "discharging": {
