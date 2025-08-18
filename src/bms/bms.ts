@@ -47,7 +47,7 @@ class BMS {
         this.chargingModules = {
             "voltageA": new VoltageA(config, battery),
         };
-        this.batterySafety = new BatterySafety(config, battery);
+        this.batterySafety = new BatterySafety(config, battery, 0.99);
         // RS485 messages typically come every 2 seconds, so we set a downtime of 10 seconds
         this.inverterRs485Downtime = new Downtime(10_000);
     }

@@ -9,13 +9,13 @@ export class BatterySafety implements ChargingModule {
    private config: Config;
    // Smooth out changes in inputs including this portion
    // of the previous value every second
-   private smoothingFactor: number = 0.99;
+   private smoothingFactor: number;
    private chargeCurrentSmoothed: number|null = 0;
    private cellVoltMaxSmoothed: number|null = null;
    private cellVoltMinSmoothed: number|null = null;
    private lastCall: number;
 
-   constructor(config: Config, battery: BatteryI, smoothingFactor: number = 0.9) {
+   constructor(config: Config, battery: BatteryI, smoothingFactor: number) {
       this.battery = battery;
       this.config = config;
       this.smoothingFactor = smoothingFactor;
