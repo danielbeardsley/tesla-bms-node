@@ -113,6 +113,7 @@ describe('BMS History', () => {
         battery.temperatureRange = {min: 18, max: 21, spread: 3};
         battery.voltageRange = {min: 3.6, max: 3.7, spread: 0.1};
         battery.voltage = 48;
+        battery.current = 2;
         const bms = new BMS(battery, inverter, getCanbusInverter(battery), config);
         await bms.init();
         bms.start();
@@ -123,6 +124,8 @@ describe('BMS History', () => {
         delete json.timestamps;
         expect(json).toEqual({
             batteryVolts: [48],
+            batteryAmps: [2],
+            batteryWatts: [96],
             batteryCellVoltsMin: [3.6],
             batteryCellVoltsMax: [3.7],
             batteryTempMin: [18],
@@ -150,7 +153,8 @@ describe('BMS History', () => {
                 spread: 3,
             },
             voltage: 48,
-            current: 0,
+            amps: 2,
+            watts: 96,
             modules: [
                 {
                     cellVoltages: [3.7, 3.7, 3.7, 3.7, 3.7, 3.7],

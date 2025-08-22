@@ -1,5 +1,7 @@
 export type HistoryColumns = {
    batteryVolts: number[];
+   batteryAmps: number[];
+   batteryWatts: number[];
    batteryCellVoltsMin: number[];
    batteryCellVoltsMax: number[];
    batteryTempMin: number[];
@@ -24,6 +26,8 @@ export type HistoryColumns = {
 
 type HistoryRecord = {
    batteryVolts: number;
+   batteryAmps: number;
+   batteryWatts: number;
    batteryCellVoltsMin: number;
    batteryCellVoltsMax: number;
    batteryTempMin: number;
@@ -59,6 +63,8 @@ export class History {
       this.timestamps = empty();
       this.values = {
          batteryVolts: empty(),
+         batteryAmps: empty(),
+         batteryWatts: empty(),
          batteryCellVoltsMin: empty(),
          batteryCellVoltsMax: empty(),
          batteryTempMin: empty(),
@@ -88,6 +94,8 @@ export class History {
       this.samplesCollected++;
       this.timestamps[this.index] = timestamp;
       this.values.batteryVolts[this.index] = round(values.batteryVolts);
+      this.values.batteryAmps[this.index] = round(values.batteryAmps);
+      this.values.batteryWatts[this.index] = round(values.batteryWatts);
       this.values.batteryCellVoltsMin[this.index] = round(values.batteryCellVoltsMin);
       this.values.batteryCellVoltsMax[this.index] = round(values.batteryCellVoltsMax);
       this.values.batteryTempMin[this.index] = round(values.batteryTempMin);
@@ -107,6 +115,8 @@ export class History {
       const values = {
          timestamps: this.linearize(this.timestamps, count),
          batteryVolts: this.linearize(this.values.batteryVolts, count),
+         batteryAmps: this.linearize(this.values.batteryAmps, count),
+         batteryWatts: this.linearize(this.values.batteryWatts, count),
          batteryCellVoltsMin: this.linearize(this.values.batteryCellVoltsMin, count),
          batteryCellVoltsMax: this.linearize(this.values.batteryCellVoltsMax, count),
          batteryTempMin: this.linearize(this.values.batteryTempMin, count),

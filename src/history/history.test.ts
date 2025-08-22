@@ -37,6 +37,8 @@ function addSamples(history: History, samples: number) {
    for (let i = 0; i < samples; i++) {
       history.add(i, {
          batteryVolts: i+1,
+         batteryAmps: i+20,
+         batteryWatts: i+21,
          batteryCellVoltsMin: i+2,
          batteryCellVoltsMax: i+3,
          batteryTempMin: i+4,
