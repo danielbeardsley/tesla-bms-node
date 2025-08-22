@@ -249,6 +249,8 @@ class BMS {
         const tempRange = this.battery.getTemperatureRange();
         this.history.add(Date.now(), {
             batteryVolts: this.battery.getVoltage(),
+            batteryAmps: this.battery.getCurrent() || 0,
+            batteryWatts: (this.battery.getCurrent() || 0) * this.battery.getVoltage(),
             batteryCellVoltsMin: cellVoltageRange.min,
             batteryCellVoltsMax: cellVoltageRange.max,
             batteryTempMin: tempRange.min,
