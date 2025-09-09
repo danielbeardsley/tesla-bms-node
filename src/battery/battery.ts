@@ -68,7 +68,8 @@ export class Battery implements BatteryI {
        (this.getVoltage() - bat.voltsEmpty) /
        (bat.voltsFull - bat.voltsEmpty);
       const shuntSOC = this.shunt.getSOC();
-      const soc = clamp(voltageBasedChargeLevel, 0, 1);
+      const unclampedSOC = shuntSOC !== undefined ? shuntSOC : voltageBasedChargeLevel;
+      const soc = clamp(unclampedSOC , 0, 1);
       logger.info("SOC - Voltage: %s%", (100 * soc).toFixed(2));
       logger.info("SOC - Shunt:   %s%", (100 * (shuntSOC || 0)).toFixed(2));
       return soc;

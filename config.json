@@ -38,6 +38,13 @@
          "name": "voltageA",
          "voltageA": {
             "maxCellVoltBuffer": 0.05
+         },
+         "latteryby": {
+            "stopDischargeAtPct": 20,
+            "stopChargeAtPct": 80,
+            "rechargeDelaySec": 600,
+            "synchronizationVoltage": 48,
+            "synchronizationDaysOfMonth": [1,15]
          }
       }
    },

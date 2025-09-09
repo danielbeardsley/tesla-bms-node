@@ -46,8 +46,22 @@ const ConfigSchema = z.object({
       // the battery comms cable, how long before we stop charging/discharging.
       batteryRecencyLimitS: z.number().int().min(1),
       chargingStrategy: z.object({
-         name: z.literal("voltageA"),
+         name: z.enum(['voltageA', 'latterby']),
          voltageA: z.optional(z.object({
+         })),
+         latterby: z.optional(z.object({
+            // Normally charge up to this %
+            stopChargeAtPct: z.number().min(0).max(100),
+            // Normally stop discharging when battery reaches this %
+            stopDischargeAtPct: z.number().min(0).max(100),
+            // How long after reaching full charge do we allow charging again.
+            // Tune this to prevent rapid cycling
+            rechargeDelaySec: z.number().int().min(0),
+            // Occasionally charge up to this voltage to reset the shunt's
+            // internal SOC 100% point
+            synchronizationVoltage: z.number().min(0),
+            // Days of the month to perform a synchronization charge
+            synchronizationDaysOfMonth: z.array(z.number().int().min(1).max(31)),
          })),
       }),
    }),

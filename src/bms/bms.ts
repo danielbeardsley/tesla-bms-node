@@ -13,6 +13,7 @@ import GetBatteryValues from '../inverter/commands/get-battery-values';
 import GetAlarmInfo, { AlarmState } from '../inverter/commands/get-alarm-info';
 import { ChargingModule } from './charging/charging-module';
 import { VoltageA } from './charging/voltage-a';
+import { Latterby } from './charging/latterby';
 import { BatterySafety } from './battery-safety';
 import { HistoryServer } from '../history/history-server';
 import { Downtime } from '../history/downtime';
@@ -31,6 +32,7 @@ class BMS {
     private batterySafety: BatterySafety;
     private chargingModules: {
         voltageA: ChargingModule;
+        latterby: ChargingModule;
     }
     public readonly inverterRs485Downtime: Downtime;
 
@@ -45,7 +47,8 @@ class BMS {
         this.history = new History(config.history.samplesToKeep);
         this.historyServer = new HistoryServer(this.history, battery, config, this);
         this.chargingModules = {
-            "voltageA": new VoltageA(config, battery),
+            voltageA: new VoltageA(config, battery),
+            latterby: new Latterby(config, battery),
         };
         this.batterySafety = new BatterySafety(config, battery, 0.99);
         // RS485 messages typically come every 2 seconds, so we set a downtime of 10 seconds
