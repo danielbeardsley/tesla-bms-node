@@ -35,7 +35,7 @@
       "intervalS": 10,
       "batteryRecencyLimitS": 180,
       "chargingStrategy": {
-         "name": "voltageA",
+         "name": "latterby",
          "voltageA": {
             "maxCellVoltBuffer": 0.05
          },
