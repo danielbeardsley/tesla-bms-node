@@ -39,7 +39,7 @@
          "voltageA": {
             "maxCellVoltBuffer": 0.05
          },
-         "latteryby": {
+         "latterby": {
             "stopDischargeAtPct": 20,
             "stopChargeAtPct": 80,
             "rechargeDelaySec": 600,
