@@ -14,8 +14,13 @@ export interface Shunt {
    readonly downtime: Downtime;
    readonly packetStats: PacketStats;
 }
-
-const SHUNT_INTERVAL_S = 1; // expected update interval in seconds
+// expected update interval in seconds
+const SHUNT_INTERVAL_S = 1;
+// consider shunt comms down if no updates for this many seconds
+const SHUNT_DOWN_S = SHUNT_INTERVAL_S * 2; 
+// SOC doesn't change quickly, so we can tolerate older data
+// consider SoC valid if updated within this many seconds
+const SHUNT_SOC_VALID_S = 300;
 
 export class VictronSmartShunt implements Shunt {
    private serialPort: SerialPort;
@@ -38,8 +43,7 @@ export class VictronSmartShunt implements Shunt {
       serialPort.pipe(delimiter).pipe(this.parser);
 
       this.parser.on("data", this.ingestData.bind(this));
-      // Consider it downtime if we don't receive data for 2 intervals
-      this.downtime = new Downtime(SHUNT_INTERVAL_S * 1000 * 2);
+      this.downtime = new Downtime(SHUNT_DOWN_S * 1000);
       this.onDataUpdate = onDataUpdate;
    }
 
@@ -69,11 +73,15 @@ export class VictronSmartShunt implements Shunt {
    }
 
    getSOC(): number | undefined {
-      return this.data.SOC;
+      return this.updatedWithin(SHUNT_SOC_VALID_S) ? this.data.SOC : undefined;
    }
 
    getCurrent(): number | undefined {
-      return this.data.I;
+      return this.updatedWithin(SHUNT_DOWN_S) ? this.data.I : undefined;
+   }
+
+   private updatedWithin(seconds: number): boolean {
+      return (Date.now() - this.lastUpdate) < (seconds * 1000);
    }
 
    close() {
