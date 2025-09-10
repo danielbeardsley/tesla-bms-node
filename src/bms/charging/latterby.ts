@@ -11,7 +11,7 @@ import { ChargingModule, ChargeParameters } from "./charging-module";
 export class Latterby implements ChargingModule {
    private battery: BatteryI;
    private config: Config;
-   private fullTime: number = 0;
+   private lastFullTime: number = 0;
 
    constructor(config: Config, battery: BatteryI) {
       this.battery = battery;
@@ -30,25 +30,24 @@ export class Latterby implements ChargingModule {
       const config = this.myConfig();
       const socPct = this.battery.getStateOfCharge() * 100;
 
-      const doneCharging = this.isSynchronizationDay() ? 
+      const isFull = this.isSynchronizationDay() ?
          this.battery.getVoltage() >= config.synchronizationVoltage :
          socPct >= config.stopChargeAtPct;
 
-      const recentlyFull =
-         (Date.now() - this.fullTime) < config.rechargeDelaySec
-         || doneCharging;
+      const recentlyFull = (Date.now() - this.lastFullTime) < (config.rechargeDelaySec * 1000);
 
-      if (this.fullTime && !recentlyFull) {
-         this.fullTime = 0;
+      // If we're full, start the clock
+      if (isFull) {
+         this.lastFullTime = Date.now();
       }
 
-      const chargeEnabled = !doneCharging && !recentlyFull;
+      const chargeEnabled = !isFull && !recentlyFull;
 
       return {
          chargeCurrentLimit: chargeEnabled ? this.config.battery.charging.maxAmps : 0,
          dischargeCurrentLimit: this.config.battery.discharging.maxAmps,
          chargingEnabled: chargeEnabled,
-         dischargingEnabled: socPct < config.stopDischargeAtPct,
+         dischargingEnabled: socPct > config.stopDischargeAtPct,
       };
    }
 
