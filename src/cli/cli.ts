@@ -3,6 +3,7 @@ import { hideBin } from 'yargs/helpers';
 import { TeslaComms } from '../battery/tesla-comms';
 import { SerialWrapper } from '../comms/serial-wrapper';
 import { Battery } from '../battery/battery';
+import { Downtime } from '../history/downtime';
 import { getConfig } from '../config';
 import { Pylontech } from '../inverter/pylontech';
 import { discoverModules } from '../battery/tesla-module-factory';
@@ -89,13 +90,14 @@ async function getBattery() {
 function getShunt() {
    const config = getConfig();
    const path = config.battery.shunt.deviceName;
+   const downtime = new Downtime(config.battery.shunt.downtimeS);
    const port = new SerialPort({
       path,
       baudRate: 19200,
       dataBits: 8,
       parity: 'none',
    });
-   return new VictronSmartShunt(port);
+   return new VictronSmartShunt(port, downtime);
 }
 
 async function getInverter() {

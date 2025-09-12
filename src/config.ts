@@ -13,6 +13,7 @@ const ConfigSchema = z.object({
       }),
       shunt: z.object({
          deviceName: z.string().min(1), // like "/dev/ttyUSB1"
+         downtimeS: z.number().int().min(1),
       }),
       balance: z.object({
          cellVDiffMax: z.number().min(0.001).max(0.5),

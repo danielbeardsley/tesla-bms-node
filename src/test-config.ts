@@ -10,6 +10,7 @@ export function getTestConfig(): Config {
             },
             shunt: {
                 deviceName: '/dev/ttyUSB2',
+                downtimeS: 2,
             },
             balance: {
                 cellVDiffMax: 0.1,

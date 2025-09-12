@@ -9,7 +9,7 @@ export class Downtime {
     private lastUpTimestamp = 0;
     private events: { timestamp: number; ms: number }[] = [];
     private start = Date.now();
-    private timeoutMs: number;
+    public readonly timeoutMs: number;
 
     constructor(timeoutMs: number) {
         this.timeoutMs = timeoutMs;

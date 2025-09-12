@@ -1,5 +1,6 @@
 import { SerialPortMock, type SerialPort } from 'serialport';
 import { describe, it, expect } from 'vitest';
+import { Downtime } from '../history/downtime';
 import { VictronSmartShunt } from './shunt';
 
 describe('Shunt', () => {
@@ -46,8 +47,9 @@ function getShunt(port: SerialPortMock) {
    const onDataPromise = new Promise<void>((resolve) => {
       onDataResolve = resolve;
    });
+   const downtime = new Downtime(1000);
    return {
-      shunt: new VictronSmartShunt(port as unknown as SerialPort, () => {
+      shunt: new VictronSmartShunt(port as unknown as SerialPort, downtime, () => {
          onDataResolve();
       }),
       dataPromise: onDataPromise

@@ -2,6 +2,7 @@ import { Battery } from './src/battery/battery';
 import { TeslaComms } from './src/battery/tesla-comms';
 import { SerialWrapper } from './src/comms/serial-wrapper';
 import { getConfig } from './src/config';
+import { Downtime } from './src/history/downtime';
 import { BMS } from './src/bms/bms';
 import { Pylontech } from './src/inverter/pylontech';
 import { CanbusSerialPort } from './src/inverter/canbus';
@@ -38,7 +39,8 @@ function getShunt() {
       dataBits: 8,
       parity: 'none',
    });
-   return new VictronSmartShunt(port);
+   const downtime = new Downtime(config.battery.shunt.downtimeS);
+   return new VictronSmartShunt(port, downtime);
 }
 
 async function getInverter() {
