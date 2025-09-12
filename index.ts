@@ -39,7 +39,7 @@ function getShunt() {
       dataBits: 8,
       parity: 'none',
    });
-   const downtime = new Downtime(path, 'shunt', config.battery.shunt.downtimeS);
+   const downtime = new Downtime(path, 'shunt', config.battery.shunt.downtimeS * 1_000);
    return new VictronSmartShunt(port, downtime);
 }
 

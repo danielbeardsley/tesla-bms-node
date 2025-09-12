@@ -55,7 +55,7 @@ class BMS {
         this.inverterRs485Downtime = new Downtime(
            config.inverter.serialPort.deviceName,
            'inverter',
-           config.inverter.serialPort.downtimeS
+           config.inverter.serialPort.downtimeS * 1_000
         );
     }
 
