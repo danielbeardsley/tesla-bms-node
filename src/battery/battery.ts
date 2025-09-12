@@ -36,7 +36,7 @@ export class Battery implements BatteryI {
       this.shunt = shunt;
       this.lock = new AsyncLock();
       this.config = config;
-      this.downtime = new Downtime(this.config.bms.intervalS * 1_000 * 1.3);
+      this.downtime = new Downtime(config.battery.serialPort.deviceName, 'battery', this.config.bms.intervalS * 1_000 * 1.3);
    }
 
    async sleep() {

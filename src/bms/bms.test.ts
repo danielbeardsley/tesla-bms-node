@@ -204,7 +204,7 @@ function getCanbusInverter(_battery: BatteryI) {
      close(): void { },
      sendBatteryInfoToInverter(_chargeData: ChargeInfo) { },
      getTsOflastInverterMessage() { return 0 },
-     downtime: new Downtime(1000),
+     downtime: new Downtime('/p', 'canbus', 1000),
      packetStats: new PacketStats(),
    }
 }

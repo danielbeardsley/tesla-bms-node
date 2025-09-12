@@ -52,6 +52,7 @@ export function getTestConfig(): Config {
             serialPort: {
                 deviceName: '/dev/ttyUSB1',
                 baudRate: 115200,
+                downtimeS: 10,
             },
             canbusSerialPort: {
                 deviceName: '/dev/ttyACM0',

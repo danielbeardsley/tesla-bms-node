@@ -47,7 +47,7 @@ function getShunt(port: SerialPortMock) {
    const onDataPromise = new Promise<void>((resolve) => {
       onDataResolve = resolve;
    });
-   const downtime = new Downtime(1000);
+   const downtime = new Downtime('a', 'b', 1000);
    return {
       shunt: new VictronSmartShunt(port as unknown as SerialPort, downtime, () => {
          onDataResolve();

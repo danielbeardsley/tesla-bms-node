@@ -4,6 +4,8 @@
  * It also tracks the last time the service was marked as up.
  */
 export class Downtime {
+    private devicePath: string;
+    private name: string;
     private downtimeMs = 0;
     private eventCount = 0;
     private lastUpTimestamp = 0;
@@ -11,7 +13,9 @@ export class Downtime {
     private start = Date.now();
     public readonly timeoutMs: number;
 
-    constructor(timeoutMs: number) {
+    constructor(devicePath: string, name: string, timeoutMs: number) {
+        this.devicePath = devicePath;
+        this.name = name;
         this.timeoutMs = timeoutMs;
         this.lastUpTimestamp = this.start;
     }
@@ -40,6 +44,8 @@ export class Downtime {
         const currentDowntimeMs = msSinceLastUp > this.timeoutMs ? msSinceLastUp - this.timeoutMs : 0;
         const totalDowntimeMs = this.downtimeMs + currentDowntimeMs;
         return {
+            devicePath: this.devicePath,
+            name: this.name,
             start: Math.round(this.start / 1000),
             downtimePercent: ((totalDowntimeMs / (Date.now() - this.start)) * 100).toFixed(2),
             downtimeS: totalDowntimeMs / 1000,

@@ -90,7 +90,7 @@ async function getBattery() {
 function getShunt() {
    const config = getConfig();
    const path = config.battery.shunt.deviceName;
-   const downtime = new Downtime(config.battery.shunt.downtimeS);
+   const downtime = new Downtime(path, 'shunt', config.battery.shunt.downtimeS);
    const port = new SerialPort({
       path,
       baudRate: 19200,

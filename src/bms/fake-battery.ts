@@ -43,7 +43,7 @@ export class FakeBattery implements BatteryI {
    public stateOfCharge: number = 0;
    public temperatureIsSafe: boolean = true;
    public lastUpdateDate: number = 0;
-   public readonly downtime: Downtime = new Downtime(1000);
+   public readonly downtime: Downtime = new Downtime('/fake/path', 'battery', 1000);
    public readonly shunt = getFakeShunt();
 
    constructor() {
@@ -120,7 +120,7 @@ export function getFakeShunt() {
        getLastUpdate: () => 0,
        close: () => {},
        getCurrent: () => 10,
-       downtime: new Downtime(1000),
+       downtime: new Downtime('/fake/path', 'shunt', 1000),
        packetStats: new PacketStats(),
     };
 }

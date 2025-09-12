@@ -33,7 +33,7 @@ export class CanbusSerialPort implements CanbusSerialPortI {
       this.speed = speed;
       this.battery = battery;
       // canbus replies come immediately after a send and we send every second
-      this.downtime = new Downtime(2_000);
+      this.downtime = new Downtime(device, humanName, 2_000);
       this.packetStats = new PacketStats();
    }
 
