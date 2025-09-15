@@ -44,4 +44,8 @@ export class VoltageA implements ChargingModule {
          dischargingEnabled: true,
       };
    }
+
+   getStateOfCharge(): number {
+      return this.battery.getStateOfCharge();
+   }
 }

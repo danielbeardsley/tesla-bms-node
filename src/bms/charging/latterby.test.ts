@@ -77,6 +77,33 @@ describe('Latterby Charging', () => {
       charge = latterby.getChargeDischargeInfo();
       expect(charge.chargingEnabled).toBe(false);
    });
+
+   it('Should cap the SOC on specified days', async () => {
+      const {latterby, latterbyConfig, battery} = initialize();
+      // Turn off the recharge delay so we can see effects immediately
+      latterbyConfig.rechargeDelaySec = 0;
+
+      battery.stateOfCharge = 1;
+      let soc = latterby.getStateOfCharge();
+      // 90%  > 80% and this should disable charging
+      expect(soc).toBe(1);
+
+      // Inlcude today in the list of days to do a synchronization charge
+      latterbyConfig.synchronizationDaysOfMonth = [new Date().getDate()];
+      battery.stateOfCharge = 1;
+      soc = latterby.getStateOfCharge();
+      expect(soc).toBe(0.99);
+
+      // Set a super-high SOC to prove we ignore it
+      battery.stateOfCharge = 1.5;
+      soc = latterby.getStateOfCharge();
+      expect(soc).toBe(0.99);
+
+      // Charging should be disabled when we reach the sync voltage
+      battery.stateOfCharge = 0.5;
+      soc = latterby.getStateOfCharge();
+      expect(soc).toBe(0.5);
+   });
 });
 
 function initialize() {

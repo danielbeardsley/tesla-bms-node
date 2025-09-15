@@ -7,4 +7,5 @@ export type ChargeParameters = {
 
 export interface ChargingModule {
    getChargeDischargeInfo(): ChargeParameters;
+   getStateOfCharge(): number;
 }

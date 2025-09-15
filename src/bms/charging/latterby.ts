@@ -56,4 +56,13 @@ export class Latterby implements ChargingModule {
       const today = new Date();
       return days.includes(today.getDate());
    }
+
+   getStateOfCharge(): number {
+      const soc = this.battery.getStateOfCharge();
+      return this.isSynchronizationDay() ?
+         // On a sync day, never report full and hover at 0.99.
+         // This lets us charge till we hit the max cell volts
+         Math.min(0.99, soc) :
+         soc;
+   }
 }

@@ -96,6 +96,10 @@ class BMS {
         const batteryInfoRecent = Date.now() - this.battery.getLastUpdateDate() < this.config.bms.batteryRecencyLimitS * 1000;
 
         if (packet.command === Command.GetBatteryValues) {
+            const chargingStrategyName = this.config.bms.chargingStrategy.name;
+            const strategy = this.chargingModules[chargingStrategyName];
+            const stateOfCharge = strategy.getStateOfCharge();
+
             responsePacket = GetBatteryValues.Response.generate(packet.address, {
                 infoFlag: 0x11, // 0x11 = things have changed since last time
                 batteryNumber: packet.address,
@@ -105,7 +109,7 @@ class BMS {
                     currentA: 0,
                     voltage: this.battery.getVoltage(),
                     cycleCount: 0,
-                    stateOfCharge: this.battery.getStateOfCharge(),
+                    stateOfCharge,
                     totalCapacityAh: this.battery.getCapacityAh(),
                 }
             });

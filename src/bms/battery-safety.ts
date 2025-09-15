@@ -60,4 +60,8 @@ export class BatterySafety implements ChargingModule {
    secondsSinceLastCall(): number {
       return (Date.now() - this.lastCall) / 1000;
    }
+
+   getStateOfCharge(): number {
+      return this.battery.getStateOfCharge();
+   }
 }
