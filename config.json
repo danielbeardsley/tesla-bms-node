@@ -15,22 +15,22 @@
       },
       "charging": {
          "maxAmps": 280,
-         "maxVolts": 49
+         "maxVolts": 49.5
       },
       "discharging": {
          "maxAmps": 280,
          "minVolts": 39
       },
       "safety": {
-         "maxCellVolt": 4.03,
+         "maxCellVolt": 4.09,
          "minCellVolt": 3.3,
          "maxCellVoltBuffer": 0.03,
          "highTempCutoffC": 45,
          "lowTempCutoffC": -3
       },
-      "capacityPerModuleAh": 150,
+      "capacityPerModuleAh": 130,
       "voltsEmpty": 39.6,
-      "voltsFull": 48.5
+      "voltsFull": 49
    },
    "bms": {
       "intervalS": 10,
@@ -44,7 +44,7 @@
             "stopDischargeAtPct": 20,
             "stopChargeAtPct": 80,
             "rechargeDelaySec": 600,
-            "synchronizationVoltage": 48,
+            "synchronizationVoltage": 48.8,
             "synchronizationDaysOfMonth": [1,15]
          }
       }
