@@ -77,7 +77,7 @@ const ConfigSchema = z.object({
          downtimeS: z.number().int().min(1),
       }),
       canbusSerialPort: z.object({
-         deviceName: z.string().min(1),
+         deviceName: z.string(),
          baudRate: z.number().int().min(1),
          transmitIntervalMs: z.number().int().min(100).max(10000),
       }),

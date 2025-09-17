@@ -38,6 +38,10 @@ export class CanbusSerialPort implements CanbusSerialPortI {
    }
 
    async open(): Promise<void> {
+      if (!this.device) {
+         return;
+      }
+
       return new Promise((resolve, _reject) => {
          logger.info(`Opening serial port ${this.humanName}:${this.device} at ${this.speed} baud`);
          this.port = new SerialPort({
