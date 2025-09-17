@@ -170,7 +170,7 @@ class BMS {
     }
 
     private startCanbusTransmission() {
-        if (!this.config.inverter.canbusSerialPort) {
+        if (!this.config.inverter.canbusSerialPort.deviceName) {
             inverterLogger.warn("Canbus serial port not configured, skipping canbus transmission");
             return;
         }

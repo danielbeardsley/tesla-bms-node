@@ -77,11 +77,11 @@ export class CanbusSerialPort implements CanbusSerialPortI {
 
    close(): void {
       logger.debug(`Closing serial port ${this.device}`);
-      this.port.close();
+      this.port?.close();
    }
 
    sendBatteryInfoToInverter(chargeData: ChargeInfo) {
-      if (!this.port.isOpen) {
+      if (!this.port?.isOpen) {
          logger.debug("Cannot canbus send data to inverter, serial port is not open");
          return;
       }
