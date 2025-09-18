@@ -62,6 +62,7 @@ class BMS {
     async init() {
         await this.battery.stopBalancing();
         await this.battery.readAll();
+        await this.battery.shunt.ready;
     }
 
     private async listenForInverterPacket() {

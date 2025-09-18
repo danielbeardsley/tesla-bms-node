@@ -13,6 +13,7 @@ export interface Shunt {
    close(): void;
    readonly downtime: Downtime;
    readonly packetStats: PacketStats;
+   readonly ready: Promise<void>;
 }
 // SOC doesn't change quickly, so we can tolerate older data
 // consider SoC valid if updated within this many seconds
@@ -26,6 +27,7 @@ export class VictronSmartShunt implements Shunt {
    private onDataUpdate: () => void;
    public readonly packetStats = new PacketStats();
    public readonly downtime: Downtime;
+   public readonly ready: Promise<void>;
 
    constructor(serialPort: SerialPort, downtime: Downtime, onDataUpdate: () => void = () => {}) {
       this.serialPort = serialPort;
@@ -40,7 +42,15 @@ export class VictronSmartShunt implements Shunt {
 
       this.parser.on("data", this.ingestData.bind(this));
       this.downtime = downtime;
-      this.onDataUpdate = onDataUpdate;
+
+      let ready: () => void;
+      this.ready = new Promise((resolve) => {
+        ready = resolve;
+      });
+      this.onDataUpdate = () =>{
+         ready();
+         onDataUpdate();
+      }
    }
 
    private ingestData(data: Record<string, number>) {

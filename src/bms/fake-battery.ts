@@ -123,6 +123,7 @@ export function getFakeShunt() {
        getCurrent: () => 10,
        downtime: new Downtime('/fake/path', 'shunt', 1000),
        packetStats: new PacketStats(),
+       ready: Promise.resolve(),
     };
 }
 
