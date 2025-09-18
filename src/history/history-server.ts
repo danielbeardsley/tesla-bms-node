@@ -33,7 +33,8 @@ export class HistoryServer {
          const values = this.history.getValues(limit || undefined);
          res.json(values);
       });
-      this.app.get('/current', (_req: Request, res: Response) => {
+      this.app.get('/current', (req: Request, res: Response) => {
+         const historyLimit = parseInt(String(req.query.history)) || 30;
          const response = {
             cellVoltageRange: this.battery.getCellVoltageRange(),
             tempRange: this.battery.getTemperatureRange(),
@@ -55,7 +56,7 @@ export class HistoryServer {
                 battery: this.battery.downtime.getDowntime(),
                 shunt: this.battery.shunt.downtime.getDowntime(),
             },
-            history: this.history.getValues(30),
+            history: this.history.getValues(historyLimit),
          };
          res.json(response);
       });
