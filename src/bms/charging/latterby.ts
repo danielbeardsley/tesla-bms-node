@@ -28,7 +28,7 @@ export class Latterby implements ChargingModule {
 
    getChargeDischargeInfo(): ChargeParameters {
       const config = this.myConfig();
-      const socPct = this.battery.getStateOfCharge() * 100;
+      const socPct = this.getStateOfCharge() * 100;
 
       const isFull = this.isSynchronizationDay() ?
          this.battery.getVoltage() >= config.synchronizationVoltage :

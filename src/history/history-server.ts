@@ -42,6 +42,7 @@ export class HistoryServer {
             amps: this.battery.getCurrent(),
             watts: (this.battery.getCurrent() || 0) * this.battery.getVoltage(),
             modules: Object.values(this.battery.modules).map(module => ({
+               id: module.getId(),
                cellVoltages: module.cellVoltages,
                temperatures: module.temperatures,
             })),

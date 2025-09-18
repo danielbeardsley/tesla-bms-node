@@ -23,6 +23,7 @@ export class FakeModule implements BatteryModuleI {
    getCellVoltageSum() { return this.cellVoltages.reduce((acc, v) => acc + v, 0) }
    getMinVoltage() { return 0 }
    getMaxVoltage() { return 0 }
+   getId() { return 0 }
 
    constructor(volts: number[], temps: number[], moduleV: number) {
       this.cellVoltages = volts;

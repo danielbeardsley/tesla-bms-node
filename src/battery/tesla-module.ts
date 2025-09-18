@@ -42,6 +42,7 @@ export interface BatteryModuleI {
    getMinVoltage(): number;
    getMaxVoltage(): number;
    lastUpdate: number;
+   getId(): number;
 }
 
 // How many milliseconds to wait between forcing the module into the
@@ -264,6 +265,10 @@ class TeslaModule implements BatteryModuleI {
 
    async stopBalancing() {
       return this.writeByteToRegister(Registers.REG_BAL_CTRL, 0);
+   }
+
+   getId() {
+      return this.id;
    }
 
    // cells is array of 6 booleans, true to balance

@@ -32,10 +32,16 @@ export class Battery implements BatteryI {
    public readonly downtime: Downtime;
 
    constructor(modules: BatteryModuleI[], shunt: Shunt, config: Config) {
-      this.modules = modules;
+      this.modules = {};
       this.shunt = shunt;
       this.lock = new AsyncLock();
       this.config = config;
+      // Only keep around the modules listed in `modulesInSeries`
+      for (const series of this.config.battery.modulesInSeries) {
+         for (const moduleIndex of series) {
+            this.modules[moduleIndex] = modules[moduleIndex];
+         }
+      }
       this.downtime = new Downtime(config.battery.serialPort.deviceName, 'battery', this.config.bms.intervalS * 1_000 * 1.3);
    }
 
