@@ -40,3 +40,33 @@ export function orThrow<T>(arg: T|undefined): T {
    }
    return arg;
 }
+
+/**
+ * A boolean who's state will remain true or false for a minimum
+ * amount of time. Useful for debouncing noisy signals.
+ */
+export function stickyBool(initial: boolean, minTrueDurationS: number, minFalseDurationS: number) {
+   let value = initial;
+   let changePending = false;
+   let lastChange = Date.now();
+   return {
+      set(newValue: boolean) {
+         changePending = (newValue !== value);
+      },
+      get() {
+         if (changePending) {
+            const now = Date.now();
+            const elapsedS = (now - lastChange) / 1000;
+            const minDuration = value ? minTrueDurationS : minFalseDurationS;
+            if (elapsedS >= minDuration) {
+               value = !value;
+               lastChange = now;
+               changePending = false;
+            }
+         }
+         return value;
+      }
+   }
+}
+
+export type StickyBool = ReturnType<typeof stickyBool>;

@@ -1,6 +1,7 @@
 import { BatteryI } from "../../battery/battery";
 import { Config } from "../../config";
 import { ChargingModule, ChargeParameters } from "./charging-module";
+import { stickyBool, type StickyBool } from "../../utils";
 
 /**
  * The name means nothing
@@ -11,11 +12,18 @@ import { ChargingModule, ChargeParameters } from "./charging-module";
 export class Latterby implements ChargingModule {
    private battery: BatteryI;
    private config: Config;
-   private lastFullTime: number = 0;
+   private isFull: StickyBool;
 
    constructor(config: Config, battery: BatteryI) {
       this.battery = battery;
       this.config = config;
+      this.isFull = stickyBool(
+         false,
+         // Delay transitioing from full to not full for this long
+         // to prevent rapid flip-flopping of the charging state.
+         this.myConfig().rechargeDelaySec,
+         // We can transition from not full to full immediately
+         0);
    }
 
    myConfig() {
@@ -34,14 +42,9 @@ export class Latterby implements ChargingModule {
          this.battery.getVoltage() >= config.synchronizationVoltage :
          socPct >= config.stopChargeAtPct;
 
-      const recentlyFull = (Date.now() - this.lastFullTime) < (config.rechargeDelaySec * 1000);
+      this.isFull.set(isFull);
 
-      // If we're full, start the clock
-      if (isFull) {
-         this.lastFullTime = Date.now();
-      }
-
-      const chargeEnabled = !isFull && !recentlyFull;
+      const chargeEnabled = !this.isFull.get();
 
       return {
          chargeCurrentLimit: chargeEnabled ? this.config.battery.charging.maxAmps : 0,
