@@ -51,7 +51,7 @@ class BMS {
             latterby: new Latterby(config, battery),
         };
         this.batterySafety = new BatterySafety(config, battery, 0.99);
-        // RS485 messages typically come every 2 seconds, so we set a downtime of 10 seconds
+        // RS485 messages typically come every 2 seconds
         this.inverterRs485Downtime = new Downtime(
            config.inverter.serialPort.deviceName,
            'inverter',
