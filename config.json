@@ -22,7 +22,7 @@
          "minVolts": 39
       },
       "safety": {
-         "maxCellVolt": 4.09,
+         "maxCellVolt": 4.1,
          "minCellVolt": 3.2,
          "maxCellVoltBuffer": 0.03,
          "highTempCutoffC": 45,
@@ -44,7 +44,7 @@
             "stopDischargeAtPct": 20,
             "stopChargeAtPct": 80,
             "rechargeDelaySec": 600,
-            "synchronizationVoltage": 48.8,
+            "synchronizationVoltage": 49.2,
             "synchronizationDaysOfMonth": [1,15]
          }
       }
