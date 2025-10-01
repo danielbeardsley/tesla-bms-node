@@ -14,7 +14,14 @@ export interface Shunt {
    readonly downtime: Downtime;
    readonly packetStats: PacketStats;
    readonly ready: Promise<void>;
+   getAllData(): Record<string, number>;
 }
+
+type ShuntData = {
+   all: Record<string, number>;
+   SOC?: number; // state of charge, 0..1
+   I?: number;   // current, A
+};
 // SOC doesn't change quickly, so we can tolerate older data
 // consider SoC valid if updated within this many seconds
 const SHUNT_SOC_VALID_S = 300;
@@ -22,7 +29,7 @@ const SHUNT_SOC_VALID_S = 300;
 export class VictronSmartShunt implements Shunt {
    private serialPort: SerialPort;
    private lastUpdate: number = 0;
-   private data: Record<string, number> = {};
+   private data: ShuntData = {all: {}, SOC: undefined, I: undefined};
    private parser: VEDirectParser;
    private onDataUpdate: () => void;
    public readonly packetStats = new PacketStats();
@@ -64,6 +71,7 @@ export class VictronSmartShunt implements Shunt {
       if (data.ChecksumValid) {
          this.downtime.up();
          if (data.SOC !== undefined) {
+            this.data.all = data;
             this.data.SOC = data.SOC / 1000;
             this.data.I = data.I / 1000;
             this.lastUpdate = Date.now();
@@ -84,6 +92,10 @@ export class VictronSmartShunt implements Shunt {
 
    getCurrent(): number | undefined {
       return this.updatedWithin(this.downtime.timeoutMs * 1000) ? this.data.I : undefined;
+   }
+
+   getAllData(): Record<string, number> {
+      return this.data.all;
    }
 
    private updatedWithin(seconds: number): boolean {

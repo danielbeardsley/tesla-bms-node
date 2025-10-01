@@ -128,6 +128,7 @@ export function getFakeShunt() {
        downtime: new Downtime('/fake/path', 'shunt', 1000),
        packetStats: new PacketStats(),
        ready: Promise.resolve(),
+       getAllData: () => ({}),
     };
 }
 

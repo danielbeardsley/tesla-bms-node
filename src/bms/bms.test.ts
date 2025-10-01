@@ -172,6 +172,7 @@ describe('BMS History', () => {
             timeSinceInverterComms: null,
             downtime: null,
             history: null,
+            shunt: {},
         });
         bms.stop();
     });
