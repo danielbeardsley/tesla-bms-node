@@ -159,10 +159,12 @@ describe('BMS History', () => {
                 {
                     cellVoltages: [3.7, 3.7, 3.7, 3.7, 3.7, 3.7],
                     temperatures: [21, 21, 21, 21, 21, 21, 21],
+                    id: 1,
                 },
                 {
                     cellVoltages: [3.7, 3.7, 3.7, 3.7, 3.7, 3.7],
                     temperatures: [21, 21, 21, 21, 21, 21, 21],
+                    id: 2,
                 }
             ],
             stateOfCharge: 0,

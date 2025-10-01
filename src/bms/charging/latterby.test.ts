@@ -3,6 +3,7 @@ import { Latterby } from './latterby';
 import { getTestConfig } from '../../test-config'
 import { FakeBattery } from '../fake-battery';
 import {sleep} from '../../utils';
+import {Config} from "../../config";
 
 describe('Latterby Charging', () => {
    it('Should enable chaging based on SOc', async () => {
@@ -26,9 +27,8 @@ describe('Latterby Charging', () => {
    });
 
    it('Should disable charging when recently full', async () => {
-      const {latterby, latterbyConfig, battery} = initialize();
+      const {latterby, latterbyConfig, battery} = initialize({rechargeDelaySec: 0.01});
       battery.stateOfCharge = 0.5;
-      latterbyConfig.rechargeDelaySec = 0.01;
       let charge = latterby.getChargeDischargeInfo();
 
       // We're full (80% is full)
@@ -51,9 +51,8 @@ describe('Latterby Charging', () => {
    });
 
    it('Should charge based on voltage on specified days', async () => {
-      const {latterby, latterbyConfig, battery} = initialize();
       // Turn off the recharge delay so we can see effects immediately
-      latterbyConfig.rechargeDelaySec = 0;
+      const {latterby, latterbyConfig, battery} = initialize({rechargeDelaySec: 0});
 
       battery.stateOfCharge = 0.9;
       let charge = latterby.getChargeDischargeInfo();
@@ -79,9 +78,8 @@ describe('Latterby Charging', () => {
    });
 
    it('Should cap the SOC on specified days', async () => {
-      const {latterby, latterbyConfig, battery} = initialize();
       // Turn off the recharge delay so we can see effects immediately
-      latterbyConfig.rechargeDelaySec = 0;
+      const {latterby, latterbyConfig, battery} = initialize({rechargeDelaySec: 0});
 
       battery.stateOfCharge = 1;
       let soc = latterby.getStateOfCharge();
@@ -106,7 +104,7 @@ describe('Latterby Charging', () => {
    });
 });
 
-function initialize() {
+function initialize(latterbyConfigOverride: Partial<Config['bms']['chargingStrategy']['latterby']> = {}) {
    const battery = new FakeBattery();
    battery.stateOfCharge = 0.5
    const config = getTestConfig();
@@ -115,7 +113,8 @@ function initialize() {
          stopChargeAtPct: 80,
          rechargeDelaySec: 600,
          synchronizationVoltage: 48,
-         synchronizationDaysOfMonth: []
+         synchronizationDaysOfMonth: [],
+         ...latterbyConfigOverride
    };
    const latterby = new Latterby(config, battery);
    return {latterby, config, latterbyConfig: config.bms.chargingStrategy.latterby, battery};

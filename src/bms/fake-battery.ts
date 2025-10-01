@@ -11,6 +11,7 @@ export class FakeModule implements BatteryModuleI {
 
    public voltage: number = 0;
    public capacity: number = 0;
+   public id: number = 0;
 
    async sleep() {}
    async readStatus() {}
@@ -23,12 +24,13 @@ export class FakeModule implements BatteryModuleI {
    getCellVoltageSum() { return this.cellVoltages.reduce((acc, v) => acc + v, 0) }
    getMinVoltage() { return 0 }
    getMaxVoltage() { return 0 }
-   getId() { return 0 }
+   getId() { return this.id }
 
-   constructor(volts: number[], temps: number[], moduleV: number) {
+   constructor(volts: number[], temps: number[], moduleV: number, id: number = 0) {
       this.cellVoltages = volts;
       this.temperatures = temps;
       this.moduleVolts = moduleV;
+      this.id = id;
    }
 }
 
@@ -54,11 +56,13 @@ export class FakeBattery implements BatteryI {
             [3.7, 3.7, 3.7, 3.7, 3.7, 3.7],
             [21, 21, 21, 21, 21, 21, 21],
             24,
+            1
          ),
          2: new FakeModule(
             [3.7, 3.7, 3.7, 3.7, 3.7, 3.7],
             [21, 21, 21, 21, 21, 21, 21],
             24,
+            2
          ),
       };
    }

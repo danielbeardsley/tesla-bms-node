@@ -42,6 +42,13 @@ export function getTestConfig(): Config {
                 name: 'voltageA',
                 voltageA: {
                     maxCellVoltBuffer: 0.1,
+                },
+                latterby: {
+                  stopDischargeAtPct: 20,
+                  stopChargeAtPct: 80,
+                  rechargeDelaySec: 600,
+                  synchronizationVoltage: 49.2,
+                  synchronizationDaysOfMonth: [28,15]
                 }
             },
         },
