@@ -23,6 +23,7 @@ export class BatterySafety implements ChargingModule {
    }
 
    getChargeDischargeInfo(): ChargeParameters {
+      const safety = this.config.battery.safety;
       const cellVoltageRange = this.battery.getCellVoltageRange();
       this.cellVoltMinSmoothed = this.smooth(this.cellVoltMinSmoothed, cellVoltageRange.min);
       this.cellVoltMaxSmoothed = this.smooth(this.cellVoltMaxSmoothed, cellVoltageRange.max);
@@ -30,12 +31,12 @@ export class BatterySafety implements ChargingModule {
       inverterLogger.debug("Saftety: Voltage range: %d - %d", cellVoltageRange.min, cellVoltageRange.max);
       // Scale down the charging current as the highest volt cell
       // gets within "buffer" volts of the maxCellVolt setting
-      const maxCellVolt = this.config.battery.safety.maxCellVolt;
-      const buffer = this.config.battery.safety.maxCellVoltBuffer;
+      const maxCellVolt = safety.maxCellVolt;
+      const buffer = safety.maxCellVoltBuffer;
       const chargeScale = ramp(cellVoltageRange.max, maxCellVolt, maxCellVolt - buffer);
 
       const chargingEnabled = this.cellVoltMaxSmoothed < maxCellVolt;
-      const dischargingEnabled = this.cellVoltMinSmoothed > this.config.battery.safety.minCellVolt;
+      const dischargingEnabled = this.cellVoltMinSmoothed > safety.minCellVolt;
       this.chargeCurrentSmoothed = chargingEnabled
          ? this.smooth(this.chargeCurrentSmoothed, this.config.battery.charging.maxAmps * chargeScale)
          : 0;
