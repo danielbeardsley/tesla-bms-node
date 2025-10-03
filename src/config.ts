@@ -30,6 +30,9 @@ const ConfigSchema = z.object({
       safety: z.object({
          minCellVolt: z.number(),
          maxCellVolt: z.number(),
+         // % SOC which will re-enable charging / discharging after hitting a
+         // cell volt limit.
+         cellVoltLimitSocRecovery: z.number().min(0).max(20),
          highTempCutoffC: z.number(),
          lowTempCutoffC: z.number(),
          maxCellVoltBuffer: z.number().min(0.001).max(0.5),

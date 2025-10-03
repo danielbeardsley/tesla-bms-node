@@ -27,6 +27,7 @@ export function getTestConfig(): Config {
             safety: {
                 minCellVolt: 3.0,
                 maxCellVolt: 4.2,
+                cellVoltLimitSocRecovery: 0,
                 highTempCutoffC: 60,
                 lowTempCutoffC: 0,
                 maxCellVoltBuffer: 0.1, // Buffer for the max cell voltage to prevent overcharging

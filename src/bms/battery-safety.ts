@@ -14,6 +14,7 @@ export class BatterySafety implements ChargingModule {
    private cellVoltMaxSmoothed: number|null = null;
    private cellVoltMinSmoothed: number|null = null;
    private lastCall: number;
+   private dischargeReenableSoc: number|null = null;
 
    constructor(config: Config, battery: BatteryI, smoothingFactor: number) {
       this.battery = battery;
@@ -47,7 +48,7 @@ export class BatterySafety implements ChargingModule {
          chargeCurrentLimit: Math.round(this.chargeCurrentSmoothed),
          dischargeCurrentLimit: this.config.battery.discharging.maxAmps,
          chargingEnabled,
-         dischargingEnabled,
+         dischargingEnabled : this.allowDischarge(dischargingEnabled),
       };
    }
 
@@ -56,6 +57,22 @@ export class BatterySafety implements ChargingModule {
       // the smoothing factor based on the time since the last call.
       const interpolatedFactor = Math.pow(this.smoothingFactor, this.secondsSinceLastCall());
       return prev === null ? newVal : prev * interpolatedFactor + newVal * (1 - interpolatedFactor);
+   }
+
+   // Prevent rapid on/off cycling of discharging when we disable discharging
+   // because of low-voltage. We do this by requiring the SOC to rise
+   private allowDischarge(dischargingEnabled: boolean): boolean {
+      const soc = this.getStateOfCharge();
+
+      if (this.dischargeReenableSoc === null) {
+         if (!dischargingEnabled) {
+            this.dischargeReenableSoc = soc + (this.config.battery.safety.cellVoltLimitSocRecovery / 100);
+         }
+      } else if (soc > this.dischargeReenableSoc) {
+         this.dischargeReenableSoc = null;
+      }
+
+      return this.dischargeReenableSoc === null && dischargingEnabled;
    }
 
    secondsSinceLastCall(): number {

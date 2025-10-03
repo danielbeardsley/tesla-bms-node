@@ -54,6 +54,36 @@ describe('Battery Saftey Module', () => {
       expect(charging.dischargingEnabled).toBe(false);
    });
 
+   it('should pause discharging till SOC recovers when hitting a cellV limit', async () => {
+      const battery = getBatteryWithRange(3.8, 3.9);
+      const config = getTestConfig();
+      const safe = new BatterySafety(config, battery, 0);
+
+      config.battery.safety.cellVoltLimitSocRecovery = 5;
+      config.battery.safety.minCellVolt = 3;
+      let charging = safe.getChargeDischargeInfo();
+      expect(charging.dischargingEnabled).toBe(true);
+
+      // Below the min, SOC should be recorded
+      config.battery.safety.minCellVolt = 3.81;
+      battery.stateOfCharge = 0.20;
+      charging = safe.getChargeDischargeInfo();
+      // We don't change the limit, but we do toggle the dischargeEnabled bool
+      expect(charging.dischargingEnabled).toBe(false);
+
+      // Recovered above the min
+      config.battery.safety.minCellVolt = 3.7;
+      charging = safe.getChargeDischargeInfo();
+      // Charging will stay disabled until SOC recovers
+      expect(charging.dischargingEnabled).toBe(false);
+
+      // 26% is 6% above the recorded 20%, so discharging should be re-enabled
+      battery.stateOfCharge = 0.26;
+      charging = safe.getChargeDischargeInfo();
+      // Charging should be enabled now
+      expect(charging.dischargingEnabled).toBe(true);
+   });
+
    it('should do smoothing on charge current', async () => {
       const battery = getBatteryWithRange(3.8, 3.9);
       const config = getTestConfig();

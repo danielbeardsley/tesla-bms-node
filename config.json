@@ -25,6 +25,7 @@
          "maxCellVolt": 4.1,
          "minCellVolt": 3.2,
          "maxCellVoltBuffer": 0.03,
+         "cellVoltLimitSocRecovery": 1,
          "highTempCutoffC": 45,
          "lowTempCutoffC": -3
       },
