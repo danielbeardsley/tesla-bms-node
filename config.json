@@ -1,7 +1,7 @@
 {
    "battery": {
       "moduleCount": 14,
-      "modulesInSeries": [[1,14],       [3,12],[4,11],[5,10],[6,9],[7,8]],
+      "modulesInSeries": [[1,14],[2,13],[3,12],[4,11],[5,10],[6,9],[7,8]],
       "serialPort": {
          "deviceName": "/dev/serial0"
       },
