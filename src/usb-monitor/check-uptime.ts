@@ -1,8 +1,5 @@
-import { usbAddrFromSerial } from './usb-utils';
-import { promisify } from 'node:util';
-import child_process from 'node:child_process';
-
-const execFile = promisify(child_process.execFile);
+import { execFile } from 'child_process';
+import { usbAddrFromSerial } from './usb-utils.js';
 
 type Device = {
    devicePath: string;
@@ -13,6 +10,7 @@ type Device = {
 };
 
 const DRY_RUN = !process.argv.includes('--act');
+const VERBOSE = process.argv.includes('-v');
 
 // If a device has been down for this many times its timeout, do a full system reboot
 const TOO_LONG_REBOOT_FACTOR = 10;
@@ -22,6 +20,9 @@ getDeviceUptimesFromBMS().then(checkForDownDevices);
 
 async function checkForDownDevices(deviceUptimes: Device[]) {
    for (const device of deviceUptimes) {
+      if (VERBOSE) {
+         console.log(`Device ${device.name} at ${device.devicePath} is ${device.isUp ? 'up' : 'down'} for ${device.timeSinceLastUpS}s (timeout ${device.timeoutMs / 1000}s)`);
+      }
       const tooLongTimeS = (device.timeoutMs / 1000) * TOO_LONG_REBOOT_FACTOR;
       if (device.timeSinceLastUpS > tooLongTimeS) {
          console.error(`Device ${device.name} at ${device.devicePath} has been down so long ${device.timeSinceLastUpS}s, that rebooting is the best option`);
@@ -36,6 +37,9 @@ async function checkForDownDevices(deviceUptimes: Device[]) {
 }
 
 async function rebootSystem() {
+   if (VERBOSE) {
+      console.log("Rebooting system");
+   }
    if (DRY_RUN) {
       console.log("Dry run, not rebooting");
       return;
@@ -44,8 +48,12 @@ async function rebootSystem() {
 }
 
 async function resetUsb(device: Device) {
+   if (VERBOSE) {
+      console.log(`Resetting USB device at ${device.devicePath}`);
+   }
    const address = usbAddrFromSerial(device.devicePath);
    if (address === null) {
+      console.error(`Could not find USB address from device path ${device.devicePath}`);
       return;
    }
    if (DRY_RUN) {
@@ -57,6 +65,9 @@ async function resetUsb(device: Device) {
 
 async function getDeviceUptimesFromBMS(): Promise<Device[]> {
    try {
+      if (VERBOSE) {
+         console.log(`Fetching device uptimes from ${BMS_URL}`);
+      }
       const response = await fetch(BMS_URL);
       if (!response.ok) {
          throw new Error(`HTTP error! Status: ${response.status}`);
