@@ -7,6 +7,7 @@ import type { Packet } from '../inverter/pylontech-packet';
 import { History } from '../history/history';
 import type { CanbusSerialPortI } from '../inverter/canbus';
 import { packetStats as batteryPacketStats } from '../battery/tesla-comms';
+import { sleep } from '../utils';
 // =========
 import GetChargeDischargeInfo, { ChargeInfo } from '../inverter/commands/get-charge-discharge-info';
 import GetBatteryValues from '../inverter/commands/get-battery-values';
@@ -62,7 +63,11 @@ class BMS {
     async init() {
         await this.battery.stopBalancing();
         await this.battery.readAll();
-        await this.battery.shunt.ready;
+        // Wait up to 10 seconds for shunt to be ready, otherwise, move on.
+        await Promise.race([
+           this.battery.shunt.ready,
+           sleep(10_000)
+        ]);
     }
 
     private async listenForInverterPacket() {
