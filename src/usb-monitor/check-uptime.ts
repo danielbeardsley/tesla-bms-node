@@ -44,7 +44,8 @@ async function rebootSystem() {
       console.log("Dry run, not rebooting");
       return;
    }
-   await execFile('reboot');
+   // reboot in one minute to allow logs to be written
+   await execFile('shutdown -r +1');
 }
 
 async function resetUsb(device: Device) {
