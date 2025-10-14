@@ -7,7 +7,7 @@
       },
       "shunt": {
          "deviceName": "/dev/serial/by-id/usb-Prolific_Technology_Inc._USB-Serial_Controller_D-if00-port0",
-         "downtimeS": 2
+         "downtimeS": 10
       },
       "balance": {
          "cellVDiffMax": 0.01,
