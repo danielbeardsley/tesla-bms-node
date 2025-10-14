@@ -43,7 +43,7 @@ async function rebootSystem() {
       return;
    }
    // reboot in one minute to allow logs to be written
-   await execFile('shutdown', ['-r', '+1']);
+   await exec('shutdown', ['-r', '+1']);
 }
 
 async function resetUsb(device: Device) {
@@ -59,7 +59,7 @@ async function resetUsb(device: Device) {
       console.log(`Dry run, not resetting USB device at ${address.bus}:${address.dev}`);
       return;
    }
-   await execFile('resetusb', [`${address.bus}:${address.dev}`]);
+   await exec('resetusb', [`${address.bus}:${address.dev}`]);
 }
 
 async function getDeviceUptimesFromBMS(): Promise<Device[]> {
@@ -77,4 +77,21 @@ async function getDeviceUptimesFromBMS(): Promise<Device[]> {
       console.error("Error fetching JSON:", err);
       return [];
    }
+}
+
+async function exec(command: string, args: string[]) {
+   const fullCmd = [command, ...args].join(' ');
+   await execFile(command, args, (error, stdout, stderr) => {
+      if (error) {
+         console.error(`Error executing ${fullCmd}`, error);
+         return;
+      }
+      if (stderr) {
+         console.error(`stderr: ${stderr}`);
+         return;
+      }
+      if (stdout) {
+         console.log(`stdout: ${stdout}`);
+      }
+   });
 }
