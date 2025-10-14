@@ -27,9 +27,7 @@ async function checkForDownDevices(deviceUptimes: Device[]) {
       if (device.timeSinceLastUpS > tooLongTimeS) {
          console.error(`Device ${device.name} at ${device.devicePath} has been down so long (${device.timeSinceLastUpS}s), that rebooting is the best option`);
          await rebootSystem();
-      }
-
-      if (!device.isUp) {
+      } else if (!device.isUp) {
          console.error(`Device ${device.name} at ${device.devicePath} has been down for (${device.timeSinceLastUpS}s), resetting the usb device`);
          await resetUsb(device);
       }
@@ -45,7 +43,7 @@ async function rebootSystem() {
       return;
    }
    // reboot in one minute to allow logs to be written
-   await execFile('shutdown -r +1');
+   await execFile('shutdown', ['-r', '+1']);
 }
 
 async function resetUsb(device: Device) {
