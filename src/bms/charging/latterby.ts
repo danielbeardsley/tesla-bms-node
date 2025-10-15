@@ -1,7 +1,6 @@
 import { BatteryI } from "../../battery/battery";
 import { Config } from "../../config";
 import { ChargingModule, ChargeParameters } from "./charging-module";
-import { stickyBool, type StickyBool } from "../../utils";
 
 /**
  * The name means nothing
@@ -12,18 +11,12 @@ import { stickyBool, type StickyBool } from "../../utils";
 export class Latterby implements ChargingModule {
    private battery: BatteryI;
    private config: Config;
-   private isFull: StickyBool;
+   private wasRecentlyEmpty: boolean = false;
+   private wasRecentlyFull: boolean = false;
 
    constructor(config: Config, battery: BatteryI) {
       this.battery = battery;
       this.config = config;
-      this.isFull = stickyBool(
-         false,
-         // Delay transitioing from full to not full for this long
-         // to prevent rapid flip-flopping of the charging state.
-         this.myConfig().rechargeDelaySec,
-         // We can transition from not full to full immediately
-         0);
    }
 
    myConfig() {
@@ -41,16 +34,33 @@ export class Latterby implements ChargingModule {
       const isFull = this.isSynchronizationDay() ?
          this.battery.getVoltage() >= config.synchronizationVoltage :
          socPct >= config.stopChargeAtPct;
+      const isEmpty = socPct <= config.stopDischargeAtPct;
 
-      this.isFull.set(isFull);
+      if (isEmpty) {
+         this.wasRecentlyEmpty = true;
+      }
 
-      const chargeEnabled = !this.isFull.get();
+      if (!isEmpty && socPct >= config.resumeDischargeAtPct) {
+         this.wasRecentlyEmpty = false;
+      }
+
+      if (isFull) {
+         this.wasRecentlyFull = true;
+      }
+
+      if (!isFull && socPct <= config.resumeChargeAtPct) {
+         this.wasRecentlyFull = false;
+      }
+
+      console.log(`Latterby: SOC=${socPct.toFixed(1)}%, V=${this.battery.getVoltage().toFixed(2)}V, isFull=${isFull}, isEmpty=${isEmpty}, wasRecentlyFull=${this.wasRecentlyFull}, wasRecentlyEmpty=${this.wasRecentlyEmpty} resumeChargeAtPct=${config.resumeChargeAtPct} resumeDischargeAtPct=${config.resumeDischargeAtPct}`);
+      const chargeEnabled = !isFull && (this.isSynchronizationDay() || !this.wasRecentlyFull);
+      const dischargeEnabled = !isEmpty && !this.wasRecentlyEmpty;
 
       return {
          chargeCurrentLimit: chargeEnabled ? this.config.battery.charging.maxAmps : 0,
          dischargeCurrentLimit: this.config.battery.discharging.maxAmps,
          chargingEnabled: chargeEnabled,
-         dischargingEnabled: socPct > config.stopDischargeAtPct,
+         dischargingEnabled: dischargeEnabled,
       };
    }
 

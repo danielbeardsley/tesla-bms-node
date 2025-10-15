@@ -56,8 +56,13 @@ const ConfigSchema = z.object({
          latterby: z.optional(z.object({
             // Normally charge up to this %
             stopChargeAtPct: z.number().min(0).max(100),
+            // Resume charging when battery drops to this %
+            resumeChargeAtPct: z.number().min(0).max(100),
+
             // Normally stop discharging when battery reaches this %
             stopDischargeAtPct: z.number().min(0).max(100),
+            // Resume discharging when battery rises to this %
+            resumeDischargeAtPct: z.number().min(0).max(100),
             // How long after reaching full charge do we allow charging again.
             // Tune this to prevent rapid cycling
             rechargeDelaySec: z.number().int().min(0),

@@ -46,7 +46,9 @@ export function getTestConfig(): Config {
                 },
                 latterby: {
                   stopDischargeAtPct: 20,
+                  resumeDischargeAtPct: 30,
                   stopChargeAtPct: 80,
+                  resumeChargeAtPct: 70,
                   rechargeDelaySec: 600,
                   synchronizationVoltage: 49.2,
                   synchronizationDaysOfMonth: [28,15]

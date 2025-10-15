@@ -42,8 +42,10 @@
             "maxCellVoltBuffer": 0.05
          },
          "latterby": {
-            "stopDischargeAtPct": 10,
+            "stopDischargeAtPct": 15,
+            "resumeDischargeAtPct": 17,
             "stopChargeAtPct": 80,
+            "resumeChargeAtPct": 78,
             "rechargeDelaySec": 600,
             "synchronizationVoltage": 49.2,
             "synchronizationDaysOfMonth": [1,15]
