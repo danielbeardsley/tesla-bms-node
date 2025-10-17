@@ -1,6 +1,7 @@
 import { BatteryI } from "../../battery/battery";
 import { Config } from "../../config";
 import { ChargingModule, ChargeParameters } from "./charging-module";
+import { ProtectedBool } from "../../utils";
 
 /**
  * The name means nothing
@@ -11,8 +12,8 @@ import { ChargingModule, ChargeParameters } from "./charging-module";
 export class Latterby implements ChargingModule {
    private battery: BatteryI;
    private config: Config;
-   private wasRecentlyEmpty: boolean = false;
-   private wasRecentlyFull: boolean = false;
+   private chargeAllowed: ProtectedBool = new ProtectedBool(true);
+   private dischargeAllowed: ProtectedBool = new ProtectedBool(true);
 
    constructor(config: Config, battery: BatteryI) {
       this.battery = battery;
@@ -36,25 +37,11 @@ export class Latterby implements ChargingModule {
          socPct >= config.stopChargeAtPct;
       const isEmpty = socPct <= config.stopDischargeAtPct;
 
-      if (isEmpty) {
-         this.wasRecentlyEmpty = true;
-      }
+      this.chargeAllowed.update(!isFull, socPct <= config.resumeChargeAtPct);
+      this.dischargeAllowed.update(!isEmpty, socPct >= config.resumeDischargeAtPct);
 
-      if (!isEmpty && socPct >= config.resumeDischargeAtPct) {
-         this.wasRecentlyEmpty = false;
-      }
-
-      if (isFull) {
-         this.wasRecentlyFull = true;
-      }
-
-      if (!isFull && socPct <= config.resumeChargeAtPct) {
-         this.wasRecentlyFull = false;
-      }
-
-      console.log(`Latterby: SOC=${socPct.toFixed(1)}%, V=${this.battery.getVoltage().toFixed(2)}V, isFull=${isFull}, isEmpty=${isEmpty}, wasRecentlyFull=${this.wasRecentlyFull}, wasRecentlyEmpty=${this.wasRecentlyEmpty} resumeChargeAtPct=${config.resumeChargeAtPct} resumeDischargeAtPct=${config.resumeDischargeAtPct}`);
-      const chargeEnabled = !isFull && (this.isSynchronizationDay() || !this.wasRecentlyFull);
-      const dischargeEnabled = !isEmpty && !this.wasRecentlyEmpty;
+      const chargeEnabled = this.chargeAllowed.get();
+      const dischargeEnabled = this.dischargeAllowed.get();
 
       return {
          chargeCurrentLimit: chargeEnabled ? this.config.battery.charging.maxAmps : 0,

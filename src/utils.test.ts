@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ramp, clamp, stickyBool, sleep } from './utils';
+import { ramp, clamp, stickyBool, sleep, ProtectedBool } from './utils';
 
 describe("utils", () => {
    describe("ramp()", () => {
@@ -55,6 +55,30 @@ describe("utils", () => {
          expect(sb.get()).toBe(false);
          await sleep(5);
          expect(sb.get()).toBe(true);
+      });
+   });
+
+   describe("ProtectedBool()", () => {
+      it("should require the trueAllowed param to transition to true", () => {
+         const pb = new ProtectedBool(false);
+         expect(pb.get()).toBe(false);
+         // True to update without the check being true
+         pb.update(true, false);
+         expect(pb.get()).toBe(false);
+
+         pb.update(true, true);
+         expect(pb.get()).toBe(true);
+
+         pb.update(false, false);
+         expect(pb.get()).toBe(false);
+
+         pb.update(false, true);
+         expect(pb.get()).toBe(false);
+      });
+
+      it("should accept an arg that is the current value", () => {
+         expect((new ProtectedBool(true)).get()).toBe(true);
+         expect((new ProtectedBool(false)).get()).toBe(false);
       });
    });
 });

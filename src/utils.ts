@@ -70,3 +70,23 @@ export function stickyBool(initial: boolean, minTrueDurationS: number, minFalseD
 }
 
 export type StickyBool = ReturnType<typeof stickyBool>;
+
+export class ProtectedBool {
+   private value: boolean = false;
+
+   constructor(initial: boolean) {
+      this.value = initial;
+   }
+
+   update(newValue: boolean, trueAllowed: boolean) {
+      if (!newValue) {
+         this.value = false;
+      } else if (trueAllowed) {
+         this.value = true;
+      }
+   }
+
+   get() {
+      return this.value;
+   }
+}
