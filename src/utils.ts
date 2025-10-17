@@ -45,31 +45,38 @@ export function orThrow<T>(arg: T|undefined): T {
  * A boolean who's state will remain true or false for a minimum
  * amount of time. Useful for debouncing noisy signals.
  */
-export function stickyBool(initial: boolean, minTrueDurationS: number, minFalseDurationS: number) {
-   let value = initial;
-   let changePending = false;
-   let lastChange = Date.now();
-   return {
-      set(newValue: boolean) {
-         changePending = (newValue !== value);
-      },
-      get() {
-         if (changePending) {
-            const now = Date.now();
-            const elapsedS = (now - lastChange) / 1000;
-            const minDuration = value ? minTrueDurationS : minFalseDurationS;
-            if (elapsedS >= minDuration) {
-               value = !value;
-               lastChange = now;
-               changePending = false;
-            }
+export class StickyBool {
+   private value: boolean;
+   private changePending: boolean = false;
+   private lastChange: number;
+   private minTrueDurationS: number;
+   private minFalseDurationS: number;
+
+   constructor(initial: boolean, minTrueDurationS: number, minFalseDurationS: number) {
+      this.value = initial;
+      this.lastChange = Date.now();
+      this.minTrueDurationS = minTrueDurationS;
+      this.minFalseDurationS = minFalseDurationS;
+   }
+
+   set(newValue: boolean) {
+      this.changePending = (newValue !== this.value);
+   }
+
+   get() {
+      if (this.changePending) {
+         const now = Date.now();
+         const elapsedS = (now - this.lastChange) / 1000;
+         const minDuration = this.value ? this.minTrueDurationS : this.minFalseDurationS;
+         if (elapsedS >= minDuration) {
+            this.value = !this.value;
+            this.lastChange = now;
+            this.changePending = false;
          }
-         return value;
       }
+      return this.value;
    }
 }
-
-export type StickyBool = ReturnType<typeof stickyBool>;
 
 export class ProtectedBool {
    private value: boolean = false;

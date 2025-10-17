@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ramp, clamp, stickyBool, sleep, ProtectedBool } from './utils';
+import { ramp, clamp, StickyBool, sleep, ProtectedBool } from './utils';
 
 describe("utils", () => {
    describe("ramp()", () => {
@@ -29,16 +29,16 @@ describe("utils", () => {
       });
    });
 
-   describe("stickyBool()", () => {
+   describe("StickyBool", () => {
       it("should start int the initial state", () => {
-         let sb = stickyBool(true, 1, 1);
+         let sb = new StickyBool(true, 1, 1);
          expect(sb.get()).toBe(true);
-         sb = stickyBool(false, 1, 1);
+         sb = new StickyBool(false, 1, 1);
          expect(sb.get()).toBe(false);
       });
 
       it("should stick to true as long as configured", async () => {
-         const sb = stickyBool(false, 0.005, 0);
+         const sb = new StickyBool(false, 0.005, 0);
          sb.set(true);
          expect(sb.get()).toBe(true);
          sb.set(false);
@@ -48,7 +48,7 @@ describe("utils", () => {
       });
 
       it("should stick to false as long as configured", async () => {
-         const sb = stickyBool(true, 0, 0.005);
+         const sb = new StickyBool(true, 0, 0.005);
          sb.set(false);
          expect(sb.get()).toBe(false);
          sb.set(true);
