@@ -91,7 +91,7 @@ export class VictronSmartShunt implements Shunt {
    }
 
    getCurrent(): number | undefined {
-      return this.updatedWithin(this.downtime.timeoutMs * 1000) ? this.data.I : undefined;
+      return this.updatedWithin(this.downtime.timeoutMs / 1000) ? this.data.I : undefined;
    }
 
    getAllData(): Record<string, number> {
