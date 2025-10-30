@@ -3,6 +3,7 @@ import { Latterby } from './latterby';
 import { getTestConfig } from '../../test-config'
 import { FakeBattery } from '../fake-battery';
 import { Config } from "../../config";
+import { sleep } from '../../utils';
 
 describe('Latterby Charging', () => {
    it('Should enable chaging based on SOc', async () => {
@@ -25,8 +26,8 @@ describe('Latterby Charging', () => {
       expect(charge.chargeCurrentLimit).toBe(0);
    });
 
-   it('Should disable charging when recently full', async () => {
-      const {latterby, battery} = initialize({rechargeDelaySec: 0.01});
+   it('Should disable charging when full until dropping below resumeChargeAtPct', async () => {
+      const {latterby, battery} = initialize({rechargeDelaySec: 0});
       battery.stateOfCharge = 0.5;
       let charge = latterby.getChargeDischargeInfo();
 
@@ -47,9 +48,9 @@ describe('Latterby Charging', () => {
       // Since we're just below resumeChargeAtPct charging should be enabled
       expect(charge.chargingEnabled).toBe(true);
    });
-
+ 
    it('Should disable discharging when recently empty', async () => {
-      const {latterby, battery} = initialize({rechargeDelaySec: 0.01});
+      const {latterby, battery} = initialize({rechargeDelaySec: 0});
       battery.stateOfCharge = 0.5;
       let charge = latterby.getChargeDischargeInfo();
 
@@ -69,6 +70,28 @@ describe('Latterby Charging', () => {
       charge = latterby.getChargeDischargeInfo();
       // Since we're just above resumeDischargeAtPct charging should be enabled
       expect(charge.dischargingEnabled).toBe(true);
+   });
+
+   it('Should disable charging when recently full', async () => {
+      const {latterby, battery} = initialize({resumeChargeAtPct: 80, rechargeDelaySec: 0.05});
+      battery.stateOfCharge = 0.5;
+
+      // We're full (80% is full)
+      battery.stateOfCharge = 0.8;
+      let charge = latterby.getChargeDischargeInfo();
+      expect(charge.chargingEnabled).toBe(false);
+
+      // Back to not full
+      battery.stateOfCharge = 0.79;
+      charge = latterby.getChargeDischargeInfo();
+      // Since we were recently full, charging should be disabled
+      expect(charge.chargingEnabled).toBe(false);
+
+      // After waiting the recharge delay, charging should be enabled again
+      await sleep(100);
+      charge = latterby.getChargeDischargeInfo();
+      // Since we're just below resumeChargeAtPct charging should be enabled
+      expect(charge.chargingEnabled).toBe(true);
    });
 
    it('Should charge based on voltage on specified days', async () => {

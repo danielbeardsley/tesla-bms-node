@@ -30,7 +30,7 @@ describe("utils", () => {
    });
 
    describe("StickyBool", () => {
-      it("should start int the initial state", () => {
+      it("should start in the initial state", () => {
          let sb = new StickyBool(true, 1, 1);
          expect(sb.get()).toBe(true);
          sb = new StickyBool(false, 1, 1);
@@ -44,6 +44,7 @@ describe("utils", () => {
          sb.set(false);
          expect(sb.get()).toBe(true);
          await sleep(5);
+         sb.set(false);
          expect(sb.get()).toBe(false);
       });
 
@@ -53,8 +54,27 @@ describe("utils", () => {
          expect(sb.get()).toBe(false);
          sb.set(true);
          expect(sb.get()).toBe(false);
-         await sleep(5);
+         await sleep(6);
+         sb.set(true);
          expect(sb.get()).toBe(true);
+      });
+
+      it("should stick to a state as long as configured even when rapid cycling without getting", async () => {
+         const t = new StickyBool(true, 0, 0.005);
+         t.set(false);
+         t.set(true);
+         expect(t.get()).toBe(false);
+         await sleep(5);
+         t.set(true);
+         expect(t.get()).toBe(true);
+
+         const f = new StickyBool(false, 0.005, 0.005);
+         f.set(true);
+         f.set(false);
+         expect(f.get()).toBe(false);
+         await sleep(6);
+         f.set(false);
+         expect(f.get()).toBe(false);
       });
    });
 

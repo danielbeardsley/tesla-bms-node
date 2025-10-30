@@ -1,7 +1,8 @@
 import { BatteryI } from "../../battery/battery";
 import { Config } from "../../config";
 import { ChargingModule, ChargeParameters } from "./charging-module";
-import { ProtectedBool } from "../../utils";
+import { ProtectedBool, StickyBool } from "../../utils";
+import { inverterLogger } from '../../logger';
 
 /**
  * The name means nothing
@@ -12,12 +13,19 @@ import { ProtectedBool } from "../../utils";
 export class Latterby implements ChargingModule {
    private battery: BatteryI;
    private config: Config;
-   private chargeAllowed: ProtectedBool = new ProtectedBool(true);
-   private dischargeAllowed: ProtectedBool = new ProtectedBool(true);
+   private socChargeAllowed: ProtectedBool = new ProtectedBool(true);
+   private socDischargeAllowed: ProtectedBool = new ProtectedBool(true);
+   private timeChargeAllowed: StickyBool;
+   private timeDischargeAllowed: StickyBool;
 
    constructor(config: Config, battery: BatteryI) {
       this.battery = battery;
       this.config = config;
+      const rechargeDelaySec = this.myConfig().rechargeDelaySec;
+      // minTrueDurationS = 0 to allow immediate disabling when needed
+      // It's the disabling that we should make sticky.
+      this.timeChargeAllowed = new StickyBool(true, 0, rechargeDelaySec);
+      this.timeDischargeAllowed = new StickyBool(true, 0, rechargeDelaySec);
    }
 
    myConfig() {
@@ -37,17 +45,25 @@ export class Latterby implements ChargingModule {
          socPct >= config.stopChargeAtPct;
       const isEmpty = socPct <= config.stopDischargeAtPct;
 
-      this.chargeAllowed.update(!isFull, socPct <= config.resumeChargeAtPct);
-      this.dischargeAllowed.update(!isEmpty, socPct >= config.resumeDischargeAtPct);
+      this.socChargeAllowed.update(!isFull, socPct <= config.resumeChargeAtPct);
+      this.socDischargeAllowed.update(!isEmpty, socPct >= config.resumeDischargeAtPct);
 
-      const chargeEnabled = this.chargeAllowed.get();
-      const dischargeEnabled = this.dischargeAllowed.get();
+      this.timeChargeAllowed.set(this.socChargeAllowed.get());
+      this.timeDischargeAllowed.set(this.socDischargeAllowed.get());
+      const chargingEnabled = this.socChargeAllowed.get() && this.timeChargeAllowed.get();
+      const dischargingEnabled = this.socDischargeAllowed.get() && this.timeDischargeAllowed.get();
+
+      inverterLogger.info("Latterby: SOC:%d% timeCharge:%s socCharge:%s => charge:%s | timeDischarge:%s socDischarge:%s => discharge:%s",
+         socPct.toFixed(1),
+         this.timeChargeAllowed.get(), this.socChargeAllowed.get(), chargingEnabled,
+         this.timeDischargeAllowed.get(), this.socDischargeAllowed.get(), dischargingEnabled
+      );
 
       return {
-         chargeCurrentLimit: chargeEnabled ? this.config.battery.charging.maxAmps : 0,
+         chargeCurrentLimit: chargingEnabled ? this.config.battery.charging.maxAmps : 0,
          dischargeCurrentLimit: this.config.battery.discharging.maxAmps,
-         chargingEnabled: chargeEnabled,
-         dischargingEnabled: dischargeEnabled,
+         chargingEnabled,
+         dischargingEnabled,
       };
    }
 

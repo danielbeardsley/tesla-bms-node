@@ -47,7 +47,6 @@ export function orThrow<T>(arg: T|undefined): T {
  */
 export class StickyBool {
    private value: boolean;
-   private changePending: boolean = false;
    private lastChange: number;
    private minTrueDurationS: number;
    private minFalseDurationS: number;
@@ -60,20 +59,19 @@ export class StickyBool {
    }
 
    set(newValue: boolean) {
-      this.changePending = (newValue !== this.value);
-   }
-
-   get() {
-      if (this.changePending) {
+      const different = newValue !== this.value;
+      if (different) {
          const now = Date.now();
          const elapsedS = (now - this.lastChange) / 1000;
          const minDuration = this.value ? this.minTrueDurationS : this.minFalseDurationS;
          if (elapsedS >= minDuration) {
-            this.value = !this.value;
+            this.value = newValue;
             this.lastChange = now;
-            this.changePending = false;
          }
       }
+   }
+
+   get() {
       return this.value;
    }
 }
