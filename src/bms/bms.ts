@@ -154,6 +154,7 @@ class BMS {
                 dischargeCurrentLimit: Math.min(safeChargeInfo.dischargeCurrentLimit, chargeInfo.dischargeCurrentLimit),
                 chargingEnabled:    safeTemp && batteryInfoRecent && safeChargeInfo.chargingEnabled    && chargeInfo.chargingEnabled,
                 dischargingEnabled: safeTemp && batteryInfoRecent && safeChargeInfo.dischargingEnabled && chargeInfo.dischargingEnabled,
+                chargeFromGrid: false,
             });
         }
 
@@ -215,6 +216,7 @@ class BMS {
             dischargeCurrentLimit: Math.min(safeChargeInfo.dischargeCurrentLimit, chargeInfo.dischargeCurrentLimit),
             chargingEnabled:    safeTemp && batteryInfoRecent && safeChargeInfo.chargingEnabled    && chargeInfo.chargingEnabled,
             dischargingEnabled: safeTemp && batteryInfoRecent && safeChargeInfo.dischargingEnabled && chargeInfo.dischargingEnabled,
+            chargeFromGrid: false,
             _meta: {
                safeTemp,
                batteryInfoRecent,

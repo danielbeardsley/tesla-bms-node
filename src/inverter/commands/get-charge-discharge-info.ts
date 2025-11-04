@@ -10,6 +10,7 @@ export type ChargeInfo = {
    dischargeCurrentLimit: number;
    chargingEnabled: boolean;
    dischargingEnabled: boolean;
+   chargeFromGrid: boolean;
    _meta?: {
       [key: string]: boolean | number | object;
    };
@@ -27,7 +28,8 @@ export default {
          out.writeInt16BE(ampsToPylonAmps(data.dischargingEnabled ? -data.dischargeCurrentLimit : 0));
          out.writeUInt8(
             bit(7, data.chargingEnabled) |
-            bit(6, data.dischargingEnabled)
+            bit(6, data.dischargingEnabled) |
+            bit(3, data.chargeFromGrid)
          );
          logger.silly("Generated charge info packet: %s", out.toBuffer().toString('hex'));
          return generatePacket(address, ReturnCode.Normal, out.toBuffer());
