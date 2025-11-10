@@ -4,6 +4,7 @@ import { getTestConfig } from '../../test-config'
 import { FakeBattery } from '../fake-battery';
 import { Config } from "../../config";
 import { sleep } from '../../utils';
+import { StorageInterface, type StorageValues } from '../../storage';
 
 describe('Latterby Charging', () => {
    it('Should enable chaging based on SOc', async () => {
@@ -94,62 +95,117 @@ describe('Latterby Charging', () => {
       expect(charge.chargingEnabled).toBe(true);
    });
 
-   it('Should charge based on voltage on specified days', async () => {
+   it('Should charge to 100% if been longer than configured since a full charge', async () => {
       // Turn off the recharge delay so we can see effects immediately
-      const {latterby, latterbyConfig, battery} = initialize({rechargeDelaySec: 0});
+      const {latterby, latterbyConfig, battery} = initialize(
+         {rechargeDelaySec: 0, daysBetweenSynchronizations: 4},
+         {lastFullCharge: Date.now() - (3 * 24 * 60 * 60 * 1000)} // 3 days ago
+      );
+
+      const chargeInfo = () => latterby.getChargeDischargeInfo();
 
       battery.stateOfCharge = 0.5;
-      let charge = latterby.getChargeDischargeInfo();
       // 50% < 80% and this should enable charging
-      expect(charge.chargingEnabled).toBe(true);
+      expect(chargeInfo().chargingEnabled).toBe(true);
 
       battery.stateOfCharge = 0.9;
-      // Inlcude today in the list of days to do a synchronization charge
-      latterbyConfig.synchronizationDaysOfMonth = [new Date().getDate()];
-      // Sync charge == keep charging till we're above this voltage
-      battery.voltage = latterbyConfig.synchronizationVoltage - 1;
-      charge = latterby.getChargeDischargeInfo();
-      expect(charge.chargingEnabled).toBe(true);
+      // We're above the stopChargeAtPct, so charging should be disabled
+      expect(chargeInfo().chargingEnabled).toBe(false);
+      // Change this to be less than the time since last full charge
+      latterbyConfig.daysBetweenSynchronizations = 2
+      // Now we should be doing a synchronization charge, so charging should be
+      // enabled despote the SOC
+      expect(chargeInfo().chargingEnabled).toBe(true);
 
-      // Set a super-high SOC to prove we ignore it
-      battery.stateOfCharge = 1.5;
-      charge = latterby.getChargeDischargeInfo();
-      expect(charge.chargingEnabled).toBe(true);
-
-      // Charging should be disabled when we reach the sync voltage
-      battery.voltage = latterbyConfig.synchronizationVoltage;
-      charge = latterby.getChargeDischargeInfo();
-      expect(charge.chargingEnabled).toBe(false);
+      // Change this to be greater than the time since last full charge
+      latterbyConfig.daysBetweenSynchronizations = 10
+      // We should now disable charging again
+      expect(chargeInfo().chargingEnabled).toBe(false);
    });
 
-   it('Should cap the SOC on specified days', async () => {
+   it('Should detect full charge and report to storage', async () => {
       // Turn off the recharge delay so we can see effects immediately
-      const {latterby, latterbyConfig, battery} = initialize({rechargeDelaySec: 0});
+      const {latterby, latterbyConfig, battery, storage} = initialize({
+         synchronizationVoltage: 49,
+      });
+      battery.voltage = 48;
+
+      const chargeInfo = () => latterby.getChargeDischargeInfo();
+      let prevLastFullCharge = Number(storage.get().lastFullCharge);
+
+      battery.stateOfCharge = 0.5;
+      await sleep(10);
+      chargeInfo();
+      // Assert is isn't updated yet
+      expect(storage.get().lastFullCharge).toBe(prevLastFullCharge);
+
+      // SOC: 100% but voltage is still below sync voltage, so shouldn't be
+      // considered full
+      battery.stateOfCharge = 1;
+      await sleep(10);
+      chargeInfo();
+      expect(storage.get().lastFullCharge).toBe(prevLastFullCharge);
+
+      // SOC: 100% and voltage is now at sync voltage, so it should be
+      // considered full, and thus lastFullCharge should be updated
+      battery.stateOfCharge = 1;
+      battery.voltage = latterbyConfig.synchronizationVoltage;
+      await sleep(10);
+      chargeInfo();
+      expect(storage.get().lastFullCharge).toBeGreaterThan(prevLastFullCharge);
+      prevLastFullCharge = Number(storage.get().lastFullCharge);
+
+      // SOC below 100% while voltage is still at sync voltage, so shouldn't be
+      // considered full, and thus lastFullCharge shouldn't be updated
+      battery.stateOfCharge = 0.99;
+      battery.voltage = latterbyConfig.synchronizationVoltage;
+      await sleep(10);
+      chargeInfo();
+      expect(storage.get().lastFullCharge).toBe(prevLastFullCharge);
+   });
+
+
+   it('Should cap the SOC if a full charge is requested', async () => {
+      // Turn off the recharge delay so we can see effects immediately
+      const {latterby, latterbyConfig, battery} = initialize(
+         {rechargeDelaySec: 0, daysBetweenSynchronizations: 4},
+         {lastFullCharge: Date.now() - (3 * 24 * 60 * 60 * 1000)} // 3 days ago
+      );
 
       battery.stateOfCharge = 1;
-      let soc = latterby.getStateOfCharge();
-      // 90%  > 80% and this should disable charging
-      expect(soc).toBe(1);
+      expect(latterby.getStateOfCharge()).toBe(1);
 
-      // Inlcude today in the list of days to do a synchronization charge
-      latterbyConfig.synchronizationDaysOfMonth = [new Date().getDate()];
+      // Change this config so a full charge is requested
+      latterbyConfig.daysBetweenSynchronizations = 2
       battery.stateOfCharge = 1;
-      soc = latterby.getStateOfCharge();
-      expect(soc).toBe(0.99);
+      expect(latterby.getStateOfCharge()).toBe(0.99);
 
       // Set a super-high SOC to prove we ignore it
       battery.stateOfCharge = 1.5;
-      soc = latterby.getStateOfCharge();
-      expect(soc).toBe(0.99);
+      expect(latterby.getStateOfCharge()).toBe(0.99);
 
       // Charging should be disabled when we reach the sync voltage
       battery.stateOfCharge = 0.5;
-      soc = latterby.getStateOfCharge();
-      expect(soc).toBe(0.5);
+      expect(latterby.getStateOfCharge()).toBe(0.5);
    });
 });
 
-function initialize(latterbyConfigOverride: Partial<Config['bms']['chargingStrategy']['latterby']> = {}) {
+function initialize(
+   latterbyConfigOverride: Partial<Config['bms']['chargingStrategy']['latterby']> = {},
+   storageOverride: Partial<StorageValues> = {},
+) {
+   let storageValues = {
+      lastFullCharge: Date.now(),
+      ...storageOverride
+   } as StorageValues;
+   const storage = {
+      get: () => ({
+         ...storageValues,
+      }),
+      update: (values: Partial<StorageValues>) => {
+         storageValues = values
+      }
+   } as StorageInterface;
    const battery = new FakeBattery();
    battery.stateOfCharge = 0.5
    const config = getTestConfig();
@@ -159,10 +215,10 @@ function initialize(latterbyConfigOverride: Partial<Config['bms']['chargingStrat
          stopChargeAtPct: 80,
          resumeChargeAtPct: 70,
          rechargeDelaySec: 600,
-         synchronizationVoltage: 48,
-         synchronizationDaysOfMonth: [],
+         daysBetweenSynchronizations: 10,
+         synchronizationVoltage: 49,
          ...latterbyConfigOverride
    };
-   const latterby = new Latterby(config, battery);
-   return {latterby, config, latterbyConfig: config.bms.chargingStrategy.latterby, battery};
+   const latterby = new Latterby(config, battery, storage);
+   return {latterby, config, latterbyConfig: config.bms.chargingStrategy.latterby, battery, storage};
 }

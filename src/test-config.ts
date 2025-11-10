@@ -50,8 +50,8 @@ export function getTestConfig(): Config {
                   stopChargeAtPct: 80,
                   resumeChargeAtPct: 70,
                   rechargeDelaySec: 600,
-                  synchronizationVoltage: 49.2,
-                  synchronizationDaysOfMonth: [28,15]
+                  daysBetweenSynchronizations: 15,
+                  synchronizationVoltage: 49,
                 }
             },
         },

@@ -66,11 +66,10 @@ const ConfigSchema = z.object({
             // How long after reaching full charge do we allow charging again.
             // Tune this to prevent rapid cycling
             rechargeDelaySec: z.number().int().min(0),
-            // Occasionally charge up to this voltage to reset the shunt's
-            // internal SOC 100% point
+            // How often to charge the battery to 100% to sync the state of 
+            // of the shunt with reality
+            daysBetweenSynchronizations: z.number().int().min(1),
             synchronizationVoltage: z.number().min(0),
-            // Days of the month to perform a synchronization charge
-            synchronizationDaysOfMonth: z.array(z.number().int().min(1).max(31)),
          })),
       }),
    }),
