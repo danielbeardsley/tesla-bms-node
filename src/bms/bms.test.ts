@@ -10,13 +10,14 @@ import type { ChargeInfo } from '../inverter/commands/get-charge-discharge-info'
 import { HistoryColumns } from '../history/history';
 import { Downtime } from '../history/downtime';
 import { PacketStats } from '../comms/packet-stats';
+import { StorageInterface, type StorageValues } from '../storage';
 
 describe('BMS', () => {
     it('Should read from the battery immediately', async () => {
         const battery = new FakeBattery();
         const readAllSpy = vi.spyOn(battery, 'readAll');
         const inverter = getInverter();
-        const bms = new BMS(battery, inverter, getCanbusInverter(battery), getTestConfig());
+        const bms = new BMS(battery, inverter, getCanbusInverter(battery), getTestConfig(), fakeStorage());
         await bms.init();
         expect(readAllSpy).toHaveBeenCalled();
     });
@@ -30,7 +31,7 @@ describe('BMS', () => {
         const inverter = getInverter();
         config.bms.intervalS = 0;
 
-        const bms = new BMS(battery, inverter, getCanbusInverter(battery), config);
+        const bms = new BMS(battery, inverter, getCanbusInverter(battery), config, fakeStorage());
         await bms.init();
         readAll.mockClear();
         bms.start();
@@ -91,6 +92,7 @@ describe('BMS', () => {
                   "safeTemp": true,
                 },
                 "chargeCurrentLimit": 0,
+                "chargeFromGrid": false,
                 "chargeVoltLimit": 54.6,
                 "chargingEnabled": false,
                 "dischargeCurrentLimit": 100,
@@ -114,7 +116,7 @@ describe('BMS History', () => {
         battery.voltageRange = {min: 3.6, max: 3.7, spread: 0.1};
         battery.voltage = 48;
         battery.current = 2;
-        const bms = new BMS(battery, inverter, getCanbusInverter(battery), config);
+        const bms = new BMS(battery, inverter, getCanbusInverter(battery), config, fakeStorage());
         await bms.init();
         bms.start();
         // Let the BMs read the battery and store the history
@@ -231,7 +233,7 @@ async function getBmsWithCanbus() {
     const open = vi.spyOn(canbusInverter, 'open');
     const sendBatteryInfoToInverter = vi.spyOn(canbusInverter, 'sendBatteryInfoToInverter');
     config.inverter.canbusSerialPort.transmitIntervalMs = 0;
-    const bms = new BMS(battery, inverter, canbusInverter, config);
+    const bms = new BMS(battery, inverter, canbusInverter, config, fakeStorage());
     await bms.init();
     bms.start();
     return { bms, battery, inverter, canbusInverter, open, sendBatteryInfoToInverter };
@@ -243,7 +245,7 @@ async function getBmsResponse(inverterRequest: Packet) {
     const inverter = getInverter();
     const writePacket = vi.spyOn(inverter, 'writePacket');
     config.bms.intervalS = 0;
-    const bms = new BMS(battery, inverter, getCanbusInverter(battery), config);
+    const bms = new BMS(battery, inverter, getCanbusInverter(battery), config, fakeStorage());
     await bms.init();
     bms.start();
     // Let the BMs read the battery
@@ -260,5 +262,14 @@ function packetStats(total: number, bad: number) {
       total: [total],
       bad: [bad],
    };
+}
+
+function fakeStorage() {
+   return {
+      get: () => ({
+         lastFullCharge: Date.now(),
+      } as StorageValues),
+      update: (_values: Partial<StorageValues>) => {}
+   } as StorageInterface;
 }
 

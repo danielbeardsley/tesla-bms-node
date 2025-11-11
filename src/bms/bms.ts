@@ -18,6 +18,7 @@ import { Latterby } from './charging/latterby';
 import { BatterySafety } from './battery-safety';
 import { HistoryServer } from '../history/history-server';
 import { Downtime } from '../history/downtime';
+import { type StorageInterface } from '../storage';
 
 const BATTERY_ADDRESS = 2;
 
@@ -37,7 +38,7 @@ class BMS {
     }
     public readonly inverterRs485Downtime: Downtime;
 
-    constructor(battery: BatteryI, inverter: Inverter, canbusInverter: CanbusSerialPortI, config: Config) {
+    constructor(battery: BatteryI, inverter: Inverter, canbusInverter: CanbusSerialPortI, config: Config, storage: StorageInterface) {
         this.battery = battery;
         this.config = config;
         this.inverter = inverter;
@@ -49,7 +50,7 @@ class BMS {
         this.historyServer = new HistoryServer(this.history, battery, config, this);
         this.chargingModules = {
             voltageA: new VoltageA(config, battery),
-            latterby: new Latterby(config, battery),
+            latterby: new Latterby(config, battery, storage),
         };
         this.batterySafety = new BatterySafety(config, battery, 0.99);
         // RS485 messages typically come every 2 seconds
