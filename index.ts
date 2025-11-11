@@ -10,6 +10,7 @@ import { SerialPort } from 'serialport';
 import { VictronSmartShunt } from './src/battery/shunt';
 import { batteryLogger, inverterLogger, logger } from './src/logger';
 import { discoverModules } from './src/battery/tesla-module-factory';
+import { Storage } from './src/storage';
 
 async function getTeslaComms() {
    const config = getConfig();
@@ -70,10 +71,12 @@ async function getCanbusInverter(battery: Battery) {
 }
 
 async function main() {
+   const storage = new Storage('./storage.json');
+   await storage.load();
    const battery = getBattery();
    const inverter = getInverter();
    const canbusInverter = getCanbusInverter(await battery);
-   const bms = new BMS(await battery, await inverter, await canbusInverter, getConfig());
+   const bms = new BMS(await battery, await inverter, await canbusInverter, getConfig(), storage);
    await bms.init();
    await bms.start();
 }
