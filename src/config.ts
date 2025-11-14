@@ -70,6 +70,9 @@ const ConfigSchema = z.object({
             // of the shunt with reality
             daysBetweenSynchronizations: z.number().int().min(1),
             synchronizationVoltage: z.number().min(0),
+            // If solar doesn't give us a full charge after this many days,
+            // chagre to 100% from the grid.
+            chargeFromGridDelayDays: z.number().int().min(0).optional(),
          })),
       }),
    }),

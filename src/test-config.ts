@@ -52,6 +52,7 @@ export function getTestConfig(): Config {
                   rechargeDelaySec: 600,
                   daysBetweenSynchronizations: 15,
                   synchronizationVoltage: 49,
+                  chargeFromGridDelayDays: 1,
                 }
             },
         },

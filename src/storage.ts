@@ -54,6 +54,7 @@ export class Storage implements StorageInterface {
       if (deepEqual(newStorage, this.data)) {
          return Promise.resolve();
       }
+      this.data = newStorage;
       return writeJsonFile(this.filename, this.data);
    }
 }
