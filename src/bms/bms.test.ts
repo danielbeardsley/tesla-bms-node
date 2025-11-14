@@ -172,6 +172,9 @@ describe('BMS History', () => {
             stateOfCharge: 0,
             modulesInSeries: [[0,1]],
             timeSinceInverterComms: null,
+            storage: {
+               lastFullCharge: expect.any(Number),
+            },
             downtime: null,
             history: null,
             shunt: {},

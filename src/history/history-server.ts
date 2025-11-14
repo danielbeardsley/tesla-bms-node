@@ -3,6 +3,7 @@ import { History } from "./history";
 import express, { Request, Response, Application } from 'express';
 import { BatteryI } from "../battery/battery";
 import { BMS } from "../bms/bms";
+import { StorageInterface } from "../storage";
 
 export class HistoryServer {
    private history: History;
@@ -11,13 +12,15 @@ export class HistoryServer {
    private app: Application;
    private bms: BMS;
    private server: ReturnType<Application['listen']>|null = null;
+   private storage: StorageInterface;
 
-    constructor(history: History, battery: BatteryI, config: Config, bms: BMS) {
+   constructor(history: History, battery: BatteryI, config: Config, bms: BMS, storage: StorageInterface) {
       this.history = history;
       this.battery = battery;
       this.config = config;
       this.app = express();
       this.bms = bms;
+      this.storage = storage;
       this.init();
    }
 
@@ -58,6 +61,7 @@ export class HistoryServer {
             },
             history: this.history.getValues(historyLimit),
             shunt: this.battery.shunt.getAllData(),
+            storage: this.storage.get(),
          };
          res.json(response);
       });
