@@ -1,8 +1,7 @@
 import { z } from "zod";
-import { loadJsonFile } from "load-json-file";
-import { writeJsonFile } from "write-json-file";
 import deepEqual from 'fast-deep-equal';
 import { logger } from "./logger";
+import { promises as fsPromises } from 'node:fs';
 
 const StorageSchema = z.object({
    lastFullCharge: z.optional(z.number()),
@@ -57,4 +56,14 @@ export class Storage implements StorageInterface {
       this.data = newStorage;
       return writeJsonFile(this.filename, this.data);
    }
+}
+
+function writeJsonFile(path: string, obj: object) {
+  const json = JSON.stringify(obj, null, 2); // pretty-print
+  return fsPromises.writeFile(path, json, "utf8");
+}
+
+async function loadJsonFile(path: string) {
+  const data = await fsPromises.readFile(path, "utf8");
+  return JSON.parse(data);
 }
