@@ -62,6 +62,7 @@ export class HistoryServer {
             history: this.history.getValues(historyLimit),
             shunt: this.battery.shunt.getAllData(),
             storage: this.storage.get(),
+            ...this.history.snapshotState,
          };
          res.json(response);
       });
