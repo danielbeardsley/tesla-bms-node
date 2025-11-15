@@ -147,14 +147,17 @@ class BMS {
             const strategy = this.chargingModules[chargingStrategyName];
             const chargeInfo = strategy.getChargeDischargeInfo();
 
+            const chargingEnabled    = safeTemp && batteryInfoRecent && safeChargeInfo.chargingEnabled    && chargeInfo.chargingEnabled;
+            const dischargingEnabled = safeTemp && batteryInfoRecent && safeChargeInfo.dischargingEnabled && chargeInfo.dischargingEnabled;
+
             responsePacket = GetChargeDischargeInfo.Response.generate(packet.address, {
                 chargeVoltLimit: this.config.battery.charging.maxVolts,
                 dischargeVoltLimit: this.config.battery.discharging.minVolts,
                 chargeCurrentLimit: Math.min(safeChargeInfo.chargeCurrentLimit, chargeInfo.chargeCurrentLimit),
                 dischargeCurrentLimit: Math.min(safeChargeInfo.dischargeCurrentLimit, chargeInfo.dischargeCurrentLimit),
-                chargingEnabled:    safeTemp && batteryInfoRecent && safeChargeInfo.chargingEnabled    && chargeInfo.chargingEnabled,
-                dischargingEnabled: safeTemp && batteryInfoRecent && safeChargeInfo.dischargingEnabled && chargeInfo.dischargingEnabled,
-                chargeFromGrid: false,
+                chargingEnabled,
+                dischargingEnabled,
+                chargeFromGrid: Boolean(chargeInfo.chargeFromGrid) && chargingEnabled,
             });
         }
 
@@ -216,7 +219,7 @@ class BMS {
             dischargeCurrentLimit: Math.min(safeChargeInfo.dischargeCurrentLimit, chargeInfo.dischargeCurrentLimit),
             chargingEnabled:    safeTemp && batteryInfoRecent && safeChargeInfo.chargingEnabled    && chargeInfo.chargingEnabled,
             dischargingEnabled: safeTemp && batteryInfoRecent && safeChargeInfo.dischargingEnabled && chargeInfo.dischargingEnabled,
-            chargeFromGrid: false,
+            chargeFromGrid: Boolean(chargeInfo.chargeFromGrid),
             _meta: {
                safeTemp,
                batteryInfoRecent,

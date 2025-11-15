@@ -67,12 +67,24 @@ export class Latterby implements ChargingModule {
          dischargeCurrentLimit: this.config.battery.discharging.maxAmps,
          chargingEnabled,
          dischargingEnabled,
+         chargeFromGrid: this.needsGridCharge(),
       };
    }
 
    needsFullCharge(): boolean {
       const sinceLastFullCharge = Date.now() - (this.storage.get().lastFullCharge || 0);
       return sinceLastFullCharge >= this.myConfig().daysBetweenSynchronizations * 24 * 60 * 60 * 1000;
+   }
+
+   needsGridCharge(): boolean {
+      const sinceLastFullCharge = Date.now() - (this.storage.get().lastFullCharge || 0);
+      const config = this.myConfig();
+      const gridDelayDays = config.chargeFromGridDelayDays;
+      if (gridDelayDays === undefined) {
+         return false;
+      }
+      const daysBeforeGridCharge = gridDelayDays + config.daysBetweenSynchronizations;
+      return sinceLastFullCharge >= daysBeforeGridCharge * 24 * 60 * 60 * 1000;
    }
 
    getStateOfCharge(): number {

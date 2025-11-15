@@ -3,6 +3,7 @@ export type ChargeParameters = {
    dischargeCurrentLimit: number;
    chargingEnabled: boolean;
    dischargingEnabled: boolean;
+   chargeFromGrid?: boolean;
 };
 
 export interface ChargingModule {

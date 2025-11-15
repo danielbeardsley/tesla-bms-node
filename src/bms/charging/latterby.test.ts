@@ -123,6 +123,37 @@ describe('Latterby Charging', () => {
       expect(chargeInfo().chargingEnabled).toBe(false);
    });
 
+   it('Should charge to 100% via grid when configured to', async () => {
+      // Turn off the recharge delay so we can see effects immediately
+      const {latterby, latterbyConfig, battery} = initialize(
+         {rechargeDelaySec: 0, daysBetweenSynchronizations: 5, chargeFromGridDelayDays: 2},
+         {lastFullCharge: Date.now() - (3 * 24 * 60 * 60 * 1000)} // 4 days ago
+      );
+
+      const chargeInfo = () => latterby.getChargeDischargeInfo();
+
+      battery.stateOfCharge = 0.9;
+      // We're above the stopChargeAtPct, so charging should be disabled
+      expect(chargeInfo().chargingEnabled).toBe(false);
+      // Change this to be less than the time since last full charge
+      latterbyConfig.daysBetweenSynchronizations = 2
+      // Now we should be doing a synchronization charge, so charging should be
+      // enabled despite the SOC, but not from the grid yet.
+      expect(chargeInfo().chargingEnabled).toBe(true);
+      expect(chargeInfo().chargeFromGrid).toBe(false);
+
+      // Change this so that we're past the grid charge delay
+      latterbyConfig.daysBetweenSynchronizations = 0
+      // Now we should be doing a synchronization charge from the grid
+      expect(chargeInfo().chargingEnabled).toBe(true);
+      expect(chargeInfo().chargeFromGrid).toBe(true);
+      // Change this to be greater than the time since last full charge
+      latterbyConfig.daysBetweenSynchronizations = 10
+      // We should now disable charging again
+      expect(chargeInfo().chargingEnabled).toBe(false);
+      expect(chargeInfo().chargeFromGrid).toBe(false);
+   });
+
    it('Should detect full charge and report to storage', async () => {
       // Turn off the recharge delay so we can see effects immediately
       const {latterby, latterbyConfig, battery, storage} = initialize({
