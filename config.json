@@ -48,7 +48,8 @@
             "resumeChargeAtPct": 78,
             "rechargeDelaySec": 600,
             "synchronizationVoltage": 49.2,
-            "synchronizationDaysOfMonth": [1,15]
+            "daysBetweenSynchronizations": 30,
+            "chargeFromGridDelayDays": 5,
          }
       }
    },
