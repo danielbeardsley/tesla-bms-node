@@ -99,7 +99,6 @@ class BMS {
         inverterLogger.verbose('Received packet (%s): %j', commandText, packet);
         let responsePacket: Buffer|null = null;
         const modules = Object.values(this.battery.modules);
-        const batteryInfoRecent = Date.now() - this.battery.getLastUpdateDate() < this.config.bms.batteryRecencyLimitS * 1000;
 
         if (packet.command === Command.GetBatteryValues) {
             const chargingStrategyName = this.config.bms.chargingStrategy.name;
@@ -133,32 +132,8 @@ class BMS {
             });
 
         } else if (packet.command === Command.GetChargeDischargeInfo) {
-            const tempRange = this.battery.getTemperatureRange();
-            const safeTemp = this.battery.isTemperatureSafe();
-
-            inverterLogger.silly("Battery temp range: %d - %d", tempRange.min, tempRange.max);
-            if (!safeTemp) {
-                inverterLogger.warn("Battery temperature out of range (%d - %d), battery disabled", this.config.battery.safety.lowTempCutoffC, this.config.battery.safety.highTempCutoffC);
-            }
-
-            const safeChargeInfo = this.batterySafety.getChargeDischargeInfo();
-
-            const chargingStrategyName = this.config.bms.chargingStrategy.name;
-            const strategy = this.chargingModules[chargingStrategyName];
-            const chargeInfo = strategy.getChargeDischargeInfo();
-
-            const chargingEnabled    = safeTemp && batteryInfoRecent && safeChargeInfo.chargingEnabled    && chargeInfo.chargingEnabled;
-            const dischargingEnabled = safeTemp && batteryInfoRecent && safeChargeInfo.dischargingEnabled && chargeInfo.dischargingEnabled;
-
-            responsePacket = GetChargeDischargeInfo.Response.generate(packet.address, {
-                chargeVoltLimit: this.config.battery.charging.maxVolts,
-                dischargeVoltLimit: this.config.battery.discharging.minVolts,
-                chargeCurrentLimit: Math.min(safeChargeInfo.chargeCurrentLimit, chargeInfo.chargeCurrentLimit),
-                dischargeCurrentLimit: Math.min(safeChargeInfo.dischargeCurrentLimit, chargeInfo.dischargeCurrentLimit),
-                chargingEnabled,
-                dischargingEnabled,
-                chargeFromGrid: Boolean(chargeInfo.chargeFromGrid) && chargingEnabled,
-            });
+            const chargeInfo = this.getChargeDischargeInfo();
+            responsePacket = GetChargeDischargeInfo.Response.generate(packet.address, chargeInfo);
         }
 
         if (responsePacket) {
@@ -206,24 +181,34 @@ class BMS {
     private getChargeDischargeInfo(): ChargeInfo {
         const batteryInfoRecent = Date.now() - this.battery.getLastUpdateDate() < this.config.bms.batteryRecencyLimitS * 1000;
         const safeTemp = this.battery.isTemperatureSafe();
+        const tempRange = this.battery.getTemperatureRange();
+
+        inverterLogger.silly("Battery temp range: %d - %d", tempRange.min, tempRange.max);
+        if (!safeTemp) {
+           inverterLogger.warn("Battery temperature out of range (%d - %d), battery disabled", this.config.battery.safety.lowTempCutoffC, this.config.battery.safety.highTempCutoffC);
+        }
 
         const safeChargeInfo = this.batterySafety.getChargeDischargeInfo();
 
         const chargingStrategyName = this.config.bms.chargingStrategy.name;
         const strategy = this.chargingModules[chargingStrategyName];
         const chargeInfo = strategy.getChargeDischargeInfo();
+
+        const chargingEnabled    = safeTemp && batteryInfoRecent && safeChargeInfo.chargingEnabled    && chargeInfo.chargingEnabled;
+        const dischargingEnabled = safeTemp && batteryInfoRecent && safeChargeInfo.dischargingEnabled && chargeInfo.dischargingEnabled;
+
         return {
             chargeVoltLimit: this.config.battery.charging.maxVolts,
             dischargeVoltLimit: this.config.battery.discharging.minVolts,
             chargeCurrentLimit: Math.min(safeChargeInfo.chargeCurrentLimit, chargeInfo.chargeCurrentLimit),
             dischargeCurrentLimit: Math.min(safeChargeInfo.dischargeCurrentLimit, chargeInfo.dischargeCurrentLimit),
-            chargingEnabled:    safeTemp && batteryInfoRecent && safeChargeInfo.chargingEnabled    && chargeInfo.chargingEnabled,
-            dischargingEnabled: safeTemp && batteryInfoRecent && safeChargeInfo.dischargingEnabled && chargeInfo.dischargingEnabled,
-            chargeFromGrid: Boolean(chargeInfo.chargeFromGrid),
+            chargingEnabled,
+            dischargingEnabled,
+            chargeFromGrid: Boolean(chargeInfo.chargeFromGrid) && chargingEnabled,
             _meta: {
-               safeTemp,
-               batteryInfoRecent,
-               safeChargeInfo,
+                safeTemp,
+                batteryInfoRecent,
+                safeChargeInfo,
             }
         };
     }
