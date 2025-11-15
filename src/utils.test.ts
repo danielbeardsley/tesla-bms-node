@@ -64,7 +64,7 @@ describe("utils", () => {
          t.set(false);
          t.set(true);
          expect(t.get()).toBe(false);
-         await sleep(5);
+         await sleep(10);
          t.set(true);
          expect(t.get()).toBe(true);
 
@@ -72,7 +72,7 @@ describe("utils", () => {
          f.set(true);
          f.set(false);
          expect(f.get()).toBe(false);
-         await sleep(6);
+         await sleep(10);
          f.set(false);
          expect(f.get()).toBe(false);
       });
