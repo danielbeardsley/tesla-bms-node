@@ -197,7 +197,7 @@ class BMS {
         const chargingEnabled    = safeTemp && batteryInfoRecent && safeChargeInfo.chargingEnabled    && chargeInfo.chargingEnabled;
         const dischargingEnabled = safeTemp && batteryInfoRecent && safeChargeInfo.dischargingEnabled && chargeInfo.dischargingEnabled;
 
-        return {
+        const result = {
             chargeVoltLimit: this.config.battery.charging.maxVolts,
             dischargeVoltLimit: this.config.battery.discharging.minVolts,
             chargeCurrentLimit: Math.min(safeChargeInfo.chargeCurrentLimit, chargeInfo.chargeCurrentLimit),
@@ -211,6 +211,14 @@ class BMS {
                 safeChargeInfo,
             }
         };
+
+        this.history.updateSnapshotState({
+           chargeSafety: safeChargeInfo,
+           chargeModule: chargeInfo,
+           chargeResult: result,
+        });
+
+        return result;
     }
 
 

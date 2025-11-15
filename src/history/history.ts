@@ -1,3 +1,6 @@
+import { type ChargeParameters } from '../bms/charging/charging-module';
+import { type ChargeInfo } from '../inverter/commands/get-charge-discharge-info';
+
 export type HistoryColumns = {
    batteryVolts: number[];
    batteryAmps: number[];
@@ -50,9 +53,16 @@ type HistoryRecord = {
    };
 }
 
+type SnapshotData = {
+   chargeSafety?: ChargeParameters;
+   chargeModule?: ChargeParameters;
+   chargeResult?: ChargeInfo;
+}
+
 export class History {
    public timestamps: number[];
    public values: HistoryColumns;
+   public snapshotState: SnapshotData;
    private samplesCollected: number = 0;
    private index: number;
    private samplesToKeep: number;
@@ -86,6 +96,7 @@ export class History {
             bad: empty(),
          },
       };
+      this.snapshotState = {};
       this.index = 0;
    }
 
@@ -109,6 +120,10 @@ export class History {
       this.values.canbus.total[this.index] = values.canbus.total;
       this.values.canbus.bad[this.index] = values.canbus.bad;
       this.index = (this.index + 1) % this.samplesToKeep;
+   }
+
+   public updateSnapshotState(data: SnapshotData) {
+      this.snapshotState = data;
    }
 
    public getValues(count?: number) {
