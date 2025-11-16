@@ -2,6 +2,7 @@ import { z } from "zod";
 import deepEqual from 'fast-deep-equal';
 import { logger } from "./logger";
 import { promises as fsPromises } from 'node:fs';
+import { dirname } from 'node:path';
 
 const StorageSchema = z.object({
    lastFullCharge: z.optional(z.number()),
@@ -23,7 +24,8 @@ export class Storage implements StorageInterface {
       this.filename = storageFilename;
    }
 
-   load() {
+   async load() {
+      await validateAccess(this.filename);
       return loadJsonFile(this.filename)
       .then((json) => {
          this.data = StorageSchema.parse(json);
@@ -61,6 +63,22 @@ export class Storage implements StorageInterface {
 function writeJsonFile(path: string, obj: object) {
   const json = JSON.stringify(obj, null, 2); // pretty-print
   return fsPromises.writeFile(path, json, "utf8");
+}
+
+async function validateAccess(path: string) {
+  // Assert we can read and write the path
+   const requiredPerms = fsPromises.constants.W_OK | fsPromises.constants.R_OK;
+   return fsPromises.access(path, requiredPerms)
+      .then(
+         () => Promise.resolve(),
+         (err) => {
+            // If the file doesn't exist, check that we can access the directory
+            if (err.code === 'ENOENT') {
+               return fsPromises.access(dirname(path), requiredPerms)
+            }
+            throw err;
+         }
+      );
 }
 
 async function loadJsonFile(path: string) {

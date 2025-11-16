@@ -29,4 +29,16 @@ describe("storage", () => {
       await storageLoad.load();
       expect(storageLoad.get()).toStrictEqual({lastFullCharge: 1234});
    });
+
+   it("should throw when reading a file it can't write", async () => {
+      const storageNotWritable = new Storage('/root.json');
+      await expect(storageNotWritable.load()).rejects.toBeInstanceOf(Error);
+   });
+
+   it("should not throw when reading a file that doesn't exist", async () => {
+      const dir = await createTempDir();
+      const filename = path.join(dir, "missing.json");
+      const storageMissing = new Storage(filename);
+      await expect(storageMissing.load()).resolves.toBeUndefined();
+   });
 });
