@@ -47,7 +47,7 @@
             "stopChargeAtPct": 80,
             "resumeChargeAtPct": 78,
             "rechargeDelaySec": 600,
-            "synchronizationVoltage": 49.2,
+            "synchronizationVoltage": 48.8,
             "daysBetweenSynchronizations": 30,
             "chargeFromGridDelayDays": 5
          }
