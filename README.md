@@ -6,33 +6,17 @@ when to charge and discharge the battery.
 
 ### TODO
 * Functionality
-   * Discharge
-      * Allow switching charge contrller implementations
-      * Try to compute real voltage using discharge current from the inverter
-        and the current voltage
-   * Charge
-      * Charge at a higer voltage and stop when the current reaches some
-        smaller amount (or the cells are at some voltage)
-   * Alarms
-      * Add alarms for over voltage, under voltage, over current, etc
-      * Figure out if the alarms are really warnings, or if they cause
-        the inverter to shut down the output
-   * Visualize the charge routine in some way for tweaking and debugging
-
-* Tests to add or improve
-   * Battery
-      * Finish describing interface in BatteryI
-   * BMS
-      * Mock the BatteryI interface and test and assert the actions
-        taken or responses to pylon packets
-   * Mock the RS485 comms over the serial port
-      * Assert the correct pylon packets are sent and received
-
-* Reporting
-   * Current Values
-      * Expose lots of the current state via a json API
-   * History
-      * Decide how and where to store the history of the battery state
-      * Decide how and where to store the history of the inverter state
-   * Logging
-      * Ensure errors easily identified in the logs, all using logger.error()
+   * Allow scheduling discharge allowed time (i.e. 3pm -> 8am)
+      * This enables saving up solar shifting load to off-peak times
+   * Figure out a way of allowing to dig deeper into the battery SOC if we have
+     a power outage
+      * i.e. normally keep it between 30% and 80%, but if we have a power outage,
+        allow going down to 10% to extend the time we have power
+      * In the winter we have less solar and so spend most of the time at the
+        bottom of the capacity range, so being able to dig deeper would be useful
+      * Possibly detect power outage by listening for inverter packets over the
+        wifi network?
+        * CON: wifi down would be indistinguishable from power outage though
+        * PRO: simple
+      * Maybe just allow extending capacity range manually via the API for some
+        period of time?
