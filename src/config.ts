@@ -63,6 +63,12 @@ const ConfigSchema = z.object({
             stopDischargeAtPct: z.number().min(0).max(100),
             // Resume discharging when battery rises to this %
             resumeDischargeAtPct: z.number().min(0).max(100),
+            // If set, add an additional constraint and only resume charging
+            // after this time of day. Military time in the local timezon like "15:45"
+            disableDischargeTimeRange: z.optional(z.object({
+               from: z.string().regex(/\d\d:\d\d/),
+               to: z.string().regex(/\d\d:\d\d/),
+            })),
             // How long after reaching full charge do we allow charging again.
             // Tune this to prevent rapid cycling
             rechargeDelaySec: z.number().int().min(0),

@@ -52,12 +52,13 @@ export class Latterby implements ChargingModule {
       this.timeChargeAllowed.set(this.socChargeAllowed.get());
       this.timeDischargeAllowed.set(this.socDischargeAllowed.get());
       const chargingEnabled = this.needsFullCharge() || (this.socChargeAllowed.get() && this.timeChargeAllowed.get());
-      const dischargingEnabled = this.socDischargeAllowed.get() && this.timeDischargeAllowed.get();
+      const dischargingEnabled = this.socDischargeAllowed.get() && this.timeDischargeAllowed.get() && this.dischargeAllowedByTime();
 
-      inverterLogger.info("Latterby: SOC:%d% needsFullCharge:%s timeCharge:%s socCharge:%s => charge:%s | timeDischarge:%s socDischarge:%s => discharge:%s",
+      inverterLogger.info(
+         "Latterby: SOC:%d% needsFullCharge:%s timeCharge:%s socCharge:%s => charge:%s | timeDelayDischarge:%s socDischarge:%s timeDisableDischarge:%s => discharge:%s",
          socPct.toFixed(1),
          this.needsFullCharge(), this.timeChargeAllowed.get(), this.socChargeAllowed.get(), chargingEnabled,
-         this.timeDischargeAllowed.get(), this.socDischargeAllowed.get(), dischargingEnabled,
+         this.timeDischargeAllowed.get(), this.socDischargeAllowed.get(), this.dischargeAllowedByTime(), dischargingEnabled,
       );
 
       this.detectFullCharge();
@@ -85,6 +86,17 @@ export class Latterby implements ChargingModule {
       }
       const daysBeforeGridCharge = gridDelayDays + config.daysBetweenSynchronizations;
       return sinceLastFullCharge >= daysBeforeGridCharge * 24 * 60 * 60 * 1000;
+   }
+
+   dischargeAllowedByTime(): boolean {
+      const range = this.myConfig().disableDischargeTimeRange;
+      if (!range) {
+         return true;
+      }
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const t = new Date();
+      const current = `${pad(t.getHours())}:${pad(t.getMinutes())}`;
+      return current < range.from || current > range.to;
    }
 
    getStateOfCharge(): number {

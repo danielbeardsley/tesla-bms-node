@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { vi, describe, it, expect, onTestFinished } from 'vitest';
 import { Latterby } from './latterby';
 import { getTestConfig } from '../../test-config'
 import { FakeBattery } from '../fake-battery';
@@ -71,6 +71,43 @@ describe('Latterby Charging', () => {
       charge = latterby.getChargeDischargeInfo();
       // Since we're just above resumeDischargeAtPct charging should be enabled
       expect(charge.dischargingEnabled).toBe(true);
+   });
+
+   it('Should resume discharging past a certain time when configured', async () => {
+      vi.useFakeTimers();
+      onTestFinished(() => {vi.useRealTimers()});
+      const {latterby, battery} = initialize({
+         rechargeDelaySec: 0,
+         disableDischargeTimeRange: {
+            from: "08:00",
+            to: "15:00",
+         },
+         stopDischargeAtPct: 30,
+         resumeDischargeAtPct: 35,
+      });
+      function assertDischargeAllowed(expected: boolean) {
+         const charge = latterby.getChargeDischargeInfo();
+         expect(charge.dischargingEnabled).toBe(expected);
+      }
+
+      function setTime(time: string) {
+         vi.setSystemTime(new Date(`2024-01-01T${time}:00`));
+      }
+
+      setTime('05:00');
+      battery.stateOfCharge = 0.2;
+      assertDischargeAllowed(false);
+
+      // Above resumeDischargeAtPct
+      battery.stateOfCharge = 0.40;
+      assertDischargeAllowed(true);
+      // Time when discharge disallowed
+      setTime('10:00');
+      assertDischargeAllowed(false);
+
+      // After disallowed time
+      setTime('16:00');
+      assertDischargeAllowed(true);
    });
 
    it('Should disable charging when recently full', async () => {
