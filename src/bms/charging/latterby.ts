@@ -55,7 +55,7 @@ export class Latterby implements ChargingModule {
       const dischargingEnabled = this.socDischargeAllowed.get() && this.timeDischargeAllowed.get() && this.dischargeAllowedByTime();
 
       inverterLogger.info(
-         "Latterby: SOC:%d% needsFullCharge:%s timeCharge:%s socCharge:%s => charge:%s | timeDelayDischarge:%s socDischarge:%s timeDisableDischarge:%s => discharge:%s",
+         "Latterby: SOC:%d% needsFullCharge:%s timeCharge:%s socCharge:%s => charge:%s | timeDelayDischarge:%s socDischarge:%s timeOfDayDischarge:%s => discharge:%s",
          socPct.toFixed(1),
          this.needsFullCharge(), this.timeChargeAllowed.get(), this.socChargeAllowed.get(), chargingEnabled,
          this.timeDischargeAllowed.get(), this.socDischargeAllowed.get(), this.dischargeAllowedByTime(), dischargingEnabled,
