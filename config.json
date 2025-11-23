@@ -46,6 +46,10 @@
             "resumeDischargeAtPct": 32,
             "stopChargeAtPct": 80,
             "resumeChargeAtPct": 78,
+            "disableDischargeTimeRange": {
+               "from": "07:00",
+               "to": "15:00"
+            },
             "rechargeDelaySec": 600,
             "synchronizationVoltage": 48.8,
             "daysBetweenSynchronizations": 30,
