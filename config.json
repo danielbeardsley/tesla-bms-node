@@ -42,8 +42,8 @@
             "maxCellVoltBuffer": 0.05
          },
          "latterby": {
-            "stopDischargeAtPct": 30,
-            "resumeDischargeAtPct": 32,
+            "stopDischargeAtPct": 20,
+            "resumeDischargeAtPct": 25,
             "stopChargeAtPct": 80,
             "resumeChargeAtPct": 78,
             "rechargeDelaySec": 600,
