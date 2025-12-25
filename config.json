@@ -10,8 +10,8 @@
          "downtimeS": 10
       },
       "balance": {
-         "cellVDiffMax": 0.01,
-         "onlyAbove": 3.7
+         "cellVDiffMax": 0.02,
+         "onlyAbove": 3.4
       },
       "charging": {
          "maxAmps": 280,
