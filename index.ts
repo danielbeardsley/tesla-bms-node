@@ -72,7 +72,10 @@ async function getCanbusInverter(battery: Battery) {
 }
 
 async function main() {
-   setupResetButton();
+   const config = getConfig();
+   if (config.resetButton) {
+      setupResetButton(config.resetButton);
+   }
    const storage = new Storage('./storage.json');
    await storage.load();
    const battery = getBattery();

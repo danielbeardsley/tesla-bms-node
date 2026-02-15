@@ -57,6 +57,10 @@
       "samplesToKeep": 1000,
       "httpPort": 8080
    },
+   "resetButton": {
+      "gpioPin": 17,
+      "holdTimeS": 3
+   },
    "inverter": {
       "serialPort": {
          "deviceName": "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_BG0106Q6-if00-port0",

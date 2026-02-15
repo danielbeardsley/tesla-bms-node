@@ -86,6 +86,10 @@ const ConfigSchema = z.object({
       samplesToKeep: z.number().int().min(1),
       httpPort: z.number().int().min(0).max(65535).optional(),
    }),
+   resetButton: z.optional(z.object({
+      gpioPin: z.number().int().min(0).max(27),
+      holdTimeS: z.number().min(0.5).max(30),
+   })),
    inverter: z.object({
       serialPort: z.object({
          deviceName: z.string().min(1),
