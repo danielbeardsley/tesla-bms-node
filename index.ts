@@ -11,6 +11,7 @@ import { VictronSmartShunt } from './src/battery/shunt';
 import { batteryLogger, inverterLogger, logger } from './src/logger';
 import { discoverModules } from './src/battery/tesla-module-factory';
 import { Storage } from './src/storage';
+import { setupResetButton } from './src/gpio-reset';
 
 async function getTeslaComms() {
    const config = getConfig();
@@ -71,6 +72,7 @@ async function getCanbusInverter(battery: Battery) {
 }
 
 async function main() {
+   setupResetButton();
    const storage = new Storage('./storage.json');
    await storage.load();
    const battery = getBattery();
