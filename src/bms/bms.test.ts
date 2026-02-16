@@ -161,11 +161,13 @@ describe('BMS History', () => {
                 {
                     cellVoltages: [3.7, 3.7, 3.7, 3.7, 3.7, 3.7],
                     temperatures: [21, 21, 21, 21, 21, 21, 21],
+                    balancing: [false, false, false, false, false, false],
                     id: 1,
                 },
                 {
                     cellVoltages: [3.7, 3.7, 3.7, 3.7, 3.7, 3.7],
                     temperatures: [21, 21, 21, 21, 21, 21, 21],
+                    balancing: [false, false, false, false, false, false],
                     id: 2,
                 }
             ],

@@ -49,6 +49,7 @@ export class HistoryServer {
                id: module.getId(),
                cellVoltages: module.cellVoltages,
                temperatures: module.temperatures,
+               balancing: module.balancing,
             })),
             modulesInSeries: this.config.battery.modulesInSeries,
             timeSinceInverterComms: Math.round(this.bms.getTimeSinceInverterComms()),
