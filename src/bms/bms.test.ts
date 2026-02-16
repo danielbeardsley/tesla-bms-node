@@ -107,6 +107,25 @@ describe('BMS', () => {
 });
 
 describe('BMS History', () => {
+    it('Should expose module balancing state in /current', async () => {
+        const config = getTestConfig();
+        const port = config.history.httpPort = 8090;
+        const inverter = getInverter();
+        const battery = new FakeBattery();
+        battery.modules[1].balancing = [false, false, true, true, false, false];
+        const bms = new BMS(battery, inverter, getCanbusInverter(battery), config, fakeStorage());
+        await bms.init();
+        bms.start();
+        await sleep(0);
+        const result = await fetch(`http://127.0.0.1:${port}/current`);
+        const current = await result.json() as { modules: { id: number, balancing: boolean[] }[] };
+        const module1 = current.modules.find(m => m.id === 1)!;
+        const module2 = current.modules.find(m => m.id === 2)!;
+        expect(module1.balancing).toEqual([false, false, true, true, false, false]);
+        expect(module2.balancing).toEqual([false, false, false, false, false, false]);
+        bms.stop();
+    });
+
     it('Should serve history recordings', async () => {
         const config = getTestConfig();
         const port = config.history.httpPort = 8089;
