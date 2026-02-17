@@ -244,7 +244,11 @@ class BMS {
             await this.battery.stopBalancing();
             await this.battery.readAll();
             const range = this.battery.getCellVoltageRange();
-            await this.battery.balance(this.config.bms.intervalS);
+            // Set this to slightly less than the measurement interval
+            // so balancing ends a bit before the next measurement,
+            // giving the cells a chance to settle so we get a truer voltage
+            const secondsToBalance = this.config.bms.intervalS * 0.9;
+            await this.battery.balance(secondsToBalance);
             batteryLogger.verbose(`Cell voltage spread:${(range.spread*1000).toFixed(0)}mV range: ${range.min.toFixed(3)}V - ${range.max.toFixed(3)}V`);
         } finally {
             this.recordHistory();
