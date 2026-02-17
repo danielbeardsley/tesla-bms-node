@@ -32,6 +32,7 @@ export enum Registers {
 export interface BatteryModuleI {
    cellVoltages: number[];
    temperatures: number[];
+   balancing: boolean[];
    sleep(): Promise<void>;
    readStatus(): Promise<void>;
    readValues(): Promise<void>;
@@ -61,6 +62,7 @@ class TeslaModule implements BatteryModuleI {
    public faults!: BQFaults;
    public covFaults!: number;
    public cuvFaults!: number;
+   public balancing: boolean[] = new Array(6).fill(false);
    public lastUpdate: number = 0;
    private lastModeAssertion: number = 0;
 
@@ -255,6 +257,7 @@ class TeslaModule implements BatteryModuleI {
 
    async balanceCellsAbove(balanceAboveV: number, balanceTimeSec: number): Promise<number> {
       const shouldBalance = this.cellVoltages.map(v => v > balanceAboveV);
+      this.balancing = shouldBalance;
       logger.debug('Balancing module %d, cells need balancing? %s', this.id, shouldBalance.join(', '));
       if (shouldBalance.some(b => b)) {
          await this.setBalanceTimer(balanceTimeSec);
@@ -264,6 +267,7 @@ class TeslaModule implements BatteryModuleI {
    }
 
    async stopBalancing() {
+      this.balancing = new Array(6).fill(false);
       return this.writeByteToRegister(Registers.REG_BAL_CTRL, 0);
    }
 

@@ -6,6 +6,7 @@ import { PacketStats } from "../comms/packet-stats";
 export class FakeModule implements BatteryModuleI {
    public cellVoltages: number[];
    public temperatures: number[];
+   public balancing: boolean[] = new Array(6).fill(false);
    public moduleVolts: number;
    public lastUpdate: number;
 
