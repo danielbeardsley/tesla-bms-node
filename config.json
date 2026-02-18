@@ -27,7 +27,7 @@
          "maxCellVoltBuffer": 0.03,
          "cellVoltLimitSocRecovery": 1,
          "highTempCutoffC": 45,
-         "lowTempCutoffC": -3
+         "lowTempCutoffC": -10
       },
       "capacityPerModuleAh": 130,
       "voltsEmpty": 39.6,
