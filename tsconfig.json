@@ -29,6 +29,6 @@
     "checkJs": false,
     "declaration": true
   },
-  "exclude": ["node_modules", "dist", "src/inverter/notyet"],
+  "exclude": ["node_modules", "dist", "src/inverter/notyet", "src/ui"],
   "include": ["src/**/*", "./index.ts", "./scratch.ts", "./config.json"]
 } 
