@@ -126,7 +126,7 @@ export function _resetCachedConfig() {
 }
 
 /** Deep-merge source into target, mutating target in place. */
-function deepMergeInPlace(target: Record<string, any>, source: Record<string, any>) {
+function deepMergeInPlace(target: Record<string, unknown>, source: Record<string, unknown>) {
    for (const key of Object.keys(source)) {
       if (
          source[key] !== null &&
@@ -135,7 +135,7 @@ function deepMergeInPlace(target: Record<string, any>, source: Record<string, an
          typeof target[key] === "object" &&
          !Array.isArray(target[key])
       ) {
-         deepMergeInPlace(target[key], source[key]);
+         deepMergeInPlace(target[key] as Record<string, unknown>, source[key] as Record<string, unknown>);
       } else {
          target[key] = source[key];
       }
@@ -149,7 +149,7 @@ const CONFIG_PATH = path.resolve(__dirname, "../config.json");
  * writes to disk, and mutates the in-memory singleton so all existing
  * references see the new values.
  */
-export function updateConfig(partial: Record<string, any>): Config {
+export function updateConfig(partial: Record<string, unknown>): Config {
    const current = getConfig();
    // Build a plain copy to merge into for validation
    const merged = JSON.parse(JSON.stringify(current));
@@ -162,7 +162,7 @@ export function updateConfig(partial: Record<string, any>): Config {
    fs.writeFileSync(CONFIG_PATH, JSON.stringify(validated, null, 3) + "\n");
 
    // Mutate singleton in place so all holders see the update
-   deepMergeInPlace(current as Record<string, any>, validated as Record<string, any>);
+   deepMergeInPlace(current as Record<string, unknown>, validated as Record<string, unknown>);
 
    return current;
 }

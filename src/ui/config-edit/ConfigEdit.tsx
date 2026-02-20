@@ -78,24 +78,25 @@ const SECTIONS: Section[] = [
   },
 ];
 
-function getByPath(obj: any, path: string): any {
-  return path.split(".").reduce((o, k) => o?.[k], obj);
+function getByPath(obj: Record<string, unknown>, path: string): unknown {
+  return path.split(".").reduce<unknown>((o, k) => (o as Record<string, unknown>)?.[k], obj);
 }
 
-function buildPatch(path: string, value: any): Record<string, any> {
+function buildPatch(path: string, value: string | number | boolean): Record<string, unknown> {
   const keys = path.split(".");
-  const result: Record<string, any> = {};
-  let current = result;
+  const result: Record<string, unknown> = {};
+  let current: Record<string, unknown> = result;
   for (let i = 0; i < keys.length - 1; i++) {
-    current[keys[i]] = {};
-    current = current[keys[i]];
+    const next: Record<string, unknown> = {};
+    current[keys[i]] = next;
+    current = next;
   }
   current[keys[keys.length - 1]] = value;
   return result;
 }
 
 export function ConfigEdit() {
-  const [config, setConfig] = useState<any>(null);
+  const [config, setConfig] = useState<Record<string, unknown> | null>(null);
   const [loadError, setLoadError] = useState("");
   const [changelogKey, setChangelogKey] = useState(0);
 
@@ -117,7 +118,7 @@ export function ConfigEdit() {
       const body = await res.json().catch(() => null);
       if (body?.error) {
         const errors = Array.isArray(body.error)
-          ? body.error.map((e: any) => e.message).join(", ")
+          ? body.error.map((e: { message: string }) => e.message).join(", ")
           : String(body.error);
         return errors;
       }
