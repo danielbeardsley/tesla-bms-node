@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "preact/hooks";
 import { ConfigField } from "./ConfigField";
+import { ConfigChangelog } from "./ConfigChangelog";
 
 interface FieldDef {
   label: string;
@@ -103,6 +104,7 @@ function buildPatch(path: string, value: any): Record<string, any> {
 export function ConfigEdit() {
   const [config, setConfig] = useState<any>(null);
   const [loadError, setLoadError] = useState("");
+  const [changelogKey, setChangelogKey] = useState(0);
 
   useEffect(() => {
     fetch("/config")
@@ -130,6 +132,7 @@ export function ConfigEdit() {
     }
     const updated = await res.json();
     setConfig(updated);
+    setChangelogKey((k) => k + 1);
     return null;
   }, []);
 
@@ -157,6 +160,7 @@ export function ConfigEdit() {
           })}
         </fieldset>
       ))}
+      <ConfigChangelog refreshKey={changelogKey} />
     </div>
   );
 }
