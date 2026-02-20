@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createApp } from './server';
-import { getConfig, _resetCachedConfig } from '../config';
+import { Config, getConfig, _resetCachedConfig } from '../config';
 import * as fs from 'fs';
 import type { Server } from 'http';
 import type { AddressInfo } from 'net';
@@ -34,7 +34,7 @@ describe('Config API', () => {
 
       const res = await fetch(`http://127.0.0.1:${port}/config`);
       expect(res.status).toBe(200);
-      const body = await res.json();
+      const body = await res.json() as Config;
       const config = getConfig();
       expect(body.battery.charging.maxAmps).toBe(config.battery.charging.maxAmps);
       expect(body.bms.intervalS).toBe(config.bms.intervalS);
@@ -52,7 +52,7 @@ describe('Config API', () => {
       });
 
       expect(res.status).toBe(200);
-      const body = await res.json();
+      const body = await res.json() as Config;
       expect(body.battery.charging.maxAmps).toBe(newAmps);
       expect(getConfig().battery.charging.maxAmps).toBe(newAmps);
       expect(fs.writeFileSync).toHaveBeenCalledOnce();
@@ -68,7 +68,7 @@ describe('Config API', () => {
       });
 
       expect(res.status).toBe(400);
-      const body = await res.json();
+      const body = await res.json() as { error: unknown };
       expect(body.error).toBeDefined();
       expect(Array.isArray(body.error)).toBe(true);
       expect(fs.writeFileSync).not.toHaveBeenCalled();
