@@ -82,20 +82,6 @@ const SECTIONS: Section[] = [
       { label: "HTTP Port", path: "history.httpPort", requiresRestart: true },
     ],
   },
-  {
-    title: "Serial Ports",
-    fields: [
-      { label: "Battery Serial Port", path: "battery.serialPort.deviceName", requiresRestart: true },
-      { label: "Shunt Device", path: "battery.shunt.deviceName", requiresRestart: true },
-      { label: "Shunt Downtime (s)", path: "battery.shunt.downtimeS", requiresRestart: true },
-      { label: "Inverter RS485 Device", path: "inverter.serialPort.deviceName", requiresRestart: true },
-      { label: "Inverter RS485 Baud", path: "inverter.serialPort.baudRate", requiresRestart: true },
-      { label: "Inverter RS485 Downtime (s)", path: "inverter.serialPort.downtimeS", requiresRestart: true },
-      { label: "CAN Bus Device", path: "inverter.canbusSerialPort.deviceName", requiresRestart: true },
-      { label: "CAN Bus Baud", path: "inverter.canbusSerialPort.baudRate", requiresRestart: true },
-      { label: "CAN Bus Transmit Interval (ms)", path: "inverter.canbusSerialPort.transmitIntervalMs", requiresRestart: true },
-    ],
-  },
 ];
 
 function getByPath(obj: any, path: string): any {
