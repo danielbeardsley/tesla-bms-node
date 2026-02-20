@@ -4,7 +4,7 @@ import { SerialWrapper } from './src/comms/serial-wrapper';
 import { getConfig } from './src/config';
 import { Downtime } from './src/history/downtime';
 import { BMS } from './src/bms/bms';
-import { startConfigServer } from './src/history/history-server';
+import { startServer } from './src/server/server';
 import { Pylontech } from './src/inverter/pylontech';
 import { CanbusSerialPort } from './src/inverter/canbus';
 import { SerialPort } from 'serialport';
@@ -79,7 +79,7 @@ async function main() {
    // Start HTTP server early so the config UI is available even if
    // hardware initialization blocks or fails.
    const app = config.history.httpPort
-      ? startConfigServer(config.history.httpPort)
+      ? startServer(config.history.httpPort)
       : undefined;
 
    const battery = getBattery();

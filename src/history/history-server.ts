@@ -1,48 +1,9 @@
-import { Config, getConfig, updateConfig } from "../config";
+import { Config } from "../config";
 import { History } from "./history";
-import express, { Request, Response, Application } from 'express';
-import * as path from "path";
+import { Request, Response, Application } from 'express';
 import { BatteryI } from "../battery/battery";
 import { BMS } from "../bms/bms";
 import { StorageInterface } from "../storage";
-import { ZodError } from "zod";
-import { logger } from "../logger";
-
-/**
- * Start an Express server with config and UI routes immediately.
- * BMS-dependent routes (/history, /current) are added later via HistoryServer.
- */
-export function startConfigServer(port: number): Application {
-   const app = express();
-
-   app.use((_req, res, next) => {
-      res.header('Access-Control-Allow-Origin', '*');
-      next();
-   });
-   app.use(express.json());
-   app.use('/ui', express.static(path.resolve(__dirname, '../../ui')));
-
-   app.get('/config', (_req: Request, res: Response) => {
-      res.json(getConfig());
-   });
-
-   app.patch('/config', (req: Request, res: Response) => {
-      try {
-         const updated = updateConfig(req.body);
-         res.json(updated);
-      } catch (err) {
-         if (err instanceof ZodError) {
-            res.status(400).json({ error: err.errors });
-         } else {
-            res.status(500).json({ error: String(err) });
-         }
-      }
-   });
-
-   app.listen(port);
-   logger.info(`HTTP server listening on port ${port}`);
-   return app;
-}
 
 export class HistoryServer {
    private history: History;
