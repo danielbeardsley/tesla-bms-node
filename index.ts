@@ -28,7 +28,7 @@ async function getBattery() {
    batteryLogger.info('Tesla comms initialized');
    batteryLogger.info('Discovering battery modules');
    const modules = await discoverModules(teslaComms, config, true);
-   const battery = new Battery(modules, getShunt(), config);
+   const battery = new Battery(modules, getShunt(), config, teslaComms);
    return battery;
 }
 
@@ -82,12 +82,24 @@ async function main() {
       ? startServer(config.history.httpPort)
       : undefined;
 
-   const battery = getBattery();
-   const inverter = getInverter();
-   const canbusInverter = getCanbusInverter(await battery);
-   const bms = new BMS(await battery, await inverter, await canbusInverter, config, storage, appServer?.app);
+   const battery = await getBattery();
+   const inverter = await getInverter();
+   const canbusInverter = await getCanbusInverter(battery);
+   const bms = new BMS(battery, inverter, canbusInverter, config, storage, appServer?.app);
    await bms.init();
    await bms.start();
+
+   function shutdown() {
+      logger.info('Shutting down...');
+      bms.stop();
+      if (appServer) {
+         appServer.server.close();
+      }
+      logger.info('Shutdown complete');
+   }
+
+   process.on('SIGTERM', shutdown);
+   process.on('SIGINT', shutdown);
 }
 
 main().catch((e)=> {

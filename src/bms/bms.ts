@@ -32,6 +32,7 @@ class BMS {
     public readonly canbusInverter: CanbusSerialPortI;
     private history: History;
     private batterySafety: BatterySafety;
+    private stopping = false;
     private chargingModules: {
         voltageA: ChargingModule;
         latterby: ChargingModule;
@@ -85,7 +86,9 @@ class BMS {
             // TODO actually log this 'e', logger.error doesn't
             logger.error("Failed when reading inverter packet", e)
         } finally {
-            setTimeout(this.listenForInverterPacket.bind(this), 0);
+            if (!this.stopping) {
+                setTimeout(this.listenForInverterPacket.bind(this), 0);
+            }
         }
     }
 
@@ -167,8 +170,12 @@ class BMS {
     }
 
     public stop() {
+        this.stopping = true;
         clearTimeout(this.batteryTimer);
         clearInterval(this.inverterTimer);
+        this.battery.close();
+        this.inverter.close();
+        this.canbusInverter.close();
     }
 
     public getTimeSinceInverterComms() {

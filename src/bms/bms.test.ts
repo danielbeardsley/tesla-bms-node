@@ -229,6 +229,7 @@ function getInverter() {
         },
         writePacket: async (_packet: Buffer) => {
         },
+        close() { },
         packetStats: new PacketStats(),
     };
 }

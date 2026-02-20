@@ -14,6 +14,10 @@ export class Pylontech {
       this.serial = serial;
    }
 
+   close() {
+      this.serial.close();
+   }
+
    readPacket(timeout?: number): Promise<Packet> {
       return this.serial.readTillDelimiter(PLYONTECH_DELIMITER, timeout || 0)
       .then(frame => {

@@ -82,7 +82,7 @@ async function getBattery() {
    const config = getConfig();
    const teslaComms = await getTeslaComms();
    const modules = await discoverModules(teslaComms, config, true);
-   const battery = new Battery(modules, getShunt(), config);
+   const battery = new Battery(modules, getShunt(), config, teslaComms);
    await battery.readAll();
    return battery;
 }

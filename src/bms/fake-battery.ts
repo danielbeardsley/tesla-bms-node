@@ -108,6 +108,9 @@ export class FakeBattery implements BatteryI {
       return this.temperatureIsSafe;
    }
 
+   close() {
+   }
+
    async balance(forSeconds: number): Promise<number> {
       this.balanceForSeconds = forSeconds;
       return 0;

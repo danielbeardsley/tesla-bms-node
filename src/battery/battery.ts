@@ -4,6 +4,7 @@ import { clamp } from '../utils';
 import type { Config } from '../config';
 import { logger } from '../logger';
 import { Shunt } from './shunt';
+import { TeslaComms } from './tesla-comms';
 import { Downtime } from '../history/downtime';
 
 export interface BatteryI {
@@ -20,6 +21,7 @@ export interface BatteryI {
    getTemperatureRange(): { min: number, max: number, spread: number };
    getLastUpdateDate(): number;
    isTemperatureSafe(): boolean;
+   close(): void;
    readonly downtime: Downtime;
    shunt: Shunt;
 }
@@ -30,10 +32,12 @@ export class Battery implements BatteryI {
    private config: Config;
    private lock: AsyncLock;
    public readonly downtime: Downtime;
+   private teslaComms: TeslaComms;
 
-   constructor(modules: BatteryModuleI[], shunt: Shunt, config: Config) {
+   constructor(modules: BatteryModuleI[], shunt: Shunt, config: Config, teslaComms: TeslaComms) {
       this.modules = {};
       this.shunt = shunt;
+      this.teslaComms = teslaComms;
       this.lock = new AsyncLock();
       this.config = config;
       // Only keep around the modules listed in `modulesInSeries`
@@ -43,6 +47,11 @@ export class Battery implements BatteryI {
          }
       }
       this.downtime = new Downtime(config.battery.serialPort.deviceName, 'battery', this.config.bms.intervalS * 1_000 * 1.3);
+   }
+
+   close() {
+      this.teslaComms.close();
+      this.shunt.close();
    }
 
    async sleep() {
