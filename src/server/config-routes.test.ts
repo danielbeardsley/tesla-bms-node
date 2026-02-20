@@ -55,7 +55,8 @@ describe('Config API', () => {
       const body = await res.json() as Config;
       expect(body.battery.charging.maxAmps).toBe(newAmps);
       expect(getConfig().battery.charging.maxAmps).toBe(newAmps);
-      expect(fs.writeFileSync).toHaveBeenCalledOnce();
+      // Called twice: once for config.json, once for config-changelog.json
+      expect(fs.writeFileSync).toHaveBeenCalledTimes(2);
    });
 
    it('PATCH /config returns 400 for invalid values', async () => {
