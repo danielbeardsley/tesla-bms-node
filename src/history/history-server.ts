@@ -1,4 +1,4 @@
-import { Config, getConfig, updateConfig } from "src/config";
+import { Config, getConfig, updateConfig } from "../config";
 import { History } from "./history";
 import express, { Request, Response, Application } from 'express';
 import * as path from "path";
