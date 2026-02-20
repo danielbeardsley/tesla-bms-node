@@ -6,59 +6,67 @@ import { BatteryI } from "../battery/battery";
 import { BMS } from "../bms/bms";
 import { StorageInterface } from "../storage";
 import { ZodError } from "zod";
+import { logger } from "../logger";
+
+/**
+ * Start an Express server with config and UI routes immediately.
+ * BMS-dependent routes (/history, /current) are added later via HistoryServer.
+ */
+export function startConfigServer(port: number): Application {
+   const app = express();
+
+   app.use((_req, res, next) => {
+      res.header('Access-Control-Allow-Origin', '*');
+      next();
+   });
+   app.use(express.json());
+   app.use('/ui', express.static(path.resolve(__dirname, '../../ui')));
+
+   app.get('/config', (_req: Request, res: Response) => {
+      res.json(getConfig());
+   });
+
+   app.patch('/config', (req: Request, res: Response) => {
+      try {
+         const updated = updateConfig(req.body);
+         res.json(updated);
+      } catch (err) {
+         if (err instanceof ZodError) {
+            res.status(400).json({ error: err.errors });
+         } else {
+            res.status(500).json({ error: String(err) });
+         }
+      }
+   });
+
+   app.listen(port);
+   logger.info(`HTTP server listening on port ${port}`);
+   return app;
+}
 
 export class HistoryServer {
    private history: History;
    private battery: BatteryI;
    private config: Config;
-   private app: Application;
    private bms: BMS;
-   private server: ReturnType<Application['listen']>|null = null;
    private storage: StorageInterface;
 
-   constructor(history: History, battery: BatteryI, config: Config, bms: BMS, storage: StorageInterface) {
+   constructor(app: Application, history: History, battery: BatteryI, config: Config, bms: BMS, storage: StorageInterface) {
       this.history = history;
       this.battery = battery;
       this.config = config;
-      this.app = express();
       this.bms = bms;
       this.storage = storage;
-      this.init();
+      this.init(app);
    }
 
-   private init() {
-      // Allow accessing the data from any other origin
-      // Origins are still limited by who can access the local server
-      this.app.use((_req, res, next) => {
-         res.header('Access-Control-Allow-Origin', '*');
-         next();
-      });
-      this.app.use(express.json());
-      this.app.use('/ui', express.static(path.resolve(__dirname, '../../ui')));
-
-      this.app.get('/config', (_req: Request, res: Response) => {
-         res.json(getConfig());
-      });
-
-      this.app.patch('/config', (req: Request, res: Response) => {
-         try {
-            const updated = updateConfig(req.body);
-            res.json(updated);
-         } catch (err) {
-            if (err instanceof ZodError) {
-               res.status(400).json({ error: err.errors });
-            } else {
-               res.status(500).json({ error: String(err) });
-            }
-         }
-      });
-
-      this.app.get('/history', (req: Request, res: Response) => {
+   private init(app: Application) {
+      app.get('/history', (req: Request, res: Response) => {
          const limit = parseInt(String(req.query.limit));
          const values = this.history.getValues(limit || undefined);
          res.json(values);
       });
-      this.app.get('/current', (req: Request, res: Response) => {
+      app.get('/current', (req: Request, res: Response) => {
          const historyLimit = parseInt(String(req.query.history)) || 30;
          const response = {
             cellVoltageRange: this.battery.getCellVoltageRange(),
@@ -89,13 +97,5 @@ export class HistoryServer {
          };
          res.json(response);
       });
-   }
-
-   start() {
-      this.server = this.app.listen(this.config.history.httpPort);
-   }
-
-   stop() {
-      this.server?.close();
    }
 }

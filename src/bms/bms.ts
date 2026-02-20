@@ -19,6 +19,7 @@ import { BatterySafety } from './battery-safety';
 import { HistoryServer } from '../history/history-server';
 import { Downtime } from '../history/downtime';
 import { type StorageInterface } from '../storage';
+import { Application } from 'express';
 
 const BATTERY_ADDRESS = 2;
 
@@ -30,7 +31,6 @@ class BMS {
     private inverter: Inverter;
     public readonly canbusInverter: CanbusSerialPortI;
     private history: History;
-    private historyServer: HistoryServer;
     private batterySafety: BatterySafety;
     private chargingModules: {
         voltageA: ChargingModule;
@@ -38,7 +38,7 @@ class BMS {
     }
     public readonly inverterRs485Downtime: Downtime;
 
-    constructor(battery: BatteryI, inverter: Inverter, canbusInverter: CanbusSerialPortI, config: Config, storage: StorageInterface) {
+    constructor(battery: BatteryI, inverter: Inverter, canbusInverter: CanbusSerialPortI, config: Config, storage: StorageInterface, app?: Application) {
         this.battery = battery;
         this.config = config;
         this.inverter = inverter;
@@ -47,7 +47,9 @@ class BMS {
         batteryLogger.info("Using config %j", config.battery);
         logger.info("Using history config %j", config.history);
         this.history = new History(config.history.samplesToKeep);
-        this.historyServer = new HistoryServer(this.history, battery, config, this, storage);
+        if (app) {
+            new HistoryServer(app, this.history, battery, config, this, storage);
+        }
         this.chargingModules = {
             voltageA: new VoltageA(config, battery),
             latterby: new Latterby(config, battery, storage),
@@ -148,9 +150,6 @@ class BMS {
         }
         void this.monitorBattery();
         void this.listenForInverterPacket();
-        if (this.config.history.httpPort) {
-            void this.historyServer.start();
-        }
         void this.canbusInverter.open().then(() => this.startCanbusTransmission());
     }
 

@@ -4,6 +4,7 @@ import { SerialWrapper } from './src/comms/serial-wrapper';
 import { getConfig } from './src/config';
 import { Downtime } from './src/history/downtime';
 import { BMS } from './src/bms/bms';
+import { startConfigServer } from './src/history/history-server';
 import { Pylontech } from './src/inverter/pylontech';
 import { CanbusSerialPort } from './src/inverter/canbus';
 import { SerialPort } from 'serialport';
@@ -71,12 +72,20 @@ async function getCanbusInverter(battery: Battery) {
 }
 
 async function main() {
+   const config = getConfig();
    const storage = new Storage('./storage.json');
    await storage.load();
+
+   // Start HTTP server early so the config UI is available even if
+   // hardware initialization blocks or fails.
+   const app = config.history.httpPort
+      ? startConfigServer(config.history.httpPort)
+      : undefined;
+
    const battery = getBattery();
    const inverter = getInverter();
    const canbusInverter = getCanbusInverter(await battery);
-   const bms = new BMS(await battery, await inverter, await canbusInverter, getConfig(), storage);
+   const bms = new BMS(await battery, await inverter, await canbusInverter, config, storage, app);
    await bms.init();
    await bms.start();
 }
