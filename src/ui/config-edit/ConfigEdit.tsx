@@ -76,13 +76,6 @@ const SECTIONS: Section[] = [
       { label: "Charge From Grid Delay (days)", path: "bms.chargingStrategy.latterby.chargeFromGridDelayDays" },
     ],
   },
-  {
-    title: "History",
-    fields: [
-      { label: "Samples To Keep", path: "history.samplesToKeep" },
-      { label: "HTTP Port", path: "history.httpPort", requiresRestart: true },
-    ],
-  },
 ];
 
 function getByPath(obj: any, path: string): any {
