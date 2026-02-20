@@ -1,4 +1,6 @@
 import { z } from "zod";
+import * as fs from "fs";
+import * as path from "path";
 import config from '../config.json';
 
 const ConfigSchema = z.object({
@@ -72,7 +74,7 @@ const ConfigSchema = z.object({
             // How long after reaching full charge do we allow charging again.
             // Tune this to prevent rapid cycling
             rechargeDelaySec: z.number().int().min(0),
-            // How often to charge the battery to 100% to sync the state of 
+            // How often to charge the battery to 100% to sync the state of
             // of the shunt with reality
             daysBetweenSynchronizations: z.number().int().min(1),
             synchronizationVoltage: z.number().min(0),
@@ -107,6 +109,55 @@ export function validateConfig(json: object) {
 // extract the inferred type
 export type Config = z.infer<typeof ConfigSchema>;
 
+// Singleton config instance — all callers share the same object reference,
+// so in-place updates are visible everywhere.
+let cachedConfig: Config | null = null;
+
 export function getConfig(): Config {
-   return validateConfig(config);
+   if (!cachedConfig) {
+      cachedConfig = validateConfig(config);
+   }
+   return cachedConfig;
+}
+
+/** Deep-merge source into target, mutating target in place. */
+function deepMergeInPlace(target: Record<string, any>, source: Record<string, any>) {
+   for (const key of Object.keys(source)) {
+      if (
+         source[key] !== null &&
+         typeof source[key] === "object" &&
+         !Array.isArray(source[key]) &&
+         typeof target[key] === "object" &&
+         !Array.isArray(target[key])
+      ) {
+         deepMergeInPlace(target[key], source[key]);
+      } else {
+         target[key] = source[key];
+      }
+   }
+}
+
+const CONFIG_PATH = path.resolve(__dirname, "../config.json");
+
+/**
+ * Update config with a partial object. Validates the merged result,
+ * writes to disk, and mutates the in-memory singleton so all existing
+ * references see the new values.
+ */
+export function updateConfig(partial: Record<string, any>): Config {
+   const current = getConfig();
+   // Build a plain copy to merge into for validation
+   const merged = JSON.parse(JSON.stringify(current));
+   deepMergeInPlace(merged, partial);
+
+   // Validate — throws ZodError if invalid
+   const validated = validateConfig(merged);
+
+   // Write to disk
+   fs.writeFileSync(CONFIG_PATH, JSON.stringify(validated, null, 3) + "\n");
+
+   // Mutate singleton in place so all holders see the update
+   deepMergeInPlace(current as Record<string, any>, validated as Record<string, any>);
+
+   return current;
 }
