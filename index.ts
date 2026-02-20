@@ -78,14 +78,14 @@ async function main() {
 
    // Start HTTP server early so the config UI is available even if
    // hardware initialization blocks or fails.
-   const app = config.history.httpPort
+   const appServer = config.history.httpPort
       ? startServer(config.history.httpPort)
       : undefined;
 
    const battery = getBattery();
    const inverter = getInverter();
    const canbusInverter = getCanbusInverter(await battery);
-   const bms = new BMS(await battery, await inverter, await canbusInverter, config, storage, app);
+   const bms = new BMS(await battery, await inverter, await canbusInverter, config, storage, appServer?.app);
    await bms.init();
    await bms.start();
 }

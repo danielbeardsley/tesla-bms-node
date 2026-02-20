@@ -2,8 +2,21 @@ import express, { Application } from 'express';
 import * as path from "path";
 import { logger } from "../logger";
 import { registerConfigRoutes } from "./config-routes";
+import type { Server } from "http";
 
-export function startServer(port: number): Application {
+export interface AppServer {
+   app: Application;
+   server: Server;
+}
+
+export function startServer(port: number): AppServer {
+   const app = createApp();
+   const server = app.listen(port);
+   logger.info(`HTTP server listening on port ${port}`);
+   return { app, server };
+}
+
+export function createApp(): Application {
    const app = express();
 
    app.use((_req, res, next) => {
@@ -15,7 +28,5 @@ export function startServer(port: number): Application {
 
    registerConfigRoutes(app);
 
-   app.listen(port);
-   logger.info(`HTTP server listening on port ${port}`);
    return app;
 }

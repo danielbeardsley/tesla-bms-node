@@ -120,6 +120,11 @@ export function getConfig(): Config {
    return cachedConfig;
 }
 
+/** Reset the cached config singleton. For use in tests only. */
+export function _resetCachedConfig() {
+   cachedConfig = null;
+}
+
 /** Deep-merge source into target, mutating target in place. */
 function deepMergeInPlace(target: Record<string, any>, source: Record<string, any>) {
    for (const key of Object.keys(source)) {

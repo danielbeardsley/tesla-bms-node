@@ -11,7 +11,7 @@ import { HistoryColumns } from '../history/history';
 import { Downtime } from '../history/downtime';
 import { PacketStats } from '../comms/packet-stats';
 import { StorageInterface, type StorageValues } from '../storage';
-import { startServer } from '../server/server';
+import { createApp } from '../server/server';
 
 describe('BMS', () => {
     it('Should read from the battery immediately', async () => {
@@ -114,7 +114,8 @@ describe('BMS History', () => {
         const inverter = getInverter();
         const battery = new FakeBattery();
         battery.modules[1].balancing = [false, false, true, true, false, false];
-        const app = startServer(port);
+        const app = createApp();
+        const server = app.listen(port);
         const bms = new BMS(battery, inverter, getCanbusInverter(battery), config, fakeStorage(), app);
         await bms.init();
         bms.start();
@@ -126,6 +127,7 @@ describe('BMS History', () => {
         expect(module1.balancing).toEqual([false, false, true, true, false, false]);
         expect(module2.balancing).toEqual([false, false, false, false, false, false]);
         bms.stop();
+        server.close();
     });
 
     it('Should serve history recordings', async () => {
@@ -137,7 +139,8 @@ describe('BMS History', () => {
         battery.voltageRange = {min: 3.6, max: 3.7, spread: 0.1};
         battery.voltage = 48;
         battery.current = 2;
-        const app = startServer(port);
+        const app = createApp();
+        const server = app.listen(port);
         const bms = new BMS(battery, inverter, getCanbusInverter(battery), config, fakeStorage(), app);
         await bms.init();
         bms.start();
@@ -204,6 +207,7 @@ describe('BMS History', () => {
             shunt: {},
         });
         bms.stop();
+        server.close();
     });
 });
 
