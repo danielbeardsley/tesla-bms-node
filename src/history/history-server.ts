@@ -1,9 +1,11 @@
-import { Config } from "src/config";
+import { Config, getConfig, updateConfig } from "src/config";
 import { History } from "./history";
 import express, { Request, Response, Application } from 'express';
+import * as path from "path";
 import { BatteryI } from "../battery/battery";
 import { BMS } from "../bms/bms";
 import { StorageInterface } from "../storage";
+import { ZodError } from "zod";
 
 export class HistoryServer {
    private history: History;
@@ -31,6 +33,26 @@ export class HistoryServer {
          res.header('Access-Control-Allow-Origin', '*');
          next();
       });
+      this.app.use(express.json());
+      this.app.use('/ui', express.static(path.resolve(__dirname, '../../ui')));
+
+      this.app.get('/config', (_req: Request, res: Response) => {
+         res.json(getConfig());
+      });
+
+      this.app.patch('/config', (req: Request, res: Response) => {
+         try {
+            const updated = updateConfig(req.body);
+            res.json(updated);
+         } catch (err) {
+            if (err instanceof ZodError) {
+               res.status(400).json({ error: err.errors });
+            } else {
+               res.status(500).json({ error: String(err) });
+            }
+         }
+      });
+
       this.app.get('/history', (req: Request, res: Response) => {
          const limit = parseInt(String(req.query.limit));
          const values = this.history.getValues(limit || undefined);
