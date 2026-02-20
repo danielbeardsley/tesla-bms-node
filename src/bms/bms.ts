@@ -170,12 +170,14 @@ class BMS {
     }
 
     public stop() {
+        logger.info('Stopping BMS...');
         this.stopping = true;
         clearTimeout(this.batteryTimer);
         clearInterval(this.inverterTimer);
         this.battery.close();
         this.inverter.close();
         this.canbusInverter.close();
+        logger.info('BMS stopped');
     }
 
     public getTimeSinceInverterComms() {

@@ -15,6 +15,7 @@ export class Pylontech {
    }
 
    close() {
+      logger.info('Closing Pylontech RS485 serial port');
       this.serial.close();
    }
 

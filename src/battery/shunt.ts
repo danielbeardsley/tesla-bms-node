@@ -103,6 +103,7 @@ export class VictronSmartShunt implements Shunt {
    }
 
    close() {
+      logger.info('Closing shunt serial port');
       this.serialPort.close();
    }
 }

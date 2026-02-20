@@ -76,7 +76,7 @@ export class CanbusSerialPort implements CanbusSerialPortI {
    }
 
    close(): void {
-      logger.debug(`Closing serial port ${this.device}`);
+      logger.info('Closing canbus serial port');
       this.port?.close();
    }
 

@@ -20,6 +20,7 @@ export class TeslaComms {
    }
 
    close() {
+      logger.info('Closing Tesla BMS serial port');
       this.serial.close();
    }
 
