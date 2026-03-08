@@ -2,6 +2,7 @@ import { type ChargeParameters } from '../bms/charging/charging-module';
 import { type ChargeInfo } from '../inverter/commands/get-charge-discharge-info';
 
 export type HistoryColumns = {
+   stateOfCharge: number[];
    batteryVolts: number[];
    batteryAmps: number[];
    batteryWatts: number[];
@@ -28,6 +29,7 @@ export type HistoryColumns = {
 }
 
 type HistoryRecord = {
+   stateOfCharge: number;
    batteryVolts: number;
    batteryAmps: number;
    batteryWatts: number;
@@ -72,6 +74,7 @@ export class History {
       this.samplesToKeep = samplesToKeep;
       this.timestamps = empty();
       this.values = {
+         stateOfCharge: empty(),
          batteryVolts: empty(),
          batteryAmps: empty(),
          batteryWatts: empty(),
@@ -104,6 +107,7 @@ export class History {
       const round = (x: number) => Number(x.toFixed(3));
       this.samplesCollected++;
       this.timestamps[this.index] = timestamp;
+      this.values.stateOfCharge[this.index] = round(values.stateOfCharge);
       this.values.batteryVolts[this.index] = round(values.batteryVolts);
       this.values.batteryAmps[this.index] = round(values.batteryAmps);
       this.values.batteryWatts[this.index] = round(values.batteryWatts);
@@ -129,6 +133,7 @@ export class History {
    public getValues(count?: number) {
       const values = {
          timestamps: this.linearize(this.timestamps, count),
+         stateOfCharge: this.linearize(this.values.stateOfCharge, count),
          batteryVolts: this.linearize(this.values.batteryVolts, count),
          batteryAmps: this.linearize(this.values.batteryAmps, count),
          batteryWatts: this.linearize(this.values.batteryWatts, count),

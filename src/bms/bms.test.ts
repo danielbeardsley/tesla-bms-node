@@ -150,6 +150,7 @@ describe('BMS History', () => {
         const json = await result.json() as HistoryColumns & { timestamps?: number[] };
         delete json.timestamps;
         expect(json).toEqual({
+            stateOfCharge: [0],
             batteryVolts: [48],
             batteryAmps: [2],
             batteryWatts: [96],

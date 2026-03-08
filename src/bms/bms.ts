@@ -275,6 +275,7 @@ class BMS {
         const cellVoltageRange = this.battery.getCellVoltageRange();
         const tempRange = this.battery.getTemperatureRange();
         this.history.add(Date.now(), {
+            stateOfCharge: this.battery.getStateOfCharge(),
             batteryVolts: this.battery.getVoltage(),
             batteryAmps: this.battery.getCurrent() || 0,
             batteryWatts: (this.battery.getCurrent() || 0) * this.battery.getVoltage(),

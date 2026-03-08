@@ -8,6 +8,7 @@ describe('History module', () => {
       addSamples(history, samples);
       const values = history.getValues();
       expect(values.batteryVolts).toEqual([1, 2, 3]);
+      expect(values.stateOfCharge).toEqual([0.01, 0.02, 0.03]);
    });
 
    it('Should write samples in a circular buffer', () => {
@@ -16,6 +17,7 @@ describe('History module', () => {
       addSamples(history, samples);
       const values = history.getValues();
       expect(values.batteryVolts).toEqual([3, 4, 5, 6, 7]);
+      expect(values.stateOfCharge).toEqual([0.03, 0.04, 0.05, 0.06, 0.07]);
    });
 
    it('Should return only the most recent N samples', () => {
@@ -30,12 +32,16 @@ describe('History module', () => {
       expect(values1.batteryVolts).toEqual([7]);
 
       expect(values2.tesla.total).toEqual([12, 13]);
+
+      expect(values3.stateOfCharge).toEqual([0.05, 0.06, 0.07]);
+      expect(values1.stateOfCharge).toEqual([0.07]);
    });
 });
 
 function addSamples(history: History, samples: number) {
    for (let i = 0; i < samples; i++) {
       history.add(i, {
+         stateOfCharge: (i+1) / 100,
          batteryVolts: i+1,
          batteryAmps: i+20,
          batteryWatts: i+21,
