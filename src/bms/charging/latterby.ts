@@ -69,6 +69,20 @@ export class Latterby implements ChargingModule {
          chargingEnabled,
          dischargingEnabled,
          chargeFromGrid: this.needsGridCharge(),
+         _meta: {
+            socPct,
+            isFull,
+            isEmpty,
+            socChargeAllowed: this.socChargeAllowed.get(),
+            socDischargeAllowed: this.socDischargeAllowed.get(),
+            timeChargeAllowed: this.timeChargeAllowed.get(),
+            timeChargeAllowedBufferS: this.timeChargeAllowed.getRemainingS(),
+            timeDischargeAllowed: this.timeDischargeAllowed.get(),
+            timeDischargeAllowedBufferS: this.timeDischargeAllowed.getRemainingS(),
+            needsFullCharge: this.needsFullCharge(),
+            needsGridCharge: this.needsGridCharge(),
+            dischargeAllowedByTime: this.dischargeAllowedByTime(),
+         },
       };
    }
 

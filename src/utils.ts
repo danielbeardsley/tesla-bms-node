@@ -74,6 +74,13 @@ export class StickyBool {
    get() {
       return this.value;
    }
+
+   /** Seconds remaining before the current value is allowed to change. */
+   getRemainingS(): number {
+      const elapsedS = (Date.now() - this.lastChange) / 1000;
+      const minDuration = this.value ? this.minTrueDurationS : this.minFalseDurationS;
+      return Math.max(0, minDuration - elapsedS);
+   }
 }
 
 export class ProtectedBool {

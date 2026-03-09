@@ -4,6 +4,7 @@ export type ChargeParameters = {
    chargingEnabled: boolean;
    dischargingEnabled: boolean;
    chargeFromGrid?: boolean;
+   _meta?: Record<string, unknown>;
 };
 
 export interface ChargingModule {

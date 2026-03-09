@@ -59,6 +59,38 @@ describe("utils", () => {
          expect(sb.get()).toBe(true);
       });
 
+      it("getRemainingS() should return time left before value can change", async () => {
+         const sb = new StickyBool(true, 0, 0.050);
+         sb.set(false);
+         expect(sb.get()).toBe(false);
+         // Just transitioned to false with 50ms sticky duration
+         expect(sb.getRemainingS()).toBeGreaterThan(0.02);
+         expect(sb.getRemainingS()).toBeLessThanOrEqual(0.05);
+         await sleep(60);
+         expect(sb.getRemainingS()).toBe(0);
+      });
+
+      it("getRemainingS() should return 0 when sticky time has already elapsed", () => {
+         // minTrueDurationS=0, so true value can change immediately
+         const sb = new StickyBool(true, 0, 1);
+         expect(sb.getRemainingS()).toBe(0);
+      });
+
+      it("getRemainingS() should use the correct duration for the current value", async () => {
+         // true sticks for 0.010s, false sticks for 0.2s
+         const sb = new StickyBool(true, 0.010, 0.2);
+         expect(sb.getRemainingS()).toBeLessThanOrEqual(0.010);
+         expect(sb.getRemainingS()).toBeGreaterThan(0);
+
+         // Wait for true sticky time to elapse, then transition to false
+         await sleep(15);
+         sb.set(false);
+         expect(sb.get()).toBe(false);
+         // Now in false state, should use minFalseDurationS (0.2)
+         expect(sb.getRemainingS()).toBeLessThanOrEqual(0.2);
+         expect(sb.getRemainingS()).toBeGreaterThan(0.1);
+      });
+
       it("should stick to a state as long as configured even when rapid cycling without getting", async () => {
          const t = new StickyBool(true, 0, 0.005);
          t.set(false);
