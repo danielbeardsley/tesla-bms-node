@@ -1,7 +1,36 @@
 {
    "battery": {
       "moduleCount": 14,
-      "modulesInSeries": [[1,14],[2,13],[3,12],[4,11],[5,10],[6,9],[7,8]],
+      "modulesInSeries": [
+         [
+            1,
+            14
+         ],
+         [
+            2,
+            13
+         ],
+         [
+            3,
+            12
+         ],
+         [
+            4,
+            11
+         ],
+         [
+            5,
+            10
+         ],
+         [
+            6,
+            9
+         ],
+         [
+            7,
+            8
+         ]
+      ],
       "serialPort": {
          "deviceName": "/dev/serial0"
       },
@@ -22,12 +51,12 @@
          "minVolts": 39
       },
       "safety": {
-         "maxCellVolt": 4.1,
          "minCellVolt": 3.2,
-         "maxCellVoltBuffer": 0.03,
+         "maxCellVolt": 4.1,
          "cellVoltLimitSocRecovery": 1,
          "highTempCutoffC": 45,
-         "lowTempCutoffC": -10
+         "lowTempCutoffC": -10,
+         "maxCellVoltBuffer": 0.02
       },
       "capacityPerModuleAh": 130,
       "voltsEmpty": 39.6,
@@ -38,17 +67,15 @@
       "batteryRecencyLimitS": 180,
       "chargingStrategy": {
          "name": "latterby",
-         "voltageA": {
-            "maxCellVoltBuffer": 0.05
-         },
+         "voltageA": {},
          "latterby": {
-            "stopDischargeAtPct": 20,
-            "resumeDischargeAtPct": 25,
-            "stopChargeAtPct": 80,
-            "resumeChargeAtPct": 78,
+            "stopChargeAtPct": 90,
+            "resumeChargeAtPct": 88,
+            "stopDischargeAtPct": 10,
+            "resumeDischargeAtPct": 15,
             "rechargeDelaySec": 600,
+            "daysBetweenSynchronizations": 40,
             "synchronizationVoltage": 48.8,
-            "daysBetweenSynchronizations": 30,
             "chargeFromGridDelayDays": 5
          }
       }
@@ -65,7 +92,6 @@
       },
       "canbusSerialPort": {
          "deviceName": "",
-         "deviceName_DISABLED": "/dev/serial/by-id/usb-Openlight_Labs_CANable2_b158aa7_github.com_normaldotcom_canable2.git_209030923541-if00",
          "baudRate": 115200,
          "transmitIntervalMs": 1000
       }
