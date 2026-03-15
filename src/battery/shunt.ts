@@ -11,6 +11,7 @@ export interface Shunt {
    getSOC(): number | undefined;
    getCurrent(): number | undefined;
    close(): void;
+   readonly isConnected: boolean;
    readonly downtime: Downtime;
    readonly packetStats: PacketStats;
    readonly ready: Promise<void>;
@@ -100,6 +101,10 @@ export class VictronSmartShunt implements Shunt {
 
    private updatedWithin(seconds: number): boolean {
       return (Date.now() - this.lastUpdate) < (seconds * 1000);
+   }
+
+   get isConnected(): boolean {
+      return this.serialPort.isOpen;
    }
 
    close() {

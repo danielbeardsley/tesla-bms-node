@@ -14,6 +14,10 @@ export class Pylontech {
       this.serial = serial;
    }
 
+   get isConnected(): boolean {
+      return this.serial.isConnected;
+   }
+
    close() {
       logger.info('Closing Pylontech RS485 serial port');
       this.serial.close();

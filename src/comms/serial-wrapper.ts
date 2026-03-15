@@ -144,6 +144,10 @@ export class SerialWrapper {
       });
    }
 
+   get isConnected(): boolean {
+      return this.port?.isOpen ?? false;
+   }
+
    flushInput(): void {
       this.buffer = [];
    }

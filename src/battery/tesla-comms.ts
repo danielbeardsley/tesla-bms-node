@@ -19,6 +19,10 @@ export class TeslaComms {
       this.serial = serialWrapper;
    }
 
+   get isConnected(): boolean {
+      return this.serial.isConnected;
+   }
+
    close() {
       logger.info('Closing Tesla BMS serial port');
       this.serial.close();

@@ -180,6 +180,15 @@ class BMS {
         logger.info('BMS stopped');
     }
 
+    public getSerialConnected() {
+        return {
+            battery: this.battery.isConnected,
+            shunt: this.battery.shunt.isConnected,
+            rs485: this.inverter.isConnected,
+            canbus: this.canbusInverter.isConnected,
+        };
+    }
+
     public getTimeSinceInverterComms() {
         const rs485 = this.inverterRs485Downtime.getDowntime();
         const canbus = this.canbusInverter.downtime.getDowntime();

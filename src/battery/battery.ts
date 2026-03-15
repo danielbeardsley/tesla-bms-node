@@ -22,6 +22,7 @@ export interface BatteryI {
    getLastUpdateDate(): number;
    isTemperatureSafe(): boolean;
    close(): void;
+   readonly isConnected: boolean;
    readonly downtime: Downtime;
    shunt: Shunt;
 }
@@ -47,6 +48,10 @@ export class Battery implements BatteryI {
          }
       }
       this.downtime = new Downtime(config.battery.serialPort.deviceName, 'battery', this.config.bms.intervalS * 1_000 * 1.3);
+   }
+
+   get isConnected(): boolean {
+      return this.teslaComms.isConnected;
    }
 
    close() {

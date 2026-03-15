@@ -5,5 +5,6 @@ export interface Inverter {
    readPacket(timeout?: number): Promise<Packet>;
    writePacket(packet: Buffer): Promise<void>;
    close(): void;
+   readonly isConnected: boolean;
    packetStats: PacketStats;
 }

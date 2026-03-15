@@ -44,6 +44,7 @@ export class HistoryServer {
             })),
             modulesInSeries: this.config.battery.modulesInSeries,
             timeSinceInverterComms: Math.round(this.bms.getTimeSinceInverterComms()),
+            serialConnected: this.bms.getSerialConnected(),
             downtime: {
                 rs485: this.bms.inverterRs485Downtime.getDowntime(),
                 // don't include canbus while we're not using it

@@ -167,6 +167,7 @@ describe('BMS History', () => {
         const resultCurrent = await fetch(`http://127.0.0.1:${port}/current`);
         const current = await resultCurrent.json();
         (current as ({timeSinceInverterComms: number|null})).timeSinceInverterComms = null; // we don't test this
+        (current as ({serialConnected: object|null})).serialConnected = null; // we don't test this
         (current as ({downtime: object|null})).downtime = null; // we don't test this
         (current as ({history: object|null})).history = null; // we don't test this
         expect(current).toEqual({
@@ -200,6 +201,7 @@ describe('BMS History', () => {
             stateOfCharge: 0,
             modulesInSeries: [[0,1]],
             timeSinceInverterComms: null,
+            serialConnected: null,
             storage: {
                lastFullCharge: expect.any(Number),
             },
@@ -231,6 +233,7 @@ function getInverter() {
         writePacket: async (_packet: Buffer) => {
         },
         close() { },
+        isConnected: true,
         packetStats: new PacketStats(),
     };
 }
@@ -242,6 +245,7 @@ function getCanbusInverter(_battery: BatteryI) {
      close(): void { },
      sendBatteryInfoToInverter(_chargeData: ChargeInfo) { },
      getTsOflastInverterMessage() { return 0 },
+     isConnected: true,
      downtime: new Downtime('/p', 'canbus', 1000),
      packetStats: new PacketStats(),
    }

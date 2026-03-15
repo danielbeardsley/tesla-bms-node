@@ -108,6 +108,10 @@ export class FakeBattery implements BatteryI {
       return this.temperatureIsSafe;
    }
 
+   get isConnected(): boolean {
+      return true;
+   }
+
    close() {
    }
 
@@ -129,6 +133,7 @@ export function getFakeShunt() {
        getLastUpdate: () => 0,
        close: () => {},
        getCurrent: () => 10,
+       isConnected: true,
        downtime: new Downtime('/fake/path', 'shunt', 1000),
        packetStats: new PacketStats(),
        ready: Promise.resolve(),

@@ -14,6 +14,7 @@ export interface CanbusSerialPortI {
    open(): Promise<void>;
    close(): void;
    sendBatteryInfoToInverter(chargeData: ChargeInfo): void;
+   readonly isConnected: boolean;
    readonly downtime: Downtime;
    readonly packetStats: PacketStats;
 }
@@ -73,6 +74,10 @@ export class CanbusSerialPort implements CanbusSerialPortI {
    private openCanChannel() {
       // O opens the channel, S6 sets the baud rate to 500kbps
       this.port.write("C\rS6\rO\r");
+   }
+
+   get isConnected(): boolean {
+      return this.port?.isOpen ?? false;
    }
 
    close(): void {
