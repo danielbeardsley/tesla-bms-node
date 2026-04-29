@@ -170,6 +170,7 @@ describe('BMS History', () => {
         (current as ({serialConnected: object|null})).serialConnected = null; // we don't test this
         (current as ({downtime: object|null})).downtime = null; // we don't test this
         (current as ({history: object|null})).history = null; // we don't test this
+        (current as ({config: object|null})).config = null; // we don't test this
         expect(current).toEqual({
             cellVoltageRange: {
                 min: 3.6,
@@ -207,6 +208,7 @@ describe('BMS History', () => {
             },
             downtime: null,
             history: null,
+            config: null,
             shunt: {},
         });
         bms.stop();
