@@ -283,11 +283,13 @@ class BMS {
 
         const cellVoltageRange = this.battery.getCellVoltageRange();
         const tempRange = this.battery.getTemperatureRange();
+        const voltage = this.battery.getVoltage();
+        const amps = this.battery.getAverageCurrentAndReset() ?? this.battery.getCurrent() ?? 0;
         this.history.add(Date.now(), {
             stateOfCharge: this.battery.getStateOfCharge(),
-            batteryVolts: this.battery.getVoltage(),
-            batteryAmps: this.battery.getCurrent() || 0,
-            batteryWatts: (this.battery.getCurrent() || 0) * this.battery.getVoltage(),
+            batteryVolts: voltage,
+            batteryAmps: amps,
+            batteryWatts: amps * voltage,
             batteryCellVoltsMin: cellVoltageRange.min,
             batteryCellVoltsMax: cellVoltageRange.max,
             batteryTempMin: tempRange.min,
