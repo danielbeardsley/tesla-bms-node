@@ -133,6 +133,7 @@ export function getFakeShunt() {
        getLastUpdate: () => 0,
        close: () => {},
        getCurrent: () => 10,
+       getAverageCurrentAndReset: () => undefined,
        isConnected: true,
        downtime: new Downtime('/fake/path', 'shunt', 1000),
        packetStats: new PacketStats(),

@@ -10,6 +10,7 @@ export interface Shunt {
    getLastUpdate(): number;
    getSOC(): number | undefined;
    getCurrent(): number | undefined;
+   getAverageCurrentAndReset(): number | undefined;
    close(): void;
    readonly isConnected: boolean;
    readonly downtime: Downtime;
@@ -33,6 +34,8 @@ export class VictronSmartShunt implements Shunt {
    private data: ShuntData = {all: {}, SOC: undefined, I: undefined};
    private parser: VEDirectParser;
    private onDataUpdate: () => void;
+   private currentSum: number = 0;
+   private currentSampleCount: number = 0;
    public readonly packetStats = new PacketStats();
    public readonly downtime: Downtime;
    public readonly ready: Promise<void>;
@@ -76,6 +79,8 @@ export class VictronSmartShunt implements Shunt {
             this.data.SOC = data.SOC / 1000;
             this.data.I = data.I / 1000;
             this.lastUpdate = Date.now();
+            this.currentSum += this.data.I;
+            this.currentSampleCount++;
          }
       } else {
          this.packetStats.incrementBad();
@@ -93,6 +98,16 @@ export class VictronSmartShunt implements Shunt {
 
    getCurrent(): number | undefined {
       return this.updatedWithin(this.downtime.timeoutMs / 1000) ? this.data.I : undefined;
+   }
+
+   getAverageCurrentAndReset(): number | undefined {
+      const fresh = this.updatedWithin(this.downtime.timeoutMs / 1000);
+      const result = fresh && this.currentSampleCount > 0
+         ? this.currentSum / this.currentSampleCount
+         : undefined;
+      this.currentSum = 0;
+      this.currentSampleCount = 0;
+      return result;
    }
 
    getAllData(): Record<string, number> {
