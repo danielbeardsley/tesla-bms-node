@@ -84,6 +84,10 @@ export class FakeBattery implements BatteryI {
       return this.current;
    }
 
+   getAverageCurrentAndReset(): number | undefined {
+      return undefined;
+   }
+
    getCellVoltageRange() {
       return this.voltageRange;
    }

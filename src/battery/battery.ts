@@ -14,6 +14,7 @@ export interface BatteryI {
    stopBalancing(): Promise<void>;
    getVoltage() : number;
    getCurrent() : number | undefined;
+   getAverageCurrentAndReset(): number | undefined;
    getCapacityAh(): number;
    getStateOfCharge(): number;
    getStateOfHealth(): number;
@@ -76,6 +77,10 @@ export class Battery implements BatteryI {
 
    getCurrent() {
       return this.shunt.getCurrent();
+   }
+
+   getAverageCurrentAndReset() {
+      return this.shunt.getAverageCurrentAndReset();
    }
 
    getCapacityAh() {
