@@ -76,6 +76,15 @@ const SECTIONS: Section[] = [
       { label: "Charge From Grid Delay (days)", path: "bms.chargingStrategy.latterby.chargeFromGridDelayDays" },
     ],
   },
+  {
+    title: "BMS - Latterby High-Capacity Mode",
+    fields: [
+      { label: "Stop Charge At %", path: "bms.chargingStrategy.latterby.highCapacity.stopChargeAtPct" },
+      { label: "Resume Charge At %", path: "bms.chargingStrategy.latterby.highCapacity.resumeChargeAtPct" },
+      { label: "Stop Discharge At %", path: "bms.chargingStrategy.latterby.highCapacity.stopDischargeAtPct" },
+      { label: "Resume Discharge At %", path: "bms.chargingStrategy.latterby.highCapacity.resumeDischargeAtPct" },
+    ],
+  },
 ];
 
 function getByPath(obj: Record<string, unknown>, path: string): unknown {

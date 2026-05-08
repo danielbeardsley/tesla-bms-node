@@ -40,14 +40,16 @@ export class Latterby implements ChargingModule {
    }
 
    getChargeDischargeInfo(): ChargeParameters {
-      const config = this.myConfig();
+      const socWindow = this.activeSocWindow();
+      const highCapacityActive = this.highCapacityActive();
+      const validUntil = this.storage.get().highCapacityModeValidUntil;
       const socPct = this.getStateOfCharge() * 100;
 
-      const isFull = socPct >= config.stopChargeAtPct;
-      const isEmpty = socPct <= config.stopDischargeAtPct;
+      const isFull = socPct >= socWindow.stopChargeAtPct;
+      const isEmpty = socPct <= socWindow.stopDischargeAtPct;
 
-      this.socChargeAllowed.update(!isFull, socPct <= config.resumeChargeAtPct);
-      this.socDischargeAllowed.update(!isEmpty, socPct >= config.resumeDischargeAtPct);
+      this.socChargeAllowed.update(!isFull, socPct <= socWindow.resumeChargeAtPct);
+      this.socDischargeAllowed.update(!isEmpty, socPct >= socWindow.resumeDischargeAtPct);
 
       this.timeChargeAllowed.set(this.socChargeAllowed.get());
       this.timeDischargeAllowed.set(this.socDischargeAllowed.get());
@@ -55,8 +57,9 @@ export class Latterby implements ChargingModule {
       const dischargingEnabled = this.socDischargeAllowed.get() && this.timeDischargeAllowed.get() && this.dischargeAllowedByTime();
 
       inverterLogger.info(
-         "Latterby: SOC:%d% needsFullCharge:%s timeCharge:%s socCharge:%s => charge:%s | timeDelayDischarge:%s socDischarge:%s timeOfDayDischarge:%s => discharge:%s",
+         "Latterby: SOC:%d% highCap:%s needsFullCharge:%s timeCharge:%s socCharge:%s => charge:%s | timeDelayDischarge:%s socDischarge:%s timeOfDayDischarge:%s => discharge:%s",
          socPct.toFixed(1),
+         highCapacityActive,
          this.needsFullCharge(), this.timeChargeAllowed.get(), this.socChargeAllowed.get(), chargingEnabled,
          this.timeDischargeAllowed.get(), this.socDischargeAllowed.get(), this.dischargeAllowedByTime(), dischargingEnabled,
       );
@@ -82,7 +85,32 @@ export class Latterby implements ChargingModule {
             needsFullCharge: this.needsFullCharge(),
             needsGridCharge: this.needsGridCharge(),
             dischargeAllowedByTime: this.dischargeAllowedByTime(),
+            highCapacityActive,
+            highCapacityModeValidUntil: validUntil,
+            activeStopChargeAtPct: socWindow.stopChargeAtPct,
+            activeResumeChargeAtPct: socWindow.resumeChargeAtPct,
+            activeStopDischargeAtPct: socWindow.stopDischargeAtPct,
+            activeResumeDischargeAtPct: socWindow.resumeDischargeAtPct,
          },
+      };
+   }
+
+   highCapacityActive(): boolean {
+      const conf = this.myConfig();
+      const validUntil = this.storage.get().highCapacityModeValidUntil;
+      return !!(conf.highCapacity && validUntil && Date.now() < validUntil);
+   }
+
+   activeSocWindow() {
+      const conf = this.myConfig();
+      if (this.highCapacityActive() && conf.highCapacity) {
+         return conf.highCapacity;
+      }
+      return {
+         stopChargeAtPct: conf.stopChargeAtPct,
+         resumeChargeAtPct: conf.resumeChargeAtPct,
+         stopDischargeAtPct: conf.stopDischargeAtPct,
+         resumeDischargeAtPct: conf.resumeDischargeAtPct,
       };
    }
 

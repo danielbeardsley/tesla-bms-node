@@ -81,6 +81,15 @@ const ConfigSchema = z.object({
             // If solar doesn't give us a full charge after this many days,
             // chagre to 100% from the grid.
             chargeFromGridDelayDays: z.number().int().min(0).optional(),
+            // Alternate SOC window used when high-capacity mode is active
+            // (see storage.highCapacityModeValidUntil). Typically a wider
+            // range than the normal one — harder on cells, so it auto-expires.
+            highCapacity: z.optional(z.object({
+               stopChargeAtPct: z.number().min(0).max(100),
+               resumeChargeAtPct: z.number().min(0).max(100),
+               stopDischargeAtPct: z.number().min(0).max(100),
+               resumeDischargeAtPct: z.number().min(0).max(100),
+            })),
          })),
       }),
    }),

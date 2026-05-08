@@ -233,6 +233,78 @@ describe('Latterby Charging', () => {
    });
 
 
+   it('Should use the high-capacity SOC window when active', async () => {
+      const {latterby, battery} = initialize(
+         {
+            rechargeDelaySec: 0,
+            highCapacity: {
+               stopChargeAtPct: 98,
+               resumeChargeAtPct: 95,
+               stopDischargeAtPct: 5,
+               resumeDischargeAtPct: 10,
+            },
+         },
+         {highCapacityModeValidUntil: Date.now() + 60_000},
+      );
+
+      // Above the normal 80% stopChargeAtPct, but below the high-capacity 98%.
+      battery.stateOfCharge = 0.9;
+      const charge = latterby.getChargeDischargeInfo();
+      expect(charge.chargingEnabled).toBe(true);
+      expect(charge._meta?.highCapacityActive).toBe(true);
+      expect(charge._meta?.activeStopChargeAtPct).toBe(98);
+      expect(charge._meta?.activeStopDischargeAtPct).toBe(5);
+
+      // Below the normal 20% stopDischargeAtPct, but above the high-capacity 5%.
+      battery.stateOfCharge = 0.08;
+      const charge2 = latterby.getChargeDischargeInfo();
+      expect(charge2.dischargingEnabled).toBe(true);
+   });
+
+   it('Should snap back to the normal SOC window when validUntil expires', async () => {
+      vi.useFakeTimers();
+      onTestFinished(() => {vi.useRealTimers()});
+      vi.setSystemTime(new Date('2026-01-01T00:00:00'));
+
+      const {latterby, battery} = initialize(
+         {
+            rechargeDelaySec: 0,
+            highCapacity: {
+               stopChargeAtPct: 98,
+               resumeChargeAtPct: 95,
+               stopDischargeAtPct: 5,
+               resumeDischargeAtPct: 10,
+            },
+         },
+         {highCapacityModeValidUntil: Date.now() + 60_000},
+      );
+
+      battery.stateOfCharge = 0.9;
+      expect(latterby.getChargeDischargeInfo()._meta?.highCapacityActive).toBe(true);
+      expect(latterby.getChargeDischargeInfo().chargingEnabled).toBe(true);
+
+      // Advance past the expiry.
+      vi.setSystemTime(new Date('2026-01-01T00:02:00'));
+      const charge = latterby.getChargeDischargeInfo();
+      expect(charge._meta?.highCapacityActive).toBe(false);
+      expect(charge._meta?.activeStopChargeAtPct).toBe(80);
+      // 90% > normal 80% stopChargeAtPct → charging disabled
+      expect(charge.chargingEnabled).toBe(false);
+   });
+
+   it('Should ignore highCapacityModeValidUntil when no highCapacity config is set', async () => {
+      const {latterby, battery} = initialize(
+         {rechargeDelaySec: 0},
+         {highCapacityModeValidUntil: Date.now() + 60_000},
+      );
+
+      battery.stateOfCharge = 0.9;
+      const charge = latterby.getChargeDischargeInfo();
+      expect(charge._meta?.highCapacityActive).toBe(false);
+      expect(charge._meta?.activeStopChargeAtPct).toBe(80);
+      expect(charge.chargingEnabled).toBe(false);
+   });
+
    it('Should cap the SOC if a full charge is requested', async () => {
       // Turn off the recharge delay so we can see effects immediately
       const {latterby, latterbyConfig, battery} = initialize(

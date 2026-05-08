@@ -76,7 +76,13 @@
             "rechargeDelaySec": 600,
             "daysBetweenSynchronizations": 40,
             "synchronizationVoltage": 48.8,
-            "chargeFromGridDelayDays": 5
+            "chargeFromGridDelayDays": 5,
+            "highCapacity": {
+               "stopChargeAtPct": 98,
+               "resumeChargeAtPct": 95,
+               "stopDischargeAtPct": 5,
+               "resumeDischargeAtPct": 10
+            }
          }
       }
    },

@@ -6,6 +6,7 @@ import { dirname } from 'node:path';
 
 const StorageSchema = z.object({
    lastFullCharge: z.optional(z.number()),
+   highCapacityModeValidUntil: z.optional(z.number()),
 });
 
 export type StorageValues = z.infer<typeof StorageSchema>;
@@ -43,6 +44,7 @@ export class Storage implements StorageInterface {
    loadDefaults() {
       this.data = {
          lastFullCharge: undefined,
+         highCapacityModeValidUntil: undefined,
       };
    }
 

@@ -20,6 +20,7 @@ import { HistoryServer } from '../history/history-server';
 import { Downtime } from '../history/downtime';
 import { type StorageInterface } from '../storage';
 import { Application } from 'express';
+import { registerChargingRoutes } from '../server/charging-routes';
 
 const BATTERY_ADDRESS = 2;
 
@@ -50,6 +51,7 @@ class BMS {
         this.history = new History(config.history.samplesToKeep);
         if (app) {
             new HistoryServer(app, this.history, battery, config, this, storage);
+            registerChargingRoutes(app, storage);
         }
         this.chargingModules = {
             voltageA: new VoltageA(config, battery),
