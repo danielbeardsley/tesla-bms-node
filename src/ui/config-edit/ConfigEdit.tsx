@@ -2,9 +2,15 @@ import { useState, useEffect, useCallback } from "preact/hooks";
 import { ConfigField } from "./ConfigField";
 import { ConfigChangelog } from "./ConfigChangelog";
 
+type FieldType = "number" | "string" | "boolean";
+
 interface FieldDef {
   label: string;
   path: string;
+  // Required when the value may be missing (undefined) so ConfigField can
+  // pick the right input type. If omitted, the type is inferred from the
+  // existing value.
+  type?: FieldType;
   requiresRestart?: boolean;
 }
 
@@ -79,10 +85,10 @@ const SECTIONS: Section[] = [
   {
     title: "BMS - Latterby High-Capacity Mode",
     fields: [
-      { label: "Stop Charge At %", path: "bms.chargingStrategy.latterby.highCapacity.stopChargeAtPct" },
-      { label: "Resume Charge At %", path: "bms.chargingStrategy.latterby.highCapacity.resumeChargeAtPct" },
-      { label: "Stop Discharge At %", path: "bms.chargingStrategy.latterby.highCapacity.stopDischargeAtPct" },
-      { label: "Resume Discharge At %", path: "bms.chargingStrategy.latterby.highCapacity.resumeDischargeAtPct" },
+      { label: "Stop Charge At %", path: "bms.chargingStrategy.latterby.highCapacity.stopChargeAtPct", type: "number" },
+      { label: "Resume Charge At %", path: "bms.chargingStrategy.latterby.highCapacity.resumeChargeAtPct", type: "number" },
+      { label: "Stop Discharge At %", path: "bms.chargingStrategy.latterby.highCapacity.stopDischargeAtPct", type: "number" },
+      { label: "Resume Discharge At %", path: "bms.chargingStrategy.latterby.highCapacity.resumeDischargeAtPct", type: "number" },
     ],
   },
 ];
@@ -149,13 +155,16 @@ export function ConfigEdit() {
           <legend style={{ fontWeight: "bold", fontSize: "15px" }}>{section.title}</legend>
           {section.fields.map((field) => {
             const val = getByPath(config, field.path);
-            if (val === undefined) return null;
+            // Without a type hint and no current value, ConfigField has no
+            // way to pick the right input — skip it.
+            if (val === undefined && !field.type) return null;
             return (
               <ConfigField
                 key={field.path}
                 label={field.label}
                 path={field.path}
-                value={val}
+                value={val as string | number | boolean | undefined}
+                type={field.type}
                 onSave={handleSave}
                 requiresRestart={field.requiresRestart}
               />

@@ -292,6 +292,29 @@ describe('Latterby Charging', () => {
       expect(charge.chargingEnabled).toBe(false);
    });
 
+   it('Should fall back to normal values for any high-capacity key not overridden', async () => {
+      // Override only the upper bound; lower bound should fall through to the normal 20%.
+      const {latterby, battery} = initialize(
+         {
+            rechargeDelaySec: 0,
+            highCapacity: { stopChargeAtPct: 98 },
+         },
+         {highCapacityModeValidUntil: Date.now() + 60_000},
+      );
+
+      battery.stateOfCharge = 0.9;
+      const charge = latterby.getChargeDischargeInfo();
+      expect(charge._meta?.highCapacityActive).toBe(true);
+      expect(charge._meta?.activeStopChargeAtPct).toBe(98);
+      expect(charge._meta?.activeStopDischargeAtPct).toBe(20); // unchanged from normal
+      expect(charge.chargingEnabled).toBe(true);
+
+      // Below the normal 20% stopDischargeAtPct — discharge should still be blocked,
+      // since we did not override the lower bound.
+      battery.stateOfCharge = 0.15;
+      expect(latterby.getChargeDischargeInfo().dischargingEnabled).toBe(false);
+   });
+
    it('Should ignore highCapacityModeValidUntil when no highCapacity config is set', async () => {
       const {latterby, battery} = initialize(
          {rechargeDelaySec: 0},

@@ -103,15 +103,16 @@ export class Latterby implements ChargingModule {
 
    activeSocWindow() {
       const conf = this.myConfig();
-      if (this.highCapacityActive() && conf.highCapacity) {
-         return conf.highCapacity;
-      }
-      return {
+      const normal = {
          stopChargeAtPct: conf.stopChargeAtPct,
          resumeChargeAtPct: conf.resumeChargeAtPct,
          stopDischargeAtPct: conf.stopDischargeAtPct,
          resumeDischargeAtPct: conf.resumeDischargeAtPct,
       };
+      if (this.highCapacityActive() && conf.highCapacity) {
+         return { ...normal, ...stripUndefined(conf.highCapacity) };
+      }
+      return normal;
    }
 
    needsFullCharge(): boolean {
@@ -160,4 +161,12 @@ export class Latterby implements ChargingModule {
          this.storage.update({lastFullCharge: Date.now()});
       }
    }
+}
+
+function stripUndefined<T extends Record<string, unknown>>(obj: T): Partial<T> {
+   const out: Partial<T> = {};
+   for (const k of Object.keys(obj) as Array<keyof T>) {
+      if (obj[k] !== undefined) out[k] = obj[k];
+   }
+   return out;
 }

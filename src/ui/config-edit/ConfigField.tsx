@@ -1,38 +1,52 @@
 import { useState, useRef, useEffect } from "preact/hooks";
 
+type FieldType = "number" | "string" | "boolean";
+
 interface ConfigFieldProps {
   label: string;
   path: string;
-  value: string | number | boolean;
+  value: string | number | boolean | undefined;
+  // Explicit type hint. Required when value can be undefined; otherwise
+  // inferred from the value at runtime.
+  type?: FieldType;
   onSave: (path: string, value: string | number | boolean) => Promise<string | null>;
   requiresRestart?: boolean;
 }
 
-export function ConfigField({ label, path, value, onSave, requiresRestart }: ConfigFieldProps) {
-  const [localValue, setLocalValue] = useState(String(value));
+function asString(v: string | number | boolean | undefined): string {
+  return v === undefined ? "" : String(v);
+}
+
+export function ConfigField({ label, path, value, type, onSave, requiresRestart }: ConfigFieldProps) {
+  const fieldType: FieldType = type ?? (typeof value as FieldType);
+  const [localValue, setLocalValue] = useState(asString(value));
   const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const timeoutRef = useRef<number | null>(null);
 
   // Reset local value when upstream value changes (e.g. after another field saves)
   useEffect(() => {
-    setLocalValue(String(value));
+    setLocalValue(asString(value));
   }, [value]);
 
-  const isDirty = localValue !== String(value);
+  const isDirty = localValue !== asString(value);
 
   async function handleSave() {
     setStatus("saving");
-    // Convert back to the original type
     let parsed: string | number | boolean;
-    if (typeof value === "number") {
+    if (fieldType === "number") {
+      if (localValue.trim() === "") {
+        setStatus("error");
+        setErrorMsg("Value required");
+        return;
+      }
       parsed = Number(localValue);
       if (isNaN(parsed)) {
         setStatus("error");
         setErrorMsg("Not a valid number");
         return;
       }
-    } else if (typeof value === "boolean") {
+    } else if (fieldType === "boolean") {
       parsed = localValue === "true";
     } else {
       parsed = localValue;
@@ -56,7 +70,7 @@ export function ConfigField({ label, path, value, onSave, requiresRestart }: Con
         {label}
         {requiresRestart && <span style={{ color: "#999", fontSize: "11px" }}> (restart)</span>}
       </label>
-      {typeof value === "boolean" ? (
+      {fieldType === "boolean" ? (
         <select
           value={localValue}
           onChange={(e) => setLocalValue((e.target as HTMLSelectElement).value)}
@@ -67,11 +81,11 @@ export function ConfigField({ label, path, value, onSave, requiresRestart }: Con
         </select>
       ) : (
         <input
-          type={typeof value === "number" ? "number" : "text"}
+          type={fieldType === "number" ? "number" : "text"}
           value={localValue}
           onInput={(e) => setLocalValue((e.target as HTMLInputElement).value)}
-          step={typeof value === "number" ? "any" : undefined}
-          style={{ padding: "4px 6px", width: typeof value === "number" ? "120px" : "300px" }}
+          step={fieldType === "number" ? "any" : undefined}
+          style={{ padding: "4px 6px", width: fieldType === "number" ? "120px" : "300px" }}
         />
       )}
       <button
