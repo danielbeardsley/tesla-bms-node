@@ -39,7 +39,7 @@
          "downtimeS": 10
       },
       "balance": {
-         "cellVDiffMax": 0.02,
+         "cellVDiffMax": 0.04,
          "onlyAbove": 3.4
       },
       "charging": {
@@ -56,7 +56,7 @@
          "cellVoltLimitSocRecovery": 1,
          "highTempCutoffC": 45,
          "lowTempCutoffC": -10,
-         "maxCellVoltBuffer": 0.02
+         "maxCellVoltBuffer": 0.01
       },
       "capacityPerModuleAh": 130,
       "voltsEmpty": 39.6,
@@ -69,19 +69,19 @@
          "name": "latterby",
          "voltageA": {},
          "latterby": {
-            "stopChargeAtPct": 90,
-            "resumeChargeAtPct": 88,
+            "stopChargeAtPct": 85,
+            "resumeChargeAtPct": 83,
             "stopDischargeAtPct": 10,
-            "resumeDischargeAtPct": 15,
+            "resumeDischargeAtPct": 25,
             "rechargeDelaySec": 600,
             "daysBetweenSynchronizations": 40,
             "synchronizationVoltage": 48.8,
             "chargeFromGridDelayDays": 5,
             "highCapacity": {
-               "stopChargeAtPct": 98,
-               "resumeChargeAtPct": 95,
-               "stopDischargeAtPct": 5,
-               "resumeDischargeAtPct": 10
+               "stopChargeAtPct": 95,
+               "resumeChargeAtPct": 93,
+               "stopDischargeAtPct": 10,
+               "resumeDischargeAtPct": 13
             }
          }
       }
@@ -92,7 +92,7 @@
    },
    "inverter": {
       "serialPort": {
-         "deviceName": "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_BG0106Q6-if00-port0",
+         "deviceName": "/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_BG01Q1FJ-if00-port0",
          "baudRate": 115200,
          "downtimeS": 10
       },
