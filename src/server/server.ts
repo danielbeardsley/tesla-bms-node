@@ -1,4 +1,5 @@
 import express, { Application } from 'express';
+import cors from 'cors';
 import * as path from "path";
 import { logger } from "../logger";
 import { registerConfigRoutes } from "./config-routes";
@@ -19,10 +20,7 @@ export function startServer(port: number): AppServer {
 export function createApp(): Application {
    const app = express();
 
-   app.use((_req, res, next) => {
-      res.header('Access-Control-Allow-Origin', '*');
-      next();
-   });
+   app.use(cors());
    app.use(express.json());
    app.use('/ui', express.static(path.resolve(__dirname, '../../ui')));
 
